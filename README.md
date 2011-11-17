@@ -1,10 +1,5 @@
----------------------------------------------------------------
-SmallCheck: another lightweight testing library in Haskell.
-Version 0.4, 21 May 2008
-Colin Runciman, University of York, UK
-
-After QuickCheck, by Koen Claessen and John Hughes (2000-2004).
----------------------------------------------------------------
+SmallCheck: another lightweight testing library in Haskell
+==========================================================
 
 If you are a Haskell programmer and a QuickCheck user do you ever wish
 you could:
@@ -51,10 +46,10 @@ generators, so a SmallCheck user defines 'series' generators -- but
 it is a more straightforward task, using SmallCheck's cons<N> family
 of generic combinators where N is constructor arity.  For example:
 
-data Tree a = Null | Fork Tree a Tree
+    data Tree a = Null | Fork Tree a Tree
 
-instance Serial a => Serial (Tree a) where
-  series = cons0 Null \/ cons3 Fork
+    instance Serial a => Serial (Tree a) where
+      series = cons0 Null \/ cons3 Fork
 
 The default interpretation of depth for datatypes is the depth of nested
 construction: constructor functions, including those for newtypes, build
@@ -62,10 +57,10 @@ results with depth one greater than their deepest argument.  But this
 default can be over-ridden by composing a cons<N> application with an
 application of 'depth', like this:
 
-newtype Light a = Light a
+    newtype Light a = Light a
 
-instance Serial a => Serial (Light a) where
-  series = cons1 Light . depth 0
+    instance Serial a => Serial (Light a) where
+      series = cons1 Light . depth 0
 
 The depth of Light x is just the depth of x.
 
@@ -77,15 +72,15 @@ second method 'coseries' -- cf. 'coarbitrary' in QuickCheck.  Again there
 is a standard pattern, this time using the alts<N> combinators where
 again N is constructor arity.  Here are Tree and Light instances:
 
-  coseries rs d = [ \t -> case t of
-                          Null         -> z
-                          Fork t1 x t2 -> f t1 x t2
-                  |  z <- alts0 rs d ,
-                     f <- alts3 rs d ]
+    coseries rs d = [ \t -> case t of
+                            Null         -> z
+                            Fork t1 x t2 -> f t1 x t2
+                    |  z <- alts0 rs d ,
+                       f <- alts3 rs d ]
 
-  coseries rs d = [ \l -> case l of
-                          Light x -> f x
-                  |  f <- (alts1 rs . depth 0) d ]
+    coseries rs d = [ \l -> case l of
+                            Light x -> f x
+                    |  f <- (alts1 rs . depth 0) d ]
 
 (NB changed from Version 0.2: 'coseries' and 'alts<N>' family now take a
 series argument -- here rs.  In the coseries definitions we simply pass
@@ -100,7 +95,7 @@ type definitions, automatic derivation using a tool such as 'derive'
 is a better option. For example, the following command-line appends to
 Prog.hs the Series instances for all data types defined there.
 
-$ derive Prog.hs -d Serial --append 
+    $ derive Prog.hs -d Serial --append 
 
 Properties
 ----------
@@ -109,13 +104,13 @@ SmallCheck's testable properties are closely based on those of QuickCheck
 but with the introduction of existential quantifiers.  Suppose we have
 defined a function
 
-isPrefix :: Eq a => [a] -> [a] -> Bool
+    isPrefix :: Eq a => [a] -> [a] -> Bool
 
 and wish to specify it by some suitable property.  Using QuickCheck we
 might define
 
-prop_isPrefix1 :: String -> String -> Bool
-prop_isPrefix1 xs ys = isPrefix xs (xs++ys)
+    prop_isPrefix1 :: String -> String -> Bool
+    prop_isPrefix1 xs ys = isPrefix xs (xs++ys)
 
 where xs and ys are universally quantified.  This property is necessary
 but not sufficient for a correct isPrefix.  For example, it is satisfied
@@ -123,9 +118,9 @@ by the function that always returns True!  We can test the same property
 using SmallCheck.  But we can also test the following property, which
 involves an existentially quantified variable:
 
-prop_isPrefix2 :: String -> String -> Property
-prop_isPrefix2 xs ys = isPrefix xs ys ==>
-                         exists $ \xs' -> ys == xs++xs'
+    prop_isPrefix2 :: String -> String -> Property
+    prop_isPrefix2 xs ys = isPrefix xs ys ==>
+                             exists $ \xs' -> ys == xs++xs'
 
 The default testing of existentials is bounded by the same depth as their
 context, here the depth-bound for xs and ys.  This rule has important
@@ -137,15 +132,15 @@ failure. However, sometimes the default same-depth-bound interpretation
 of existential properties can make testing of a valid property fail at
 all depths.  Here is a contrived but illustrative example:
 
-prop_append1 :: [Bool] -> [Bool] -> Property
-prop_append1 xs ys = exists $ \zs -> zs == xs++ys
+    prop_append1 :: [Bool] -> [Bool] -> Property
+    prop_append1 xs ys = exists $ \zs -> zs == xs++ys
 
 Customised variants of 'exists' are handy in such circumstances.
 For example, 'existsDeeperBy' transforms the depth bound by a given
 Int->Int function:
 
-prop_append2 :: [Bool] -> [Bool] -> Property
-prop_append2 xs ys = existsDeeperBy (*2) $ \zs -> zs == xs++ys
+    prop_append2 :: [Bool] -> [Bool] -> Property
+    prop_append2 xs ys = existsDeeperBy (*2) $ \zs -> zs == xs++ys
 
 There are also quantifiers for unique existence.  Their names include
 a 1 immediately after 'exists': eg. exists1, exists1DeeperBy.
@@ -157,15 +152,15 @@ As in QuickCheck, the ==> operator can be used to express a restricting
 condition under which a property should hold.  For example, testing a
 propositional-logic module (see examples/logical), we might define:
 
-prop_tautEval :: Proposition -> Environment -> Property
-prop_tautEval p e =
-  tautology p ==> eval p e
+    prop_tautEval :: Proposition -> Environment -> Property
+    prop_tautEval p e =
+      tautology p ==> eval p e
 
 But here is an alternative definition:
 
-prop_tautEval :: Proposition -> Property
-prop_taut p =
-  tautology p ==> \e -> eval p e
+    prop_tautEval :: Proposition -> Property
+    prop_taut p =
+      tautology p ==> \e -> eval p e
 
 The first definition generates p and e for each test, whereas the second
 only generates e if the tautology p holds.  This difference is not great
@@ -180,49 +175,49 @@ Testing
 Just as QuickCheck has a top-level function 'quickCheck' so SmallCheck
 has 'smallCheck d'.
 
-smallCheck  :: Testable a => Int -> a -> IO ()
+    smallCheck  :: Testable a => Int -> a -> IO ()
 
 It runs series of tests using depth bounds 0..d, stopping if any test
 fails, and prints a summary report or a counter-example. The variant:
 
-smallCheckI :: Testable a =>        a -> IO ()
+    smallCheckI :: Testable a =>        a -> IO ()
  
 is interactive. Instead of requiring a maximum-depth argument, it invites
 the user to decide whether to do deeper tests and whether to continue
 after a failure.  The interface is low-tech: y<return> (or just <return>)
 means "yes", anything else means "no".  For example:
 
-haskell> smallCheckI prop_append1
-Depth 0:
-  Completed 1 test(s) without failure.
-  Deeper? y
-Depth 1:
-  Failed test no. 5. Test values follow.
-  [True]
-  [True]
-  Continue? n
-  Deeper? n
-haskell>
+    haskell> smallCheckI prop_append1
+    Depth 0:
+      Completed 1 test(s) without failure.
+      Deeper? y
+    Depth 1:
+      Failed test no. 5. Test values follow.
+      [True]
+      [True]
+      Continue? n
+      Deeper? n
+    haskell>
 
 Having methods to generate series of all (depth-bounded) values of
 an argument type, SmallCheck can give at least partial information
 about the extension of a function.  For example, if we test the
 property
 
-prop_assoc op =
-  \x y z -> (x `op` y) `op` z == x `op` (y `op` z)
-  where
-  typeInfo = op :: Bool -> Bool -> Bool
+    prop_assoc op =
+      \x y z -> (x `op` y) `op` z == x `op` (y `op` z)
+      where
+      typeInfo = op :: Bool -> Bool -> Bool
 
 the result is shown as follows.
 
-haskell> smallCheckI prop_assoc
-Depth 0:
-  Failed test no. 22. Test values follow.
-  {True->{True->True;False->True};False->{True->False;False->True}}
-  False
-  True
-  False
+    haskell> smallCheckI prop_assoc
+    Depth 0:
+      Failed test no. 22. Test values follow.
+      {True->{True->True;False->True};False->{True->False;False->True}}
+      False
+      True
+      False
 
 When (unique) existential properties are tested, any failure reports
 conclude with "non-existence" (or "non-uniqueness" followed by two
@@ -290,11 +285,7 @@ for use in a single instance -- the import and instance can be commented
 out if there is no need to test IO computations.  I am not aware of any
 other portability issues.  SmallCheck can be obtained from
 
-http://hackage.haskell.org/cgi-bin/hackage-scripts/package/smallcheck
-
-or alternatively from 
-
-http://www.cs.york.ac.uk/fp/smallcheck0.4.tar
+http://hackage.haskell.org/package/smallcheck
 
 Comments and suggestions are welcome.
 
@@ -303,6 +294,3 @@ to users who have mailed me with feedback, to Ralf Hinze who suggested
 the better method for functional coseries, to Neil Mitchell for
 automating the derivation of Serial instances, to Matt Naylor for
 the circuit-design examples and to Gwern Branwen for Cabal packaging.
-
-Colin.Runciman@cs.york.ac.uk
-23 May 2008
