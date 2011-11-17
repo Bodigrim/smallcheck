@@ -1,0 +1,48 @@
+Name:          smallcheck
+Version:       0.2.1
+License:       BSD3
+License-File:  LICENSE
+Author:        Colin Runciman
+Maintainer:    Colin Runciman <Colin.Runciman@cs.york.ac.uk>
+
+Stability:     Beta
+Category:      Testing
+Synopsis:      Another lightweight testing library in Haskell.
+Description:   SmallCheck is similar to QuickCheck (Claessen and Hughes 2000-) but
+               instead of testing for a sample of randomly generated values, SmallCheck
+               tests properties for all the finitely many values up to some depth,
+               progressively increasing the depth used.
+               .
+               Folk-law: if there is any case in which a program
+               fails, there is almost always a simple one.
+               .
+               Corollary: if a program does not fail in any
+               simple case, it almost never fails.
+               .
+               Other possible sales pitches:
+               .
+               * write test generators for your own types more easily
+               .
+               * be sure any counter-examples found are minimal
+               .
+               * write properties using existentials as well as universals
+               .
+               * establish complete coverage of a defined test-space
+               .
+               * display counter-examples of functional type
+Homepage:      http://www.cs.york.ac.uk/fp/smallcheck0.2.tar
+
+Build-Depends: base
+Build-Type:    Simple
+
+Extra-source-files: examples/numeric/NumProps.hs, examples/logical/LogicProps.hs,
+                    examples/imperative/Interpreter.hs, examples/imperative/Syntax.hs,
+                    examples/imperative/Machine.hs, examples/imperative/Behaviour.hs,
+                    examples/imperative/Properties.hs, examples/imperative/Value.hs,
+                    examples/imperative/StackMap.hs, examples/imperative/Compiler.hs,
+                    examples/listy/ListProps.hs, examples/regular/Regular.hs
+
+Data-files:         examples/numeric/README, examples/logical/README, examples/imperative/README,
+                    examples/listy/README, examples/regular/README, README
+
+Exposed-modules:    Test.SmallCheck

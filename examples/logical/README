@@ -1,0 +1,7 @@
+First see ../../README.
+
+In this directory, LogicProps.hs illustrates the basic way to define
+Serial instances of your own types, and hence Testable properties of
+functions over them. Compile or interpret LogicProps.main (SmallCheck is
+the only other module required) for a small selection of self-introducing
+tests.

@@ -1,0 +1,8 @@
+First see ../../README.
+
+In this directory, Regular.hs illustrates a test involving IO -- writing
+and reading expressions to/from a file.  The use of 'smart constructors'
+in the series definition is necessary for the property to hold, but does
+*not* reduce the number of tests -- rather, there are duplicated tests for
+the same expressions generated in different ways. Compile or interpret
+Regular.main for a self-introducing test.

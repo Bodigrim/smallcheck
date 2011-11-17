@@ -1,0 +1,10 @@
+First see ../../README.
+
+This directory gives the largest illustrative example.  We test for
+congruence between an interpreter and compiler for a small imperative
+language.  The example is adapted from an original using QuickCheck,
+as described in the lecture notes for AFP'02 (LNCS 2638).  Compared
+with the simpler example in ../logic, here specialised instances
+are used to restrict the input space to programs in a standard form.
+Run Properties.main and compare the rate of growth for the last two
+properties tested.
