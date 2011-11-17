@@ -1,8 +1,9 @@
 module Regular where
 
-import Data.Char (isAlpha)
-import Data.List (intersperse)
-import Control.Monad (liftM)
+import Char (isAlpha)
+import List (intersperse)
+import Monad (liftM)
+
 import Test.SmallCheck
 
 -- A data type of regular expressions.
@@ -10,10 +11,10 @@ import Test.SmallCheck
 data RE = Emp
         | Lam
         | Sym Char
-	| Alt [RE]
+        | Alt [RE]
         | Cat [RE]
-	| Rep RE
-	deriving Eq
+        | Rep RE
+        deriving Eq
 
 isEmp, isLam, isSym, isCat, isAlt, isRep :: RE -> Bool
 isEmp Emp     = True
@@ -72,7 +73,7 @@ rest (' ':s) as         = rest s as
 rest (v  :s) ((c:a):as) = if isAlpha v then rest s (((Sym v:c):a):as)
                           else if null as then (a2re (c:a),v:s)
 			  else wrong
-
+			      
 a2re :: [[RE]] -> RE
 a2re = alt . reverse . map (cat . reverse)
 

@@ -1,0 +1,30 @@
+First see ../../README.
+
+The programs in this directory define a number of different circuits.
+Some of these were originally written in Lava and were used to generate
+circuit netlists for external synthesis tools and propositional logic for
+external theorem provers.  They have been slightly adapted as examples
+for SmallCheck, so that they do not depend on Lava.
+
+BitAdd.hs defines a trivial circuit that takes two inputs, a bit and a
+bit-vector (i.e. a list of bits), and returns a bit-vector containing
+the sum of the two.  Using SmallCheck, it is straightforward to verify
+that the circuit behaves correctly for all bit-vector inputs up to the
+given size.
+
+Sad.hs defines a more complicated circuit that works over two lists of
+lists of bits, but verification with SmallCheck is just as simple and
+useful as before.
+
+Mux.hs defines a simple multiplexor and a more complicated variant that
+is optimised for Xilinx FPGAs.  Originally, the correctness of the more
+complicated version was argued by verifying its equivalence with the
+simpler version using an external SAT solver.  However, using SmallCheck,
+more general properties can be expressed, and so each circuit can be
+verified independently in terms of Haskell's list indexing operator (!!).
+The correctness properties are again easy to express in SmallCheck,
+but their antecedents filter out so many test cases as to make them
+inefficient.  This problem is resolved by writing a custom test-case
+generator using SmallCheck's "Serial" class.
+
+Matthew Naylor, University of York, 22nd Jan 2007.

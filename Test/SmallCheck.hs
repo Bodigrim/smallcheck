@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------
 -- SmallCheck: another lightweight testing library.
 -- Colin Runciman, August 2006
--- Version 0.2 (November 2006)
+-- Version 0.4, 23 May 2008
 --
 -- After QuickCheck, by Koen Claessen and John Hughes (2000-2004).
 ---------------------------------------------------------------------
@@ -11,6 +11,7 @@ module Test.SmallCheck (
   Property, Testable,
   forAll, forAllElem,
   exists, existsDeeperBy, thereExists, thereExistsElem,
+  exists1, exists1DeeperBy, thereExists1, thereExists1Elem,
   (==>),
   Series, Serial(..),
   (\/), (><), two, three, four,
@@ -20,10 +21,10 @@ module Test.SmallCheck (
   depth, inc, dec
   ) where
 
-import Data.List (intersperse)
-import Control.Monad (when)
-import System.IO (stdout, hFlush)
-import System.IO.Unsafe (unsafePerformIO)  -- used only for Testable (IO a)
+import List (intersperse)
+import Monad (when)
+import IO (stdout, hFlush)
+import Foreign (unsafePerformIO)  -- used only for Testable (IO a)
 
 ------------------ <Series of depth-bounded values> -----------------
 
@@ -51,80 +52,81 @@ s1 >< s2 = \d -> [(x,y) | x <- s1 d, y <- s2 d]
 -- for data values, the depth of nested constructor applications
 -- for functional values, both the depth of nested case analysis
 -- and the depth of results
-
+ 
 class Serial a where
   series   :: Series a
-  coseries :: Serial b => Series (a->b)
+  coseries :: Series b -> Series (a->b)
 
 instance Serial () where
-  series   _ = [()]
-  coseries d = [ \() -> b
-               | b <- series d ]
+  series      _ = [()]
+  coseries rs d = [ \() -> b
+                  | b <- rs d ]
 
 instance Serial Int where
-  series   d = [(-d)..d]
-  coseries d = [ \i -> if i > 0 then f (N (i - 1))
-                       else if i < 0 then g (N (abs i - 1))
-                       else z
-               | z <- alts0 d, f <- alts1 d, g <- alts1 d ]
+  series      d = [(-d)..d]
+  coseries rs d = [ \i -> if i > 0 then f (N (i - 1))
+                          else if i < 0 then g (N (abs i - 1))
+                          else z
+                  | z <- alts0 rs d, f <- alts1 rs d, g <- alts1 rs d ]
 
 instance Serial Integer where
-  series   d = [ toInteger (i :: Int)
-               | i <- series d ]
-  coseries d = [ f . (fromInteger :: Integer->Int)
-               | f <- series d ]
+  series      d = [ toInteger (i :: Int)
+                  | i <- series d ]
+  coseries rs d = [ f . (fromInteger :: Integer->Int)
+                  | f <- coseries rs d ]
 
 newtype N a = N a
+              deriving (Eq, Ord)
 
 instance Show a => Show (N a) where
   show (N i) = show i
 
 instance (Integral a, Serial a) => Serial (N a) where
-  series   d = map N [0..d']
-               where
-               d' = fromInteger (toInteger d)
-  coseries d = [ \(N i) -> if i > 0 then f (N (i - 1))
-                           else z
-               | z <- alts0 d, f <- alts1 d ]
+  series      d = map N [0..d']
+                  where
+                  d' = fromInteger (toInteger d)
+  coseries rs d = [ \(N i) -> if i > 0 then f (N (i - 1))
+                              else z
+                  | z <- alts0 rs d, f <- alts1 rs d ]
 
 type Nat = N Int
 type Natural = N Integer
 
 instance Serial Float where
-  series d   = [ encodeFloat sig exp
-               | (sig,exp) <- series d,
-                 odd sig || sig==0 && exp==0 ]
-  coseries d = [ f . decodeFloat
-               | f <- series d ]
-
+  series     d = [ encodeFloat sig exp
+                 | (sig,exp) <- series d,
+                   odd sig || sig==0 && exp==0 ]
+  coseries rs d = [ f . decodeFloat
+                  | f <- coseries rs d ]
+             
 instance Serial Double where
-  series   d = [ frac (x :: Float)
-               | x <- series d ]
-  coseries d = [ f . (frac :: Double->Float)
-               | f <- series d ]
+  series      d = [ frac (x :: Float)
+                  | x <- series d ]
+  coseries rs d = [ f . (frac :: Double->Float)
+                  | f <- coseries rs d ]
 
 frac :: (Real a, Fractional a, Real b, Fractional b) => a -> b
 frac = fromRational . toRational
 
 instance Serial Char where
-  series d   = take (d+1) ['a'..'z']
-  coseries d = [ \c -> f (N (fromEnum c - fromEnum 'a'))
-               | f <- series d ]
+  series      d = take (d+1) ['a'..'z']
+  coseries rs d = [ \c -> f (N (fromEnum c - fromEnum 'a'))
+                  | f <- coseries rs d ]
 
 instance (Serial a, Serial b) =>
          Serial (a,b) where
-  series   = series >< series
-  coseries = map uncurry . coseries
+  series      = series >< series
+  coseries rs = map uncurry . (coseries $ coseries rs)
 
 instance (Serial a, Serial b, Serial c) =>
          Serial (a,b,c) where
-  series   = \d -> [(a,b,c) | (a,(b,c)) <- series d]
-  coseries = map uncurry3 . coseries
+  series      = \d -> [(a,b,c) | (a,(b,c)) <- series d]
+  coseries rs = map uncurry3 . (coseries $ coseries $ coseries rs)
 
 instance (Serial a, Serial b, Serial c, Serial d) =>
          Serial (a,b,c,d) where
-  series   = \d -> [(a,b,c,d) | (a,(b,(c,d))) <- series d]
-  coseries = map uncurry4 . coseries
+  series      = \d -> [(a,b,c,d) | (a,(b,(c,d))) <- series d]
+  coseries rs = map uncurry4 . (coseries $ coseries $ coseries $ coseries rs)
 
 uncurry3 :: (a->b->c->d) -> ((a,b,c)->d)
 uncurry3 f (x,y,z) = f x y z
@@ -141,7 +143,7 @@ three s = \d -> [(x,y,z) | (x,(y,z)) <- (s >< s >< s) d]
 four  :: Series a -> Series (a,a,a,a)
 four  s = \d -> [(w,x,y,z) | (w,(x,(y,z))) <- (s >< s >< s >< s) d]
 
-cons0 ::
+cons0 :: 
          a -> Series a
 cons0 c _ = [c]
 
@@ -161,64 +163,73 @@ cons4 :: (Serial a, Serial b, Serial c, Serial d) =>
          (a->b->c->d->e) -> Series e
 cons4 c d = [c w x y z | d > 0, (w,x,y,z) <- series (d-1)]
 
-alts0 ::  Serial a =>
+alts0 ::  Series a ->
             Series a
-alts0 d = series d
+alts0 as d = as d
 
-alts1 ::  (Serial a, Serial b) =>
-            Series (a->b)
-alts1 d = if d > 0 then series (dec d)
-          else [\_ -> x | x <- series d]
+alts1 ::  Serial a =>
+            Series b -> Series (a->b)
+alts1 bs d = if d > 0 then coseries bs (dec d)
+             else [\_ -> x | x <- bs d]
 
-alts2 ::  (Serial a, Serial b, Serial c) =>
-            Series (a->b->c)
-alts2 d = if d > 0 then series (dec d)
-          else [\_ _ -> x | x <- series d]
+alts2 ::  (Serial a, Serial b) =>
+            Series c -> Series (a->b->c)
+alts2 cs d = if d > 0 then coseries (coseries cs) (dec d)
+             else [\_ _ -> x | x <- cs d]
 
-alts3 ::  (Serial a, Serial b, Serial c, Serial d) =>
-            Series (a->b->c->d)
-alts3 d = if d > 0 then series (dec d)
-          else [\_ _ _ -> x | x <- series d]
+alts3 ::  (Serial a, Serial b, Serial c) =>
+            Series d -> Series (a->b->c->d)
+alts3 ds d = if d > 0 then coseries (coseries (coseries ds)) (dec d)
+             else [\_ _ _ -> x | x <- ds d]
 
-alts4 ::  (Serial a, Serial b, Serial c, Serial d, Serial e) =>
-            Series (a->b->c->d->e)
-alts4 d = if d > 0 then series (dec d)
-          else [\_ _ _ _ -> x | x <- series d]
+alts4 ::  (Serial a, Serial b, Serial c, Serial d) =>
+            Series e -> Series (a->b->c->d->e)
+alts4 es d = if d > 0 then coseries (coseries (coseries (coseries es))) (dec d)
+             else [\_ _ _ _ -> x | x <- es d]
 
 instance Serial Bool where
-  series     = cons0 True \/ cons0 False
-  coseries d = [ \x -> if x then b1 else b2
-               | (b1,b2) <- series d ]
+  series        = cons0 True \/ cons0 False
+  coseries rs d = [ \x -> if x then r1 else r2
+                  | r1 <- rs d, r2 <- rs d ]
 
 instance Serial a => Serial (Maybe a) where
-  series     = cons0 Nothing \/ cons1 Just
-  coseries d = [ \m -> case m of
+  series        = cons0 Nothing \/ cons1 Just
+  coseries rs d = [ \m -> case m of
                        Nothing -> z
                        Just x  -> f x
-               |  z <- alts0 d ,
-                  f <- alts1 d ]
+                  |  z <- alts0 rs d ,
+                     f <- alts1 rs d ]
 
 instance (Serial a, Serial b) => Serial (Either a b) where
-  series     = cons1 Left \/ cons1 Right
-  coseries d = [ \e -> case e of
-                       Left x  -> f x
-                       Right y -> g y
-               |  f <- alts1 d ,
-                  g <- alts1 d ]
+  series        = cons1 Left \/ cons1 Right
+  coseries rs d = [ \e -> case e of
+                          Left x  -> f x
+                          Right y -> g y
+                  |  f <- alts1 rs d ,
+                     g <- alts1 rs d ]
 
 instance Serial a => Serial [a] where
-  series     = cons0 [] \/ cons2 (:)
-  coseries d = [ \xs -> case xs of
-                        []      -> y
-                        (x:xs') -> f x xs'
-               |   y <- alts0 d ,
-                   f <- alts2 d ]
+  series        = cons0 [] \/ cons2 (:)
+  coseries rs d = [ \xs -> case xs of
+                           []      -> y
+                           (x:xs') -> f x xs'
+                  |   y <- alts0 rs d ,
+                      f <- alts2 rs d ]
 
--- Warning: the coseries instance here may generate duplicates.
+-- Thanks to Ralf Hinze for the definition of coseries
+-- using the nest auxiliary.
+
 instance (Serial a, Serial b) => Serial (a->b) where
-  series = coseries
-  coseries d = [ \f -> g [f x | x <- series d]
-               | g <- series d ]
+  series = coseries series
+  coseries rs d = 
+    [ \ f -> g [ f a | a <- args ] 
+    | g <- nest args d ]
+    where
+    args = series d
+    nest []     _ = [ \[] -> c
+                    | c <- rs d ]
+    nest (a:as) _ = [ \(b:bs) -> f b bs
+                    | f <- coseries (nest as) d ]
 
 -- For customising the depth measure.  Use with care!
 
@@ -236,7 +247,7 @@ inc d = d+1
 -- show the extension of a function (in part, bounded both by
 -- the number and depth of arguments)
 instance (Serial a, Show a, Show b) => Show (a->b) where
-  show f =
+  show f = 
     if maxarheight == 1
     && sumarwidth + length ars * length "->;" < widthLimit then
       "{"++(
@@ -249,7 +260,7 @@ instance (Serial a, Show a, Show b) => Show (a->b) where
                            | x <- series depthLimit ]
     maxarheight = maximum  [ max (height a) (height r)
                            | (a,r) <- ars ]
-    sumarwidth = sum       [ length a + length r
+    sumarwidth = sum       [ length a + length r 
                            | (a,r) <- ars]
     indent = unlines . map ("  "++) . lines
     height = length . lines
@@ -303,27 +314,50 @@ forAll xs f = Property $ \d -> Prop $
 forAllElem :: (Show a, Testable b) => [a] -> (a->b) -> Property
 forAllElem xs = forAll (const xs)
 
-thereExists :: Testable b => Series a -> (a->b) -> Property
-thereExists xs f = Property $ \d -> Prop $
-  [ Result
-      ( Just $ or [ all pass (evaluate (f x) d)
-                  | x <- xs d ] )
-      [] ]
+existence :: (Show a, Testable b) => Bool -> Series a -> (a->b) -> Property
+existence u xs f = Property existenceDepth
   where
-  pass (Result Nothing _)  = True
-  pass (Result (Just b) _) = b
+  existenceDepth d = Prop [ Result (Just valid) arguments ]
+    where
+    witnesses = [ show x | x <- xs d, all pass (evaluate (f x) d) ]
+    valid     = enough witnesses
+    enough    = if u then unique else (not . null)
+    arguments = if valid then []
+                else if null witnesses then ["non-existence"]
+                else "non-uniqueness" : take 2 witnesses
 
-thereExistsElem :: Testable b => [a] -> (a->b) -> Property
+unique :: [a] -> Bool
+unique [_] = True
+unique  _  = False
+
+pass :: Result -> Bool
+pass (Result Nothing _)  = True
+pass (Result (Just b) _) = b
+
+thereExists :: (Show a, Testable b) => Series a -> (a->b) -> Property
+thereExists = existence False
+
+thereExists1 :: (Show a, Testable b) => Series a -> (a->b) -> Property
+thereExists1 = existence True
+
+thereExistsElem :: (Show a, Testable b) => [a] -> (a->b) -> Property
 thereExistsElem xs = thereExists (const xs)
 
-exists :: (Serial a, Testable b) =>
-            (a->b) -> Property
+thereExists1Elem :: (Show a, Testable b) => [a] -> (a->b) -> Property
+thereExists1Elem xs = thereExists1 (const xs)
+
+exists :: (Show a, Serial a, Testable b) => (a->b) -> Property
 exists = thereExists series
 
-existsDeeperBy :: (Serial a, Testable b) =>
-                    (Int->Int) -> (a->b) -> Property
+exists1 :: (Show a, Serial a, Testable b) => (a->b) -> Property
+exists1 = thereExists1 series
+
+existsDeeperBy :: (Show a, Serial a, Testable b) => (Int->Int) -> (a->b) -> Property
 existsDeeperBy f = thereExists (series . f)
 
+exists1DeeperBy :: (Show a, Serial a, Testable b) => (Int->Int) -> (a->b) -> Property
+exists1DeeperBy f = thereExists1 (series . f)
+ 
 infixr 0 ==>
 
 (==>) :: Testable a => Bool -> a -> Property
@@ -361,7 +395,7 @@ iterCheck dFrom mdTo t = iter dFrom
           (\dTo -> when (ok && d < dTo) $ iter (d+1))
           mdTo
 
-check :: Bool -> Int -> Int -> Bool -> [Result] -> IO Bool
+check :: Bool -> Integer -> Integer -> Bool -> [Result] -> IO Bool
 check i n x ok rs | null rs = do
   putStr ("  Completed "++show n++" test(s)")
   putStrLn (if ok then " without failure." else ".")
@@ -390,7 +424,7 @@ whenUserWishes wish x action = do
   ( if (null reply || reply=="y") then action
     else return x )
 
-progressReport :: Bool -> Int -> Int -> IO ()
+progressReport :: Bool -> Integer -> Integer -> IO ()
 progressReport i n x | n >= x = do
   when i $ ( putStr (n' ++ replicate (length n') '\b') >>
              hFlush stdout )

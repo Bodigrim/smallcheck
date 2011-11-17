@@ -126,7 +126,7 @@ instance Serial IOp2 where
   series = const [I2 op | op <- [Add, Sub, Mul, Div, Mod]]
 
 newtype BExpr = B Expr
-
+ 
 instance Serial BExpr where
   series = cons1 uno'
         \/ cons3 duo'

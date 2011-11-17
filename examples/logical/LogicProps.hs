@@ -8,7 +8,7 @@ module PropLogic where
 
 import Test.SmallCheck
 
-import Data.List (nub)
+import List (nub)
 
 data Prop = Var Name
           | Not Prop
@@ -41,7 +41,7 @@ eval (Var v)   env = env v
 eval (Not p)   env = not (eval p env)
 eval (And p q) env = eval p env && eval q env
 eval (Or  p q) env = eval p env || eval q env
-eval (Imp p q) env = eval p env <= eval q env
+eval (Imp p q) env = eval p env <= eval q env 
 
 envsFor :: Prop -> [Env]
 envsFor p = foldr bind [const False] (nub (varsOf p))
@@ -62,11 +62,11 @@ tautologous p = all (eval p) (envsFor p)
 satisfiable :: Prop -> Bool
 satisfiable p = any (eval p) (envsFor p)
 
-instance Serial Name where
-  series     = cons0 P \/ cons0 Q \/ cons0 R
-  coseries d = [ \n -> case n of
-                       P -> x ; Q -> y ; R -> z
-               |  x <- alts0 d, y <- alts0 d, z <- alts0 d ]
+instance Serial Name where 
+  series        = cons0 P \/ cons0 Q \/ cons0 R 
+  coseries rs d = [ \n -> case n of
+                          P -> x ; Q -> y ; R -> z               
+                  |  x <- alts0 rs d, y <- alts0 rs d, z <- alts0 rs d ]
 
 instance Serial Prop where
   series = cons1 Var
@@ -86,7 +86,7 @@ prop_taut2 p =
   not (tautologous p) ==> exists (\e -> not $ eval p e)
 
 prop_sat1 :: Prop -> Env -> Property
-prop_sat1 p e =
+prop_sat1 p e = 
   eval p e ==> satisfiable p
 
 prop_sat2 :: Prop -> Property

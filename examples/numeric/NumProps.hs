@@ -1,9 +1,8 @@
-------------------------------------------
--- Illustrating numerics in SmallCheck 0.2
+----------------------------------------
+-- Illustrating numerics in SmallCheck
 -- Colin Runciman, November 2006.
-------------------------------------------
-
-module NumProps where
+-- Modified for SmallCheck 0.3, May 2008
+----------------------------------------
 
 import Test.SmallCheck
 
@@ -24,7 +23,8 @@ prop_primes1 (N n) =
 
 prop_primes2 :: Nat -> Property
 prop_primes2 (N n) =
-  n > 0 ==> exists $ \exponents ->
+  n > 0 ==> exists1 $ \exponents ->
+    (null exponents || last exponents /= N 0) && 
     n == product (zipWith power primes exponents)
   where
   power p (N e) = product (replicate e p)
@@ -42,7 +42,8 @@ main = do
   test1 "\\(N n) -> n > 1 ==> forAll (`take` primes) $ \\p ->\n\
         \  p `mod` n > 0 || n == p"
         prop_primes1
-  test1 "\\(N n) -> n > 0 ==> exists $ \\exponents ->\n\
+  test1 "\\(N n) -> n > 0 ==> exists1 $ \\exponents ->\n\
+        \  (null exponents || last exponents /= N 0) &&\n\
         \  n == product (zipWith power primes exponents)"
         prop_primes2
   test1 "\\x -> exp (log x) == x"

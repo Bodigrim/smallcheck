@@ -1,5 +1,5 @@
 Name:          smallcheck
-Version:       0.2.1
+Version:       0.4
 License:       BSD3
 License-File:  LICENSE
 Author:        Colin Runciman
@@ -12,27 +12,8 @@ Description:   SmallCheck is similar to QuickCheck (Claessen and Hughes 2000-) b
                instead of testing for a sample of randomly generated values, SmallCheck
                tests properties for all the finitely many values up to some depth,
                progressively increasing the depth used.
-               .
-               Folk-law: if there is any case in which a program
-               fails, there is almost always a simple one.
-               .
-               Corollary: if a program does not fail in any
-               simple case, it almost never fails.
-               .
-               Other possible sales pitches:
-               .
-               * write test generators for your own types more easily
-               .
-               * be sure any counter-examples found are minimal
-               .
-               * write properties using existentials as well as universals
-               .
-               * establish complete coverage of a defined test-space
-               .
-               * display counter-examples of functional type
-Homepage:      http://www.cs.york.ac.uk/fp/smallcheck0.2.tar
 
-Build-Depends: base
+Build-Depends: base, haskell98
 Build-Type:    Simple
 
 Extra-source-files: examples/numeric/NumProps.hs, examples/logical/LogicProps.hs,
@@ -40,9 +21,12 @@ Extra-source-files: examples/numeric/NumProps.hs, examples/logical/LogicProps.hs
                     examples/imperative/Machine.hs, examples/imperative/Behaviour.hs,
                     examples/imperative/Properties.hs, examples/imperative/Value.hs,
                     examples/imperative/StackMap.hs, examples/imperative/Compiler.hs,
-                    examples/listy/ListProps.hs, examples/regular/Regular.hs
+                    examples/listy/ListProps.hs, examples/regular/Regular.hs,
+                    examples/circuits/BitAdd.hs, examples/circuits/Mux.hs, examples/circuits/Sad.hs,
+                    examples/binarytries/BinaryTries.hs
 
 Data-files:         examples/numeric/README, examples/logical/README, examples/imperative/README,
-                    examples/listy/README, examples/regular/README, README
+                    examples/listy/README, examples/regular/README, examples/circuits/README,
+                    examples/binarytries/README, README
 
 Exposed-modules:    Test.SmallCheck

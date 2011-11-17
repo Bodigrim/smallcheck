@@ -7,3 +7,8 @@ floating-point series. Compile or interpret NumProps (SmallCheck is
 the only other module required) and run main for a small selection of
 self-introducing tests -- a couple about natural numbers and primes,
 and a couple about floating point numbers.
+
+For version 0.3 the second property about primes has been strengthened
+by making the existence unique.  The restriction on the exponent list
+was prompted by reports of non-uniqueness when the 'exists1' version
+was first tested.
