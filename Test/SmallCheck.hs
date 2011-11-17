@@ -21,10 +21,10 @@ module Test.SmallCheck (
   depth, inc, dec
   ) where
 
-import List (intersperse)
-import Monad (when)
-import IO (stdout, hFlush)
-import Foreign (unsafePerformIO)  -- used only for Testable (IO a)
+import Data.List (intersperse)
+import Control.Monad (when)
+import System.IO (stdout, hFlush)
+import System.IO.Unsafe (unsafePerformIO)  -- used only for Testable (IO a)
 
 ------------------ <Series of depth-bounded values> -----------------
 

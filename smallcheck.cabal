@@ -13,7 +13,7 @@ Description:   SmallCheck is similar to QuickCheck (Claessen and Hughes 2000-) b
                tests properties for all the finitely many values up to some depth,
                progressively increasing the depth used.
 
-Build-Depends: base, haskell98
+Build-Depends: base
 Build-Type:    Simple
 
 Extra-source-files: examples/numeric/NumProps.hs, examples/logical/LogicProps.hs,
