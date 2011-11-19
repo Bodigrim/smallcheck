@@ -31,3 +31,8 @@ Version 0.4
 -----------
 
 The module SmallCheck is now Test.SmallCheck.  Packaged with Cabal.
+
+Version 0.5
+-----------
+
+Make the package build with GHC 7.2. Some cosmetic changes.
