@@ -249,8 +249,8 @@ The name is intended to acknowledge QuickCheck, not to suggest that
 SmallCheck replaces it.  See also Lazy SmallCheck.  Each tool has its
 advantages and disadvantages when compared with the others.
 
-SmallCheck is a Haskell 98 package. It can be [obtained][hackage] from
-hackage.
+SmallCheck is a Haskell 98 package (aside from using unsafePerformIO to test IO
+computations). It can be [obtained][hackage] from hackage.
 
 [hackage]: http://hackage.haskell.org/package/smallcheck
 
