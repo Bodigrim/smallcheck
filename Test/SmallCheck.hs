@@ -1,3 +1,14 @@
+{-# LANGUAGE CPP #-}
+
+#ifdef GENERICS
+{-# LANGUAGE DefaultSignatures
+           , FlexibleContexts
+           , TypeOperators
+           , TypeSynonymInstances
+           , FlexibleInstances
+  #-}
+#endif
+
 ---------------------------------------------------------------------
 -- SmallCheck: another lightweight testing library.
 -- Colin Runciman, August 2006
@@ -25,6 +36,12 @@ import Data.List (intersperse)
 import Control.Monad (when)
 import System.IO (stdout, hFlush)
 import System.IO.Unsafe (unsafePerformIO)  -- used only for Testable (IO a)
+
+#ifdef GENERICS
+import GHC.Generics
+import Data.DList (DList, toList, fromList)
+import Data.Monoid (mempty, mappend)
+#endif
 
 ------------------ <Series of depth-bounded values> -----------------
 
@@ -56,6 +73,79 @@ s1 >< s2 = \d -> [(x,y) | x <- s1 d, y <- s2 d]
 class Serial a where
   series   :: Series a
   coseries :: Series b -> Series (a->b)
+
+#ifdef GENERICS
+  default series :: (Generic a, GSerial (Rep a)) => Series a
+  series = map to . gSeries
+
+  default coseries :: (Generic a, GSerial (Rep a)) => Series b -> Series (a->b)
+  coseries rs = map (. from) . gCoseries rs
+
+-------------------------- <Generic Serial> -------------------------
+
+class GSerial f where
+  gSeries   :: Series (f a)
+  gCoseries :: Series b -> Series (f a -> b)
+
+instance GSerial f => GSerial (M1 i c f) where
+  gSeries      = map M1 . gSeries
+  gCoseries rs = map (. unM1) . gCoseries rs
+  {-# INLINE gSeries #-}
+  {-# INLINE gCoseries #-}
+
+instance Serial c => GSerial (K1 i c) where
+  gSeries      = map K1 . series
+  gCoseries rs = map (. unK1) . coseries rs
+  {-# INLINE gSeries #-}
+  {-# INLINE gCoseries #-}
+
+instance GSerial U1 where
+  gSeries        = cons0 U1
+  gCoseries rs d = [\U1 -> b | b <- rs d]
+  {-# INLINE gSeries #-}
+  {-# INLINE gCoseries #-}
+
+instance (GSerial a, GSerial b) => GSerial (a :*: b) where
+  gSeries    d = [x :*: y | x <- gSeries d, y <- gSeries d]
+  gCoseries rs = map uncur . gCoseries (gCoseries rs)
+      where
+        uncur f (x :*: y) = f x y
+  {-# INLINE gSeries #-}
+  {-# INLINE gCoseries #-}
+
+instance (GSerialSum a, GSerialSum b) => GSerial (a :+: b) where
+  gSeries   = toList . gSeriesSum
+  gCoseries = gCoseriesSum
+  {-# INLINE gSeries #-}
+  {-# INLINE gCoseries #-}
+
+class GSerialSum f where
+  gSeriesSum   :: DSeries (f a)
+  gCoseriesSum :: Series b -> Series (f a -> b)
+
+type DSeries a = Int -> DList a
+
+instance (GSerialSum a, GSerialSum b) => GSerialSum (a :+: b) where
+  gSeriesSum      d = fmap L1 (gSeriesSum d) `mappend` fmap R1 (gSeriesSum d)
+  gCoseriesSum rs d = [ \e -> case e of
+                                L1 x -> f x
+                                R1 y -> g y
+                      | f <- gCoseriesSum rs d
+                      , g <- gCoseriesSum rs d
+                      ]
+  {-# INLINE gSeriesSum #-}
+  {-# INLINE gCoseriesSum #-}
+
+instance GSerial f => GSerialSum (C1 c f) where
+  gSeriesSum      d | d > 0     = fromList $ gSeries (d-1)
+                    | otherwise = mempty
+  gCoseriesSum rs d | d > 0     = gCoseries rs (d-1)
+                    | otherwise = [\_ -> x | x <- rs d]
+  {-# INLINE gSeriesSum #-}
+  {-# INLINE gCoseriesSum #-}
+#endif
+
+------------------------- <Serial instances> ------------------------
 
 instance Serial () where
   series      _ = [()]
