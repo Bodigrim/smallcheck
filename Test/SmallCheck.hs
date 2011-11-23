@@ -39,6 +39,8 @@ import System.IO.Unsafe (unsafePerformIO)  -- used only for Testable (IO a)
 
 #ifdef GENERICS
 import GHC.Generics
+import Data.DList (DList, toList, fromList)
+import Data.Monoid (mempty, mappend)
 #endif
 
 ------------------ <Series of depth-bounded values> -----------------
@@ -124,7 +126,7 @@ class GSerialSum f where
 type DSeries a = Int -> DList a
 
 instance (GSerialSum a, GSerialSum b) => GSerialSum (a :+: b) where
-  gSeriesSum      d = mapDL L1 (gSeriesSum d) `append` mapDL R1 (gSeriesSum d)
+  gSeriesSum      d = fmap L1 (gSeriesSum d) `mappend` fmap R1 (gSeriesSum d)
   gCoseriesSum rs d = [ \e -> case e of
                                 L1 x -> f x
                                 R1 y -> g y
@@ -136,35 +138,11 @@ instance (GSerialSum a, GSerialSum b) => GSerialSum (a :+: b) where
 
 instance GSerial f => GSerialSum (C1 c f) where
   gSeriesSum      d | d > 0     = fromList $ gSeries (d-1)
-                    | otherwise = empty
+                    | otherwise = mempty
   gCoseriesSum rs d | d > 0     = gCoseries rs (d-1)
                     | otherwise = [\_ -> x | x <- rs d]
   {-# INLINE gSeriesSum #-}
   {-# INLINE gCoseriesSum #-}
-
-------------------------- <Difference lists> ------------------------
-
-type DList a = [a] -> [a]
-
-empty :: DList a
-empty = id
-{-# INLINE empty #-}
-
-append :: DList a -> DList a -> DList a
-append = (.)
-{-# INLINE append #-}
-
-mapDL :: (a -> b) -> DList a -> DList b
-mapDL f = fromList . map f . toList
-{-# INLINE mapDL #-}
-
-fromList :: [a] -> DList a
-fromList = (++)
-{-# INLINE fromList #-}
-
-toList :: DList a -> [a]
-toList = ($ [])
-{-# INLINE toList #-}
 #endif
 
 ------------------------- <Serial instances> ------------------------
