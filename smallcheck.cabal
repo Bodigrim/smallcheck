@@ -43,7 +43,11 @@ Library
 
     Build-Depends: base == 4.*
 
-    Exposed-modules:    Test.SmallCheck
+    Exposed-modules:
+        Test.SmallCheck
+        Test.SmallCheck.Drivers
+        Test.SmallCheck.Property
+        Test.SmallCheck.Series
 
     if impl(ghc >= 7.2.1)
       cpp-options: -DGENERICS
