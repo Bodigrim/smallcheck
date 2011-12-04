@@ -3,6 +3,7 @@ module Test.SmallCheck (
 
   Testable,
   Property,
+  property,
 
   -- | The simplest kind of test is a function (possibly of many
   -- arguments) returning 'Bool'.

@@ -2,6 +2,7 @@ module Test.SmallCheck.Property (
   Result(..),
 
   Property, Testable(..),
+  property, mkProperty,
   forAll, forAllElem,
   exists, existsDeeperBy, thereExists, thereExistsElem,
   exists1, exists1DeeperBy, thereExists1, thereExists1Elem,
@@ -18,6 +19,17 @@ nothing = Result {ok = Nothing, arguments = []}
 
 -- | Wrapper type for 'Testable's
 newtype Property = Property (Int -> [Result])
+
+-- | Wrap a 'Testable' into a 'Property'
+property :: Testable a => a -> Property
+property = Property . test
+
+-- | A lower-level way to create properties. Use 'property' if possible.
+--
+-- The argument is a function that produces the list of results given the depth
+-- of testing.
+mkProperty :: (Int -> [Result]) -> Property
+mkProperty = Property
 
 -- | Anything of a 'Testable' type can be regarded as a \"test\"
 class Testable a where
