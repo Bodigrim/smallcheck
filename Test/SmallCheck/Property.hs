@@ -52,13 +52,10 @@ instance Testable Property where
 instance Testable a => Testable (IO a) where
   test = test . unsafePerformIO
 
-evaluate :: Testable a => a -> Series TestCase
-evaluate x d = rs where rs = test x d
-
 forAll :: (Show a, Testable b) => Series a -> (a->b) -> Property
 forAll xs f = Property $ \d ->
   [ r{arguments = show x : arguments r}
-  | x <- xs d, r <- evaluate (f x) d ]
+  | x <- xs d, r <- test (f x) d ]
 
 forAllElem :: (Show a, Testable b) => [a] -> (a->b) -> Property
 forAllElem xs = forAll (const xs)
@@ -68,7 +65,7 @@ existence u xs f = Property existenceDepth
   where
   existenceDepth d = [ TestCase (boolToResult valid) arguments ]
     where
-    witnesses = [ show x | x <- xs d, all (resultIsOk . result) (evaluate (f x) d) ]
+    witnesses = [ show x | x <- xs d, all (resultIsOk . result) (test (f x) d) ]
     valid     = enough witnesses
     enough    = if u then unique else (not . null)
     arguments = if valid then []
