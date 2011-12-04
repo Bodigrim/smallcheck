@@ -45,20 +45,20 @@ iterCheck dFrom mdTo t = iter dFrom
           (\dTo -> when (ok && d < dTo) $ iter (d+1))
           mdTo
 
-check :: Bool -> Integer -> Integer -> Bool -> [Result] -> IO Bool
+check :: Bool -> Integer -> Integer -> Bool -> [TestCase] -> IO Bool
 check i n x ok rs | null rs = do
   putStr ("  Completed "++show n++" test(s)")
   putStrLn (if ok then " without failure." else ".")
   when (x > 0) $
     putStrLn ("  But "++show x++" did not meet ==> condition.")
   return ok
-check i n x ok (Result Nothing _ : rs) = do
+check i n x ok (TestCase Inappropriate _ : rs) = do
   progressReport i n x
   check i (n+1) (x+1) ok rs
-check i n x f (Result (Just True) _ : rs) = do
+check i n x f (TestCase Pass _ : rs) = do
   progressReport i n x
   check i (n+1) x f rs
-check i n x f (Result (Just False) args : rs) = do
+check i n x f (TestCase Fail args : rs) = do
   putStrLn ("  Failed test no. "++show (n+1)++". Test values follow.")
   mapM_ (putStrLn . ("  "++)) args
   ( if i then

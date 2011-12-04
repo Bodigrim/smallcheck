@@ -1,5 +1,6 @@
 module Test.SmallCheck.Property (
-  Result(..),
+  TestCase(..),
+  TestResult(..),
 
   Property, Testable(..),
   property, mkProperty,
@@ -12,13 +13,16 @@ module Test.SmallCheck.Property (
 import Test.SmallCheck.Series
 import System.IO.Unsafe (unsafePerformIO)  -- used only for Testable (IO a)
 
-data Result = Result {ok :: Maybe Bool, arguments :: [String]}
-
-nothing :: Result
-nothing = Result {ok = Nothing, arguments = []}
+data TestResult
+    = Pass
+    | Fail
+    | Inappropriate
+        -- ^ 'Inappropriate' means that the precondition of '==>'
+        -- was not satisfied
+data TestCase = TestCase { result :: TestResult, arguments :: [String] }
 
 -- | Wrapper type for 'Testable's
-newtype Property = Property (Int -> [Result])
+newtype Property = Property (Int -> [TestCase])
 
 -- | Wrap a 'Testable' into a 'Property'
 property :: Testable a => a -> Property
@@ -28,15 +32,15 @@ property = Property . test
 --
 -- The argument is a function that produces the list of results given the depth
 -- of testing.
-mkProperty :: (Int -> [Result]) -> Property
+mkProperty :: (Int -> [TestCase]) -> Property
 mkProperty = Property
 
 -- | Anything of a 'Testable' type can be regarded as a \"test\"
 class Testable a where
-  test :: a -> Int -> [Result]
+  test :: a -> Int -> [TestCase]
 
 instance Testable Bool where
-  test b _ = [Result (Just b) []]
+  test b _ = [TestCase (boolToResult b) []]
 
 instance (Serial a, Show a, Testable b) => Testable (a->b) where
   test f = f' where Property f' = forAll series f
@@ -48,7 +52,7 @@ instance Testable Property where
 instance Testable a => Testable (IO a) where
   test = test . unsafePerformIO
 
-evaluate :: Testable a => a -> Series Result
+evaluate :: Testable a => a -> Series TestCase
 evaluate x d = rs where rs = test x d
 
 forAll :: (Show a, Testable b) => Series a -> (a->b) -> Property
@@ -62,9 +66,9 @@ forAllElem xs = forAll (const xs)
 existence :: (Show a, Testable b) => Bool -> Series a -> (a->b) -> Property
 existence u xs f = Property existenceDepth
   where
-  existenceDepth d = [ Result (Just valid) arguments ]
+  existenceDepth d = [ TestCase (boolToResult valid) arguments ]
     where
-    witnesses = [ show x | x <- xs d, all pass (evaluate (f x) d) ]
+    witnesses = [ show x | x <- xs d, all (resultIsOk . result) (evaluate (f x) d) ]
     valid     = enough witnesses
     enough    = if u then unique else (not . null)
     arguments = if valid then []
@@ -75,9 +79,15 @@ unique :: [a] -> Bool
 unique [_] = True
 unique  _  = False
 
-pass :: Result -> Bool
-pass (Result Nothing _)  = True
-pass (Result (Just b) _) = b
+resultIsOk :: TestResult -> Bool
+resultIsOk r =
+    case r of
+        Fail -> False
+        Pass -> True
+        Inappropriate -> True
+
+boolToResult :: Bool -> TestResult
+boolToResult b = if b then Pass else Fail
 
 thereExists :: (Show a, Testable b) => Series a -> (a->b) -> Property
 thereExists = existence False
@@ -151,3 +161,5 @@ infixr 0 ==>
 (==>) :: Testable a => Bool -> a -> Property
 True ==>  x = Property (test x)
 False ==> x = Property (const [nothing])
+    where
+    nothing = TestCase { result = Inappropriate, arguments = [] }
