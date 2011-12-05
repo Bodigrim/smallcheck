@@ -1,6 +1,7 @@
 module Test.SmallCheck.Property (
   TestCase(..),
   TestResult(..),
+  resultIsOk,
 
   Property, Testable(..),
   property, mkProperty,
