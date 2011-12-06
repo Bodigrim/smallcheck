@@ -4,6 +4,7 @@ module Test.Framework.Providers.SmallCheck (testProperty) where
 import Test.Framework.Providers.API
 import qualified Test.SmallCheck.Property as SC
 import Data.Maybe
+import Data.List
 
 testProperty :: SC.Testable a => TestName -> Int -> a -> Test
 testProperty name depth prop = Test name $ Property $ SC.test prop depth
@@ -13,8 +14,13 @@ newtype Property = Property [SC.TestCase]
 data Result
     = Timeout
     | Pass
-    | Fail String
-    deriving Show
+    | Fail [String]
+
+instance Show Result where
+    show Timeout  = "Timed out"
+    show Pass     = "OK"
+    show (Fail s) =
+        intercalate "\n" $ "Failed with arguments: " : s
 
 instance TestResultlike Int Result where
     testSucceeded Pass = True
@@ -34,4 +40,4 @@ runSmallCheck (Property tests) = foldr go (const $ return Pass) tests 1
     go test rest n =
         if SC.resultIsOk (SC.result test)
             then yieldImprovement n >> (rest $! n+1)
-            else return $ Fail $ show $ SC.arguments test
+            else return $ Fail $ SC.arguments test
