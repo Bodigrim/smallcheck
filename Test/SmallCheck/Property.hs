@@ -12,7 +12,6 @@ module Test.SmallCheck.Property (
   ) where
 
 import Test.SmallCheck.Series
-import System.IO.Unsafe (unsafePerformIO)  -- used only for Testable (IO a)
 
 data TestResult
     = Pass
@@ -48,10 +47,6 @@ instance (Serial a, Show a, Testable b) => Testable (a->b) where
 
 instance Testable Property where
   test (Property f) d = f d
-
--- For testing properties involving IO.  Unsafe, so use with care!
-instance Testable a => Testable (IO a) where
-  test = test . unsafePerformIO
 
 forAll :: (Show a, Testable b) => Series a -> (a->b) -> Property
 forAll xs f = Property $ \d ->
