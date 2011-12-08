@@ -28,8 +28,10 @@ instance Testlike Int Result SC.Property where
     testTypeName _ = "Properties"
 
     runTest topts prop = runImprovingIO $ do
-        mb_result <- maybeTimeoutImprovingIO (unK (topt_timeout topts)) $
-            runSmallCheck prop (unK $ topt_maximum_test_depth topts)
+        let timeout = unK $ topt_timeout topts
+            depth   = unK $ topt_maximum_test_depth topts
+        mb_result <- maybeTimeoutImprovingIO timeout $
+            runSmallCheck prop depth
         return $ fromMaybe Timeout mb_result
 
 runSmallCheck :: SC.Property -> Int -> ImprovingIO Int f Result
