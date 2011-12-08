@@ -6,10 +6,8 @@ import qualified Test.SmallCheck.Property as SC
 import Data.Maybe
 import Data.List
 
-testProperty :: SC.Testable a => TestName -> Int -> a -> Test
-testProperty name depth prop = Test name $ Property $ SC.test prop depth
-
-newtype Property = Property [SC.TestCase]
+testProperty :: SC.Testable a => TestName -> a -> Test
+testProperty name prop = Test name $ SC.property prop
 
 data Result
     = Timeout
@@ -26,16 +24,16 @@ instance TestResultlike Int Result where
     testSucceeded Pass = True
     testSucceeded _    = False
 
-instance Testlike Int Result Property where
+instance Testlike Int Result SC.Property where
     testTypeName _ = "Properties"
 
     runTest topts prop = runImprovingIO $ do
         mb_result <- maybeTimeoutImprovingIO (unK (topt_timeout topts)) $
-            runSmallCheck prop
+            runSmallCheck prop (unK $ topt_maximum_test_depth topts)
         return $ fromMaybe Timeout mb_result
 
-runSmallCheck :: Property -> ImprovingIO Int f Result
-runSmallCheck (Property tests) = foldr go (const $ return Pass) tests 1
+runSmallCheck :: SC.Property -> Int -> ImprovingIO Int f Result
+runSmallCheck prop depth = foldr go (const $ return Pass) (SC.test prop depth) 1
     where
     go test rest n =
         if SC.resultIsOk (SC.result test)
