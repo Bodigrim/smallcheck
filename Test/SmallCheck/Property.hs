@@ -1,14 +1,22 @@
 module Test.SmallCheck.Property (
+  -- * Basic definitions
   TestCase(..),
   TestResult(..),
   resultIsOk,
 
   Property, Depth, Testable(..),
   property, mkProperty,
+
+  -- * Constructing tests
+  (==>), exists, existsDeeperBy, exists1, exists1DeeperBy,
+  -- ** Series- and list-based constructors
+  -- | Combinators below can be used to explicitly specify the domain of
+  -- quantification (as 'Series' or lists).
+  --
+  -- Hopefully, their meaning is evident from their names and types.
   forAll, forAllElem,
-  exists, existsDeeperBy, thereExists, thereExistsElem,
-  exists1, exists1DeeperBy, thereExists1, thereExists1Elem,
-  (==>)
+  thereExists, thereExistsElem,
+  thereExists1, thereExists1Elem
   ) where
 
 import Test.SmallCheck.Series
@@ -72,6 +80,7 @@ unique :: [a] -> Bool
 unique [_] = True
 unique  _  = False
 
+-- | Return 'False' iff the result is 'Fail'
 resultIsOk :: TestResult -> Bool
 resultIsOk r =
     case r of
