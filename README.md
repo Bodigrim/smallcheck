@@ -18,7 +18,7 @@ To get started with SmallCheck:
 * Install it and give it a try!  
   `cabal update; cabal install smallcheck`
 * Read the [paper][paper] or [other materials][oldpage] from the original
-  authors of SmallCheck (note that information might be somewhat outdated)
+  authors of SmallCheck (note that that information might be somewhat outdated)
 * If you see something that can be improved, please [submit an issue][issues]
 * Check out [the source code][github] at GitHub
 
