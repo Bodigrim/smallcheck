@@ -34,7 +34,7 @@ instance Testlike Int Result SC.Property where
             runSmallCheck prop depth
         return $ fromMaybe Timeout mb_result
 
-runSmallCheck :: SC.Property -> Int -> ImprovingIO Int f Result
+runSmallCheck :: SC.Property -> SC.Depth -> ImprovingIO Int f Result
 runSmallCheck prop depth = foldr go (const $ return Pass) (SC.test prop depth) 1
     where
     go test rest n =

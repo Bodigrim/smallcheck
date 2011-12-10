@@ -3,7 +3,7 @@ module Test.SmallCheck.Property (
   TestResult(..),
   resultIsOk,
 
-  Property, Testable(..),
+  Property, Depth, Testable(..),
   property, mkProperty,
   forAll, forAllElem,
   exists, existsDeeperBy, thereExists, thereExistsElem,
@@ -22,7 +22,7 @@ data TestResult
 data TestCase = TestCase { result :: TestResult, arguments :: [String] }
 
 -- | Wrapper type for 'Testable's
-newtype Property = Property (Int -> [TestCase])
+newtype Property = Property (Depth -> [TestCase])
 
 -- | Wrap a 'Testable' into a 'Property'
 property :: Testable a => a -> Property
@@ -32,12 +32,12 @@ property = Property . test
 --
 -- The argument is a function that produces the list of results given the depth
 -- of testing.
-mkProperty :: (Int -> [TestCase]) -> Property
+mkProperty :: (Depth -> [TestCase]) -> Property
 mkProperty = Property
 
 -- | Anything of a 'Testable' type can be regarded as a \"test\"
 class Testable a where
-  test :: a -> Int -> [TestCase]
+  test :: a -> Depth -> [TestCase]
 
 instance Testable Bool where
   test b _ = [TestCase (boolToResult b) []]
@@ -116,16 +116,16 @@ exists1 = thereExists1 series
 -- >prop_append1 :: [Bool] -> [Bool] -> Property
 -- >prop_append1 xs ys = exists $ \zs -> zs == xs++ys
 --
--- 'existsDeeperBy' transforms the depth bound by a given @'Int' -> 'Int'@ function:
+-- 'existsDeeperBy' transforms the depth bound by a given @'Depth' -> 'Depth'@ function:
 --
 -- >prop_append2 :: [Bool] -> [Bool] -> Property
 -- >prop_append2 xs ys = existsDeeperBy (*2) $ \zs -> zs == xs++ys
-existsDeeperBy :: (Show a, Serial a, Testable b) => (Int->Int) -> (a->b) -> Property
+existsDeeperBy :: (Show a, Serial a, Testable b) => (Depth->Depth) -> (a->b) -> Property
 existsDeeperBy f = thereExists (series . f)
 
 -- | Like 'existsDeeperBy', but additionally require the uniqueness of the
 -- argument satisfying the predicate
-exists1DeeperBy :: (Show a, Serial a, Testable b) => (Int->Int) -> (a->b) -> Property
+exists1DeeperBy :: (Show a, Serial a, Testable b) => (Depth->Depth) -> (a->b) -> Property
 exists1DeeperBy f = thereExists1 (series . f)
 
 infixr 0 ==>

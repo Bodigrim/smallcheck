@@ -41,6 +41,7 @@ module Test.SmallCheck (
   (==>),
 
   -- * Running tests
+  Depth,
   smallCheck, depthCheck, smallCheckI
   ) where
 

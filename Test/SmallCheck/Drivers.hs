@@ -8,11 +8,11 @@ import Test.SmallCheck.Property
 
 -- | Run series of tests using depth bounds 0..d, stopping if any test fails,
 -- and print a summary report or a counter-example.
-smallCheck :: Testable a => Int -> a -> IO ()
+smallCheck :: Testable a => Depth -> a -> IO ()
 smallCheck d = iterCheck 0 (Just d)
 
 -- | Same as 'smallCheck', but test for values of depth d only
-depthCheck :: Testable a => Int -> a -> IO ()
+depthCheck :: Testable a => Depth -> a -> IO ()
 depthCheck d = iterCheck d (Just d)
 
 -- | Interactive variant, asking the user whether testing should
@@ -34,7 +34,7 @@ depthCheck d = iterCheck d (Just d)
 smallCheckI :: Testable a => a -> IO ()
 smallCheckI = iterCheck 0 Nothing
 
-iterCheck :: Testable a => Int -> Maybe Int -> a -> IO ()
+iterCheck :: Testable a => Depth -> Maybe Depth -> a -> IO ()
 iterCheck dFrom mdTo t = iter dFrom
   where
   iter d = do

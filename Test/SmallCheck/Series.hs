@@ -11,6 +11,7 @@
 
 module Test.SmallCheck.Series (
   -- * Series
+  Depth,
   Series,
   (\/), (><), two, three, four,
 
@@ -29,14 +30,16 @@ import Data.DList (DList, toList, fromList)
 import Data.Monoid (mempty, mappend)
 #endif
 
--- | 'Series' is a function from the depth to a finite list of values.
+-- | Maximum depth of generated test values
 --
--- For data values, the "depth" is the depth of nested constructor applications.
+-- For data values, it is the depth of nested constructor applications.
 --
--- For functional values, the "depth" is both the depth of nested case analysis
--- and the depth of results
+-- For functional values, it is both the depth of nested case analysis
+-- and the depth of results.
+type Depth = Int
 
-type Series a = Int -> [a]
+-- | 'Series' is a function from the depth to a finite list of values.
+type Series a = Depth -> [a]
 
 -- | Sum of series
 infixr 7 \/
@@ -99,7 +102,7 @@ class GSerialSum f where
   gSeriesSum   :: DSeries (f a)
   gCoseriesSum :: Series b -> Series (f a -> b)
 
-type DSeries a = Int -> DList a
+type DSeries a = Depth -> DList a
 
 instance (GSerialSum a, GSerialSum b) => GSerialSum (a :+: b) where
   gSeriesSum      d = fmap L1 (gSeriesSum d) `mappend` fmap R1 (gSeriesSum d)
@@ -295,15 +298,15 @@ instance (Serial a, Serial b) => Serial (a->b) where
                     | f <- coseries (nest as) d ]
 
 -- | For customising the depth measure. Use with care!
-depth :: Int -> Int -> Int
+depth :: Depth -> Depth -> Depth
 depth d d' | d >= 0    = d'+1-d
            | otherwise = error "SmallCheck.depth: argument < 0"
 
-dec :: Int -> Int
+dec :: Depth -> Depth
 dec d | d > 0     = d-1
       | otherwise = error "SmallCheck.dec: argument <= 0"
 
-inc :: Int -> Int
+inc :: Depth -> Depth
 inc d = d+1
 
 -- show the extension of a function (in part, bounded both by
@@ -326,4 +329,4 @@ instance (Serial a, Show a, Show b) => Show (a->b) where
                            | (a,r) <- ars]
     indent = unlines . map ("  "++) . lines
     height = length . lines
-    (widthLimit,lengthLimit,depthLimit) = (80,20,3)::(Int,Int,Int)
+    (widthLimit,lengthLimit,depthLimit) = (80,20,3)::(Int,Int,Depth)
