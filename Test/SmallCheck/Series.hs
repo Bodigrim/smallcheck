@@ -90,7 +90,7 @@ module Test.SmallCheck.Series (
   -- default definitions that use the 'Generic' instance.
 
   -- * Other useful definitions
-  (\/), (><), two, three, four,
+  (\/), (><),
   N(..), Nat, Natural,
   depth
   ) where
@@ -278,15 +278,6 @@ uncurry3 f (x,y,z) = f x y z
 
 uncurry4 :: (a->b->c->d->e) -> ((a,b,c,d)->e)
 uncurry4 f (w,x,y,z) = f w x y z
-
-two   :: Series a -> Series (a,a)
-two   s = s >< s
-
-three :: Series a -> Series (a,a,a)
-three s = \d -> [(x,y,z) | (x,(y,z)) <- (s >< s >< s) d]
-
-four  :: Series a -> Series (a,a,a,a)
-four  s = \d -> [(w,x,y,z) | (w,(x,(y,z))) <- (s >< s >< s >< s) d]
 
 cons0 ::
          a -> Series a
