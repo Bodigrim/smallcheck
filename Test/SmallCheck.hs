@@ -1,15 +1,15 @@
 module Test.SmallCheck (
   -- * Constructing tests
 
-  Testable,
-  Property,
-  property,
-
   -- | The simplest kind of test is a function (possibly of many
   -- arguments) returning 'Bool'.
   --
   -- In addition, you can use the combinators shown below. For more
   -- advanced combinators, see "Test.SmallCheck.Property".
+
+  Testable,
+  Property,
+  property,
 
   -- ** Existential quantification
 
