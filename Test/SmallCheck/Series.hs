@@ -10,16 +10,89 @@
 #endif
 
 module Test.SmallCheck.Series (
-  -- * Series
-  Depth,
-  Series,
-  (\/), (><), two, three, four,
+  -- * Basic definitions
+  Depth, Series, Serial(..),
 
-  Serial(..),
+  -- * Data Generators
+  -- | SmallCheck itself defines data generators for all the data types used
+  -- by the Prelude.
+  --
+  -- Writing SmallCheck generators for application-specific types is
+  -- straightforward. You need to define a 'series' generator, typically using
+  -- @consN@ family of generic combinators where N is constructor arity.
+  --
+  -- For example:
+  --
+  -- >data Tree a = Null | Fork (Tree a) a (Tree a)
+  -- >
+  -- >instance Serial a => Serial (Tree a) where
+  -- >  series = cons0 Null \/ cons3 Fork
+  --
+  -- The default interpretation of depth for datatypes is the depth of nested
+  -- construction: constructor functions, including those for newtypes, build
+  -- results with depth one greater than their deepest argument.  But this
+  -- default can be over-ridden by composing a @consN@ application with an
+  -- application of 'depth', like this:
+  --
+  -- >newtype Light a = Light a
+  -- >
+  -- >instance Serial a => Serial (Light a) where
+  -- >  series = cons1 Light . depth 0
+  --
+  -- The depth of @Light x@ is just the depth of @x@.
+
   cons0, cons1, cons2, cons3, cons4,
+  -- * Function Generators
+
+  -- | To generate functions of an application-specific argument type
+  -- requires a second method 'coseries'.  Again there is a standard
+  -- pattern, this time using the altsN combinators where again N is
+  -- constructor arity.  Here are Tree and Light instances:
+  --
+  -- >coseries rs d = [ \t -> case t of
+  -- >                        Null         -> z
+  -- >                        Fork t1 x t2 -> f t1 x t2
+  -- >                |  z <- alts0 rs d ,
+  -- >                   f <- alts3 rs d ]
+  -- >
+  -- >coseries rs d = [ \l -> case l of
+  -- >                        Light x -> f x
+  -- >                |  f <- (alts1 rs . depth 0) d ]
   alts0, alts1, alts2, alts3, alts4,
+
+  -- * Automated Derivation of Generators
+
+  -- | For small examples, Series instances are easy enough to define by hand,
+  -- following the above patterns.  But for programs with many or large data
+  -- type definitions, automatic derivation using a tool such as \"derive\"
+  -- is a better option. For example, the following command-line appends to
+  -- Prog.hs the Series instances for all data types defined there.
+  --
+  -- >$ derive Prog.hs -d Serial --append
+
+  -- ** Using GHC Generics
+  -- | For GHC users starting from GHC 7.2.1 there's also an option to use GHC's
+  -- Generics to get 'Serial' instance for free.
+  --
+  -- Example:
+  --
+  -- >{-# LANGUAGE DeriveGeneric #-}
+  -- >import Test.SmallCheck
+  -- >import GHC.Generics
+  -- >
+  -- >data Tree a = Null | Fork (Tree a) a (Tree a)
+  -- >    deriving Generic
+  -- >instance Serial a => Serial (Tree a)
+  --
+  -- Here we enable the @DeriveGeneric@ extension which allows to derive 'Generic'
+  -- instance for our data type. Then we declare that @Tree a@ is an instance of
+  -- 'Serial', but do not provide any definitions. This causes GHC to use the
+  -- default definitions that use the 'Generic' instance.
+
+  -- * Other useful definitions
+  (\/), (><), two, three, four,
   N(..), Nat, Natural,
-  depth, inc, dec
+  depth
   ) where
 
 import Data.List (intersperse)
@@ -41,7 +114,7 @@ type Depth = Int
 -- | 'Series' is a function from the depth to a finite list of values.
 type Series a = Depth -> [a]
 
--- | Sum of series
+-- | Sum (union) of series
 infixr 7 \/
 (\/) :: Series a -> Series a -> Series a
 s1 \/ s2 = \d -> s1 d ++ s2 d
@@ -142,6 +215,11 @@ instance Serial Integer where
   coseries rs d = [ f . (fromInteger :: Integer->Int)
                   | f <- coseries rs d ]
 
+-- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
+-- to be generated. Generated functions of type @N a -> b@ do not distinguish
+-- different negative values of @a@.
+--
+-- See also 'Nat' and 'Natural'.
 newtype N a = N a
               deriving (Eq, Ord)
 
