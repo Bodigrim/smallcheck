@@ -1,3 +1,12 @@
+--------------------------------------------------------------------
+-- |
+-- Module    : Test.SmallCheck.Drivers
+-- Copyright : (c) Colin Runciman et al.
+-- License   : BSD3
+-- Maintainer: Roman Cheplyaka <roma@ro-che.info>
+--
+-- Functions to run SmallCheck tests.
+--------------------------------------------------------------------
 module Test.SmallCheck.Drivers (
   smallCheck, smallCheckI, depthCheck
   ) where

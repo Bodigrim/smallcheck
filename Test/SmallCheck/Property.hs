@@ -1,3 +1,12 @@
+--------------------------------------------------------------------
+-- |
+-- Module    : Test.SmallCheck.Property
+-- Copyright : (c) Colin Runciman et al.
+-- License   : BSD3
+-- Maintainer: Roman Cheplyaka <roma@ro-che.info>
+--
+-- Properties and tools to construct them.
+--------------------------------------------------------------------
 module Test.SmallCheck.Property (
   -- * Basic definitions
   TestCase(..),

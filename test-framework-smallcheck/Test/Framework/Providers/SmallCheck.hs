@@ -1,3 +1,12 @@
+--------------------------------------------------------------------
+-- |
+-- Module    : Test.Framework.Providers.SmallCheck
+-- Copyright : (c) Roman Cheplyaka
+-- License   : BSD3
+-- Maintainer: Roman Cheplyaka <roma@ro-che.info>
+--
+-- This module allows to use SmallCheck properties in test-framework.
+--------------------------------------------------------------------
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Test.Framework.Providers.SmallCheck
     ( testProperty

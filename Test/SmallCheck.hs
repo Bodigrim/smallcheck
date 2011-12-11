@@ -1,3 +1,16 @@
+--------------------------------------------------------------------
+-- |
+-- Module    : Test.SmallCheck
+-- Copyright : (c) Colin Runciman et al.
+-- License   : BSD3
+-- Maintainer: Roman Cheplyaka <roma@ro-che.info>
+--
+-- This module exports the main pieces of SmallCheck functionality.
+--
+-- For pointers to other sources of information about SmallCheck, please refer
+-- to the README at
+-- <https://github.com/feuerbach/smallcheck/blob/master/README.md>
+--------------------------------------------------------------------
 module Test.SmallCheck (
   -- * Constructing tests
 

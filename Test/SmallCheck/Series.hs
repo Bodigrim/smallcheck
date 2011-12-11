@@ -1,3 +1,12 @@
+--------------------------------------------------------------------
+-- |
+-- Module    : Test.SmallCheck.Series
+-- Copyright : (c) Colin Runciman et al.
+-- License   : BSD3
+-- Maintainer: Roman Cheplyaka <roma@ro-che.info>
+--
+-- Generation of test data.
+--------------------------------------------------------------------
 {-# LANGUAGE CPP #-}
 
 #ifdef GENERICS
