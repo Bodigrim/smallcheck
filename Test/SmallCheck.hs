@@ -41,8 +41,18 @@ module Test.SmallCheck (
   (==>),
 
   -- * Running tests
-  Depth,
-  smallCheck, depthCheck, smallCheckI
+  -- | The functions below can be used to run SmallCheck tests.
+  --
+  -- As an alternative, consider using @test-framework@ package.
+  --
+  -- It allows to organize SmallCheck properties into a test suite (possibly
+  -- together with HUnit or QuickCheck tests), apply timeouts, get nice
+  -- statistics etc.
+  --
+  -- To use SmallCheck properties with test-framework, install
+  -- @test-framework-smallcheck@ package.
+  smallCheck, depthCheck, smallCheckI,
+  Depth
   ) where
 
 import Test.SmallCheck.Property
