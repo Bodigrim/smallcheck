@@ -6,6 +6,7 @@ import qualified Test.SmallCheck.Property as SC
 import Data.Maybe
 import Data.List
 
+-- | Create a 'Test' for a SmallCheck 'SC.Testable' property
 testProperty :: SC.Testable a => TestName -> a -> Test
 testProperty name prop = Test name $ SC.property prop
 
