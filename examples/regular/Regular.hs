@@ -5,6 +5,7 @@ import List (intersperse)
 import Monad (liftM)
 
 import Test.SmallCheck
+import Test.SmallCheck.Series
 
 -- A data type of regular expressions.
 
@@ -97,21 +98,7 @@ instance Serial RE where
         \/ cons1 cat
         \/ cons1 Rep
 
-prop_readShow :: RE -> IO Bool
-prop_readShow re = do
-  writeFile "tmp" (show re)
-  re' <- liftM read (readFile "tmp")
-  return (re'==re)
+prop_readShow :: RE -> Bool
+prop_readShow re = read (show re) == re
 
-main = do
-  rule
-  putStrLn "Testing property involving IO.  Always returns True?"
-  putStrLn "do\n\
-           \  writeFile \"tmp\" (show re)\n\
-           \  re' <- liftM read (readFile \"tmp\")\n\
-           \  return (re'==re)"
-  rule
-  smallCheck 4 prop_readShow
-  where
-  rule = putStrLn
-           "----------------------------------------------------"
+main = smallCheck 4 prop_readShow

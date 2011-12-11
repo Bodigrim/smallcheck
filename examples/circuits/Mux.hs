@@ -1,5 +1,6 @@
 import List
 import Test.SmallCheck
+import Test.SmallCheck.Series
 
 type Bit             =  Bool
 

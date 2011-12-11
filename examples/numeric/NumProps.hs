@@ -5,6 +5,8 @@
 ----------------------------------------
 
 import Test.SmallCheck
+import Test.SmallCheck.Series
+import Test.SmallCheck.Property
 
 primes :: [Int]
 primes = sieve [2..]

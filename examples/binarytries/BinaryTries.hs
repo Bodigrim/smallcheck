@@ -7,6 +7,7 @@
 module BinaryTries where
 
 import Test.SmallCheck
+import Test.SmallCheck.Series
 
 -- first representation
 
