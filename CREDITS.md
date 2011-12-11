@@ -11,3 +11,10 @@ Colin Runciman:
 > the better method for functional coseries, to Neil Mitchell for
 > automating the derivation of Serial instances, to Matt Naylor for
 > the circuit-design examples and to Gwern Branwen for Cabal packaging.
+
+Contributors
+------------
+
+The following people have contributed to SmallCheck:
+
+* Bas van Dijk (default Generic implementation of Serial instance)
