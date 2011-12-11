@@ -17,15 +17,17 @@ Description: Support for SmallCheck tests in test-framework
 Source-repository head
   type:     git
   location: git://github.com/feuerbach/smallcheck.git
+  subdir:   test-framework-smallcheck
 
 Source-repository this
   type:     git
   location: git://github.com/feuerbach/smallcheck.git
   tag:      testframework-v0.1
+  subdir:   test-framework-smallcheck
 
 Library
         Exposed-Modules:        Test.Framework.Providers.SmallCheck
 
-        Build-Depends:          test-framework >= 0.2.0 && < 0.5.0,
-                                smallcheck >= 0.5,
+        Build-Depends:          test-framework >= 0.4.2.0 && < 0.5,
+                                smallcheck >= 0.6,
                                 base >= 4 && < 5
