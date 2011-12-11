@@ -1,14 +1,24 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Test.Framework.Providers.SmallCheck (testProperty) where
+module Test.Framework.Providers.SmallCheck
+    ( testProperty
+    , withDepth
+    ) where
 
 import Test.Framework.Providers.API
 import qualified Test.SmallCheck.Property as SC
 import Data.Maybe
 import Data.List
+import Data.Monoid
 
 -- | Create a 'Test' for a SmallCheck 'SC.Testable' property
 testProperty :: SC.Testable a => TestName -> a -> Test
 testProperty name prop = Test name $ SC.property prop
+
+-- | Change the default maximum test depth for a given 'Test'.
+--
+-- This is a simple wrapper around 'plusTestOptions'.
+withDepth :: SC.Depth -> Test -> Test
+withDepth d = plusTestOptions mempty { topt_maximum_test_depth = Just d }
 
 data Result
     = Timeout
