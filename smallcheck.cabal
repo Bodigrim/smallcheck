@@ -1,5 +1,5 @@
 Name:          smallcheck
-Version:       0.5
+Version:       0.6
 Cabal-Version: >= 1.6
 License:       BSD3
 License-File:  LICENSE
@@ -23,11 +23,14 @@ Extra-source-files: examples/numeric/NumProps.hs, examples/logical/LogicProps.hs
                     examples/imperative/StackMap.hs, examples/imperative/Compiler.hs,
                     examples/listy/ListProps.hs, examples/regular/Regular.hs,
                     examples/circuits/BitAdd.hs, examples/circuits/Mux.hs, examples/circuits/Sad.hs,
-                    examples/binarytries/BinaryTries.hs
-
-Data-files:         examples/numeric/README, examples/logical/README, examples/imperative/README,
+                    examples/binarytries/BinaryTries.hs,
+                    examples/numeric/README, examples/logical/README, examples/imperative/README,
                     examples/listy/README, examples/regular/README, examples/circuits/README,
-                    examples/binarytries/README, README.md, CREDITS.md, CHANGES.md
+                    examples/binarytries/README,
+                    README.md, CREDITS.md, CHANGES.md,
+                    examples/run-examples.sh
+
+
 
 Source-repository head
   type:     git
@@ -36,7 +39,7 @@ Source-repository head
 Source-repository this
   type:     git
   location: git://github.com/feuerbach/smallcheck.git
-  tag:      v0.5
+  tag:      v0.6
 
 Library
 
