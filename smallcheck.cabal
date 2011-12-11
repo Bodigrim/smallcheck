@@ -10,11 +10,10 @@ Bug-reports:   https://github.com/feuerbach/smallcheck/issues
 
 Stability:     Beta
 Category:      Testing
-Synopsis:      Another lightweight testing library in Haskell.
-Description:   SmallCheck is similar to QuickCheck (Claessen and Hughes 2000-) but
-               instead of testing for a sample of randomly generated values, SmallCheck
-               tests properties for all the finitely many values up to some depth,
-               progressively increasing the depth used.
+Synopsis:      A property-based testing library
+Description:   SmallCheck is a testing library that allows to verify properties
+               for all test cases up to some depth. The test cases are generated
+               automatically by SmallCheck.
 Build-Type:    Simple
 
 Extra-source-files: examples/numeric/NumProps.hs, examples/logical/LogicProps.hs,
