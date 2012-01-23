@@ -121,6 +121,8 @@ import Data.Monoid (mempty, mappend)
 type Depth = Int
 
 -- | 'Series' is a function from the depth to a finite list of values.
+--
+-- If @s@ is a 'Series', @s n@ is expected to yield values of depth up to @n@.
 type Series a = Depth -> [a]
 
 -- | Sum (union) of series
