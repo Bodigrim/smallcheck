@@ -28,6 +28,6 @@ Source-repository this
 Library
         Exposed-Modules:        Test.Framework.Providers.SmallCheck
 
-        Build-Depends:          test-framework >= 0.4.2.0 && < 0.5,
+        Build-Depends:          test-framework >= 0.4.2.0 && < 1.0,
                                 smallcheck >= 0.6,
                                 base >= 4 && < 5
