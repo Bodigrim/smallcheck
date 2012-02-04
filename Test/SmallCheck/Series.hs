@@ -61,8 +61,7 @@ module Test.SmallCheck.Series (
   -- >f x_1 ... x_N
   --
   -- where @x_i@ ranges over all values of type @t_i@ of depth up to @d-1@
-  -- (as defined by the 'series' functions for the corresponding
-  -- types).
+  -- (as defined by the 'series' functions for @t_i@).
   --
   -- If @d <= 0@, no values are produced.
 
