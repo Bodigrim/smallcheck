@@ -50,6 +50,22 @@ module Test.SmallCheck.Series (
   --
   -- The depth of @Light x@ is just the depth of @x@.
 
+  -- ** What does consN do, exactly?
+
+  -- | @consN@ has type
+  -- @(Serial t_1, ..., Serial t_N) => (t_1 -> ... -> t_N -> t) -> Series t@.
+  --
+  -- @consN f@ is a series which, for a given depth @d > 0@, produces values of the
+  -- form
+  --
+  -- >f x_1 ... x_N
+  --
+  -- where @x_i@ ranges over all values of type @t_i@ of depth up to @d-1@
+  -- (as defined by the 'series' functions for the corresponding
+  -- types).
+  --
+  -- If @d <= 0@, no values are produced.
+
   cons0, cons1, cons2, cons3, cons4,
   -- * Function Generators
 
@@ -67,6 +83,23 @@ module Test.SmallCheck.Series (
   -- >coseries rs d = [ \l -> case l of
   -- >                        Light x -> f x
   -- >                |  f <- (alts1 rs . depth 0) d ]
+
+  -- ** What does altsN do, exactly?
+
+  -- | @altsN@ has type
+  -- @(Serial t_1, ..., Serial t_N) => Series t -> Series (t_1 -> ... -> t_N -> t)@.
+  --
+  -- @altsN s@ is a series which, for a given depth @d@, produces functions of
+  -- type
+  --
+  -- >t_1 -> ... -> t_N -> t
+  --
+  -- If @d <= 0@, these are constant functions, one for each value of @s 0@.
+  --
+  -- If @d > 0@, these functions inspect each of their arguments up to depth
+  -- @d-1@ (as defined by the 'coseries' functions for the corresponding
+  -- types) and return values given by @s d@.
+
   alts0, alts1, alts2, alts3, alts4,
 
   -- * Automated Derivation of Generators
@@ -137,6 +170,9 @@ s1 >< s2 = \d -> [(x,y) | x <- s1 d, y <- s2 d]
 
 class Serial a where
   series   :: Series a
+  -- | A proper 'coseries' implementation should pass the depth unchanged to
+  -- its first argument. Doing otherwise will make enumeration of curried
+  -- functions non-uniform in their arguments.
   coseries :: Series b -> Series (a->b)
 
 #ifdef GENERICS
