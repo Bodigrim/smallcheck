@@ -156,6 +156,8 @@ type Depth = Int
 -- | 'Series' is a function from the depth to a finite list of values.
 --
 -- If @s@ is a 'Series', @s n@ is expected to yield values of depth up to @n@.
+--
+-- (In particular, @series d@ is expected to be a subset of @series (d+1)@.)
 type Series a = Depth -> [a]
 
 -- | Sum (union) of series
