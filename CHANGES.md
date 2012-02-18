@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 0.6.1
+-----------
+
+* Documentation improvements
+* Make the package build with GHC 7.4.1
+
 Version 0.6
 -----------
 

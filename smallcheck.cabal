@@ -1,5 +1,5 @@
 Name:          smallcheck
-Version:       0.6
+Version:       0.6.1
 Cabal-Version: >= 1.6
 License:       BSD3
 License-File:  LICENSE
@@ -39,7 +39,7 @@ Source-repository head
 Source-repository this
   type:     git
   location: git://github.com/feuerbach/smallcheck.git
-  tag:      v0.6
+  tag:      v0.6.1
 
 Library
 
