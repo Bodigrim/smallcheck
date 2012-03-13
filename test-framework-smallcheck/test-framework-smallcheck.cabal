@@ -22,7 +22,7 @@ Source-repository head
 Source-repository this
   type:     git
   location: git://github.com/feuerbach/smallcheck.git
-  tag:      testframework-v0.1
+  tag:      testframework-v0.1.1
   subdir:   test-framework-smallcheck
 
 Library
