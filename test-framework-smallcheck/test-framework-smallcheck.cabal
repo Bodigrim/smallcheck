@@ -1,5 +1,5 @@
 Name:                test-framework-smallcheck
-Version:             0.1
+Version:             0.1.1
 Cabal-Version:       >= 1.6
 Category:            Testing
 Synopsis:            SmallCheck support for the test-framework package.
