@@ -8,7 +8,7 @@
 -- Functions to run SmallCheck tests.
 --------------------------------------------------------------------
 module Test.SmallCheck.Drivers (
-  smallCheck, smallCheckI, depthCheck
+  smallCheck, smallCheckI, depthCheck, smallCheckPure
   ) where
 
 import System.IO (stdout, hFlush)
@@ -89,3 +89,19 @@ progressReport i n x | n >= x = do
              hFlush stdout )
   where
   n' = show n
+
+-- | A pure analog of 'smallCheck'.
+--
+-- If a counterexample is found, it is returned.
+--
+-- Otherwise, a tuple of two numbers is returned, where the first number is the
+-- number of all test cases, and the second number is the number of test cases
+-- that did not satisfy the precondition.
+smallCheckPure :: Testable a => Depth -> a -> Either [String] (Integer, Integer)
+smallCheckPure d a = (foldr step Right $ concatMap (test a) [0..d]) (0,0)
+  where
+    step testRes rest (n, x) = n `seq` x `seq`
+      case result testRes of
+        Fail -> Left $ arguments testRes
+        Pass ->          rest (n+1, x)
+        Inappropriate -> rest (n+1, x+1)
