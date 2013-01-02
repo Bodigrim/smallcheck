@@ -1,6 +1,16 @@
 Changes
 =======
 
+Version 0.7
+-----------
+
+* Monadic tests
+* Remove smallCheckI (interactive version)
+* `smallCheck` now behaves exactly like `depthCheck`. `depthCheck` is
+  deprecated in favour of `smallCheck`.
+* Remove mkProperty function and TestCase data type
+* Hide `resultIsOk` and `TestResult` functions
+
 Version 0.6.1
 -----------
 
