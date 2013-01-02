@@ -43,13 +43,15 @@ Source-repository this
 
 Library
 
-    Build-Depends: base == 4.*
+    Build-Depends: base == 4.*, mtl, logict
 
     Exposed-modules:
         Test.SmallCheck
         Test.SmallCheck.Drivers
         Test.SmallCheck.Property
         Test.SmallCheck.Series
+    Other-modules:
+        Test.SmallCheck.Monad
 
     if impl(ghc >= 7.2.1)
       cpp-options: -DGENERICS
