@@ -7,7 +7,8 @@
 --
 -- Generation of test data.
 --------------------------------------------------------------------
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
+    GeneralizedNewtypeDeriving #-}
 
 #ifdef GENERICS
 {-# LANGUAGE DefaultSignatures
@@ -133,10 +134,17 @@ module Test.SmallCheck.Series (
   -- * Other useful definitions
   (\/), (><),
   N(..), Nat, Natural,
-  depth
+  depth,
+  generate
   ) where
 
 import Data.List (intersperse)
+import Test.SmallCheck.Monad
+import Control.Monad.Logic
+import Control.Applicative
+import Control.Monad.Identity
+import Control.Monad.Reader
+import Data.Monoid
 
 #ifdef GENERICS
 import GHC.Generics
@@ -144,48 +152,46 @@ import Data.DList (DList, toList, fromList)
 import Data.Monoid (mempty, mappend)
 #endif
 
--- | Maximum depth of generated test values
---
--- For data values, it is the depth of nested constructor applications.
---
--- For functional values, it is both the depth of nested case analysis
--- and the depth of results.
-type Depth = Int
-
 -- | 'Series' is a function from the depth to a finite list of values.
 --
 -- If @s@ is a 'Series', @s n@ is expected to yield values of depth up to @n@.
 --
 -- (In particular, @series d@ is expected to be a subset of @series (d+1)@.)
-type Series a = Depth -> [a]
+type Series m a = SC m a
+
+generate :: (Depth -> [a]) -> Series m a
+generate f = do
+  d <- getDepth
+  msum $ map return $ f d
 
 -- | Sum (union) of series
 infixr 7 \/
-(\/) :: Series a -> Series a -> Series a
-s1 \/ s2 = \d -> s1 d ++ s2 d
+(\/) :: Monad m => Series m a -> Series m a -> Series m a
+(\/) = interleave
 
 -- | Product of series
 infixr 8 ><
-(><) :: Series a -> Series b -> Series (a,b)
-s1 >< s2 = \d -> [(x,y) | x <- s1 d, y <- s2 d]
+(><) :: Monad m => Series m a -> Series m b -> Series m (a,b)
+a >< b = a >>- \a -> b >>- \b -> return (a,b)
 
-class Serial a where
-  series   :: Series a
+class Monad m => Serial m a where
+  series   :: Series m a
   -- | A proper 'coseries' implementation should pass the depth unchanged to
   -- its first argument. Doing otherwise will make enumeration of curried
   -- functions non-uniform in their arguments.
-  coseries :: Series b -> Series (a->b)
+  coseries :: Series m b -> Series m (a->b)
 
 #ifdef GENERICS
-  default series :: (Generic a, GSerial (Rep a)) => Series a
+{-
+  default series :: (Generic a, GSerial (Rep a)) => Series m a
   series = map to . gSeries
 
-  default coseries :: (Generic a, GSerial (Rep a)) => Series b -> Series (a->b)
+  default coseries :: (Generic a, GSerial (Rep a)) => Series m b -> Series m (a->b)
   coseries rs = map (. from) . gCoseries rs
 
 class GSerial f where
-  gSeries   :: Series (f a)
-  gCoseries :: Series b -> Series (f a -> b)
+  gSeries   :: Series m (f a)
+  gCoseries :: Series m b -> Series m (f a -> b)
 
 instance GSerial f => GSerial (M1 i c f) where
   gSeries      = map M1 . gSeries
@@ -221,7 +227,7 @@ instance (GSerialSum a, GSerialSum b) => GSerial (a :+: b) where
 
 class GSerialSum f where
   gSeriesSum   :: DSeries (f a)
-  gCoseriesSum :: Series b -> Series (f a -> b)
+  gCoseriesSum :: Series b -> Series m (f a -> b)
 
 type DSeries a = Depth -> DList a
 
@@ -237,89 +243,91 @@ instance (GSerialSum a, GSerialSum b) => GSerialSum (a :+: b) where
   {-# INLINE gCoseriesSum #-}
 
 instance GSerial f => GSerialSum (C1 c f) where
-  gSeriesSum      d | d > 0     = fromList $ gSeries (d-1)
+  gSeriesSum      d | d > 0     = generate $ gSeries (d-1)
                     | otherwise = mempty
   gCoseriesSum rs d | d > 0     = gCoseries rs (d-1)
                     | otherwise = [\_ -> x | x <- rs d]
   {-# INLINE gSeriesSum #-}
   {-# INLINE gCoseriesSum #-}
+-}
 #endif
 
-instance Serial () where
-  series      _ = [()]
-  coseries rs d = [ \() -> b
-                  | b <- rs d ]
+instance Monad m => Serial m () where
+  series = return ()
+  coseries rs = constM rs
 
-instance Serial Int where
-  series      d = [(-d)..d]
-  coseries rs d = [ \i -> if i > 0 then f (N (i - 1))
-                          else if i < 0 then g (N (abs i - 1))
-                          else z
-                  | z <- alts0 rs d, f <- alts1 rs d, g <- alts1 rs d ]
+instance Monad m => Serial m Int where
+  series =
+    generate (\d -> [0..d]) `interleave`
+    generate (\d -> map negate [1..d])
+  coseries rs =
+    alts0 rs >>- \z ->
+    alts1 rs >>- \f ->
+    alts1 rs >>- \g ->
+    return $ \i -> case () of { _
+      | i > 0 -> f (N (i - 1))
+      | i < 0 -> g (N (abs i - 1))
+      | otherwise -> z
+    }
 
-instance Serial Integer where
-  series      d = [ toInteger (i :: Int)
-                  | i <- series d ]
-  coseries rs d = [ f . (fromInteger :: Integer->Int)
-                  | f <- coseries rs d ]
+instance Monad m => Serial m Integer where
+  series = (toInteger :: Int -> Integer) <$> series
+  coseries rs = (. (fromInteger :: Integer->Int)) <$> coseries rs
 
 -- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
 -- to be generated. Generated functions of type @N a -> b@ do not distinguish
 -- different negative values of @a@.
---
 -- See also 'Nat' and 'Natural'.
-newtype N a = N a
-              deriving (Eq, Ord)
+newtype N a = N a deriving (Eq, Ord, Real, Enum, Num, Integral)
 
 instance Show a => Show (N a) where
   show (N i) = show i
 
-instance (Integral a, Serial a) => Serial (N a) where
-  series      d = map N [0..d']
-                  where
-                  d' = fromInteger (toInteger d)
-  coseries rs d = [ \(N i) -> if i > 0 then f (N (i - 1))
-                              else z
-                  | z <- alts0 rs d, f <- alts1 rs d ]
+instance (Integral a, Serial m a) => Serial m (N a) where
+  series = generate $ \d -> map (N . fromIntegral) [0..d]
+
+  coseries rs =
+    alts0 rs >>- \z ->
+    alts1 rs >>- \f ->
+    return $ \(N i) ->
+      if i > 0
+        then f (N $ i-1)
+        else z
 
 type Nat = N Int
 type Natural = N Integer
 
-instance Serial Float where
-  series     d = [ encodeFloat sig exp
-                 | (sig,exp) <- series d,
-                   odd sig || sig==0 && exp==0 ]
-  coseries rs d = [ f . decodeFloat
-                  | f <- coseries rs d ]
+instance Monad m => Serial m Float where
+  series =
+    series >>- \(sig, exp) ->
+    guard (odd sig || sig==0 && exp==0) >>
+    return (encodeFloat sig exp)
+  coseries rs =
+    coseries rs >>- \f ->
+      return $ f . decodeFloat
 
-instance Serial Double where
-  series      d = [ frac (x :: Float)
-                  | x <- series d ]
-  coseries rs d = [ f . (frac :: Double->Float)
-                  | f <- coseries rs d ]
+instance Monad m => Serial m Double where
+  series = series >>- (return . (realToFrac :: Float -> Double))
+  coseries rs =
+    coseries rs >>- \f -> return $ (f . (realToFrac :: Double -> Float))
 
-frac :: (Real a, Fractional a, Real b, Fractional b) => a -> b
-frac = fromRational . toRational
+instance Monad m => Serial m Char where
+  series = generate $ \d -> take (d+1) ['a'..'z']
+  coseries rs =
+    coseries rs >>- \f ->
+    return $ \c -> f (N (fromEnum c - fromEnum 'a'))
 
-instance Serial Char where
-  series      d = take (d+1) ['a'..'z']
-  coseries rs d = [ \c -> f (N (fromEnum c - fromEnum 'a'))
-                  | f <- coseries rs d ]
+instance (Monad m, Serial m a, Serial m b) => Serial m (a,b) where
+  series = cons2 (,)
+  coseries rs = uncurry <$> alts2 rs
 
-instance (Serial a, Serial b) =>
-         Serial (a,b) where
-  series      = series >< series
-  coseries rs = map uncurry . (coseries $ coseries rs)
+instance (Monad m, Serial m a, Serial m b, Serial m c) => Serial m (a,b,c) where
+  series = cons3 (,,)
+  coseries rs = uncurry3 <$> alts3 rs
 
-instance (Serial a, Serial b, Serial c) =>
-         Serial (a,b,c) where
-  series      = \d -> [(a,b,c) | (a,(b,c)) <- series d]
-  coseries rs = map uncurry3 . (coseries $ coseries $ coseries rs)
-
-instance (Serial a, Serial b, Serial c, Serial d) =>
-         Serial (a,b,c,d) where
-  series      = \d -> [(a,b,c,d) | (a,(b,(c,d))) <- series d]
-  coseries rs = map uncurry4 . (coseries $ coseries $ coseries $ coseries rs)
+instance (Monad m, Serial m a, Serial m b, Serial m c, Serial m d) => Serial m (a,b,c,d) where
+  series = cons4 (,,,)
+  coseries rs = uncurry4 <$> alts4 rs
 
 uncurry3 :: (a->b->c->d) -> ((a,b,c)->d)
 uncurry3 f (x,y,z) = f x y z
@@ -327,95 +335,132 @@ uncurry3 f (x,y,z) = f x y z
 uncurry4 :: (a->b->c->d->e) -> ((a,b,c,d)->e)
 uncurry4 f (w,x,y,z) = f w x y z
 
-cons0 ::
-         a -> Series a
-cons0 c _ = [c]
+decDepth :: Series m a -> Series m a
+decDepth a = localDepth (subtract 1) a
 
-cons1 :: Serial a =>
-         (a->b) -> Series b
-cons1 c d = [c z | d > 0, z <- series (d-1)]
+-- | If the current depth is 0, evaluate the first argument. Otherwise,
+-- evaluate the second argument with decremented depth.
+decDepthChecked :: SC m a -> SC m a -> SC m a
+decDepthChecked b r = do
+  d <- getDepth
+  if d == 0
+    then b
+    else decDepth r
 
-cons2 :: (Serial a, Serial b) =>
-         (a->b->c) -> Series c
-cons2 c d = [c y z | d > 0, (y,z) <- series (d-1)]
+cons0 :: a -> Series m a
+cons0 = pure
 
-cons3 :: (Serial a, Serial b, Serial c) =>
-         (a->b->c->d) -> Series d
-cons3 c d = [c x y z | d > 0, (x,y,z) <- series (d-1)]
+cons1 :: Serial m a => (a->b) -> Series m b
+cons1 f = f <$> decDepth series
 
-cons4 :: (Serial a, Serial b, Serial c, Serial d) =>
-         (a->b->c->d->e) -> Series e
-cons4 c d = [c w x y z | d > 0, (w,x,y,z) <- series (d-1)]
+cons2 :: (Serial m a, Serial m b) => (a->b->c) -> Series m c
+cons2 f = f <$> decDepth series <*> decDepth series
 
-alts0 ::  Series a ->
-            Series a
-alts0 as d = as d
+cons3 :: (Serial m a, Serial m b, Serial m c) =>
+         (a->b->c->d) -> Series m d
+cons3 f =
+  f <$> decDepth series
+    <*> decDepth series
+    <*> decDepth series
 
-alts1 ::  Serial a =>
-            Series b -> Series (a->b)
-alts1 bs d = if d > 0 then coseries bs (dec d)
-             else [\_ -> x | x <- bs d]
+cons4 :: (Serial m a, Serial m b, Serial m c, Serial m d) =>
+         (a->b->c->d->e) -> Series m e
+cons4 f =
+  f <$> decDepth series
+    <*> decDepth series
+    <*> decDepth series
+    <*> decDepth series
 
-alts2 ::  (Serial a, Serial b) =>
-            Series c -> Series (a->b->c)
-alts2 cs d = if d > 0 then coseries (coseries cs) (dec d)
-             else [\_ _ -> x | x <- cs d]
+constM :: Monad m => m b -> m (a -> b)
+constM = liftM const
 
-alts3 ::  (Serial a, Serial b, Serial c) =>
-            Series d -> Series (a->b->c->d)
-alts3 ds d = if d > 0 then coseries (coseries (coseries ds)) (dec d)
-             else [\_ _ _ -> x | x <- ds d]
+alts0 :: Series m a -> Series m a
+alts0 s = s
 
-alts4 ::  (Serial a, Serial b, Serial c, Serial d) =>
-            Series e -> Series (a->b->c->d->e)
-alts4 es d = if d > 0 then coseries (coseries (coseries (coseries es))) (dec d)
-             else [\_ _ _ _ -> x | x <- es d]
+alts1 :: (Monad m, Serial m a) => Series m b -> Series m (a->b)
+alts1 rs =
+  decDepthChecked (constM rs) (coseries rs)
 
-instance Serial Bool where
-  series        = cons0 True \/ cons0 False
-  coseries rs d = [ \x -> if x then r1 else r2
-                  | r1 <- rs d, r2 <- rs d ]
+alts2
+  :: (Serial m a, Serial m b)
+  => Series m c -> Series m (a->b->c)
+alts2 rs =
+  decDepthChecked
+    (constM $ constM rs)
+    (coseries $ coseries rs)
 
-instance Serial a => Serial (Maybe a) where
-  series        = cons0 Nothing \/ cons1 Just
-  coseries rs d = [ \m -> case m of
-                       Nothing -> z
-                       Just x  -> f x
-                  |  z <- alts0 rs d ,
-                     f <- alts1 rs d ]
+alts3 ::  (Serial m a, Serial m b, Serial m c) =>
+            Series m d -> Series m (a->b->c->d)
+alts3 rs =
+  decDepthChecked
+    (constM $ constM $ constM rs)
+    (coseries $ coseries $ coseries rs)
 
-instance (Serial a, Serial b) => Serial (Either a b) where
-  series        = cons1 Left \/ cons1 Right
-  coseries rs d = [ \e -> case e of
-                          Left x  -> f x
-                          Right y -> g y
-                  |  f <- alts1 rs d ,
-                     g <- alts1 rs d ]
+alts4 ::  (Serial m a, Serial m b, Serial m c, Serial m d) =>
+            Series m e -> Series m (a->b->c->d->e)
+alts4 rs =
+  decDepthChecked
+    (constM $ constM $ constM $ constM rs)
+    (coseries $ coseries $ coseries $ coseries rs)
 
-instance Serial a => Serial [a] where
-  series        = cons0 [] \/ cons2 (:)
-  coseries rs d = [ \xs -> case xs of
-                           []      -> y
-                           (x:xs') -> f x xs'
-                  |   y <- alts0 rs d ,
-                      f <- alts2 rs d ]
+instance Monad m => Serial m Bool where
+  series = cons0 True \/ cons0 False
+  coseries rs =
+    rs >>- \r1 ->
+    rs >>- \r2 ->
+    return $ \x -> if x then r1 else r2
+
+instance (Monad m, Serial m a) => Serial m (Maybe a) where
+  series = cons0 Nothing \/ cons1 Just
+  coseries rs =
+    alts0 rs >>- \z ->
+    alts1 rs >>- \f ->
+    return $ maybe z f
+
+instance (Monad m, Serial m a, Serial m b) => Serial m (Either a b) where
+  series = cons1 Left \/ cons1 Right
+  coseries rs =
+    alts1 rs >>- \f ->
+    alts1 rs >>- \g ->
+    return $ either f g
+
+instance Serial m a => Serial m [a] where
+  series = cons0 [] \/ cons2 (:)
+  coseries rs =
+    alts0 rs >>- \y ->
+    alts2 rs >>- \f ->
+    return $ \xs -> case xs of [] -> y; x:xs' -> f x xs'
 
 -- Thanks to Ralf Hinze for the definition of coseries
 -- using the nest auxiliary.
-instance (Serial a, Serial b) => Serial (a->b) where
+instance (Serial m a, Serial m b, Monad m) => Serial m (a->b) where
   series = coseries series
-  coseries rs d =
-    [ \ f -> g [ f a | a <- args ]
-    | g <- nest args d ]
+  coseries r = do
+    args <- unwind series
+
+    g <- nest r args
+    return $ \f -> g $ map f args
+
     where
-    args = series d
-    nest []     _ = [ \[] -> c
-                    | c <- rs d ]
-    nest (a:as) _ = [ \(b:bs) -> f b bs
-                    | f <- coseries (nest as) d ]
+
+    nest :: forall a b m c . Serial m b => Series m c -> [a] -> Series m ([b] -> c)
+    nest rs args = do
+      case args of
+        [] -> const `liftM` rs
+        _:rest -> do
+          let sf = coseries $ nest rs rest
+          f <- sf
+          return $ \(b:bs) -> f b bs
+
+unwind :: MonadLogic m => m a -> m [a]
+unwind a =
+  msplit a >>=
+  maybe (return []) (\(x,a') -> (x:) `liftM` unwind a')
 
 -- | For customising the depth measure. Use with care!
 depth :: Depth -> Depth -> Depth
+depth = undefined
+{-
 depth d d' | d >= 0    = d'+1-d
            | otherwise = error "SmallCheck.depth: argument < 0"
 
@@ -428,7 +473,7 @@ inc d = d+1
 
 -- show the extension of a function (in part, bounded both by
 -- the number and depth of arguments)
-instance (Serial a, Show a, Show b) => Show (a->b) where
+instance (Serial m a, Show a, Show b) => Show (a->b) where
   show f =
     if maxarheight == 1
     && sumarwidth + length ars * length "->;" < widthLimit then
@@ -447,3 +492,4 @@ instance (Serial a, Show a, Show b) => Show (a->b) where
     indent = unlines . map ("  "++) . lines
     height = length . lines
     (widthLimit,lengthLimit,depthLimit) = (80,20,3)::(Int,Int,Depth)
+-}

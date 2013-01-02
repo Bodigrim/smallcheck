@@ -5,17 +5,27 @@ module Test.SmallCheck.Monad
   , runSC
   , TestResult(..)
   , Example
+  , Depth
   , record
   , searchCounterexamples
   , searchExamples
   , addArgument
-  , fromList
+  , getDepth
+  , localDepth
   ) where
 
 import Control.Monad.State.Strict
 import Control.Monad.Reader
 import Control.Monad.Logic
 import Control.Applicative
+
+-- | Maximum depth of generated test values
+--
+-- For data values, it is the depth of nested constructor applications.
+--
+-- For functional values, it is both the depth of nested case analysis
+-- and the depth of results.
+type Depth = Int
 
 data TestResult
     = Pass
@@ -33,10 +43,12 @@ newtype Interpretation =
     )
 
 searchExamples :: SC m a -> SC m a
-searchExamples (SC a) = SC $ local (const exampleI) a
+searchExamples (SC a) = SC $
+  flip local a $ \env -> env { interpretation = exampleI }
 
 searchCounterexamples :: SC m a -> SC m a
-searchCounterexamples (SC a) = SC $ local (const counterexampleI) a
+searchCounterexamples (SC a) = SC $
+  flip local a $ \env -> env { interpretation = counterexampleI }
 
 exampleI :: Interpretation
 exampleI = Interpretation $ \ex res ->
@@ -57,16 +69,22 @@ data Stats = Stats
   }
   deriving Show
 
+-- | Scoped environment for SC
+data Env = Env
+  { interpretation :: Interpretation
+  , arguments :: [String] -- ^ reversed arguments list
+  , depth :: !Depth
+  }
+
 initialState :: Stats
 initialState = Stats 0 0
 
 -- | The backtracking monad used by SmallCheck
 newtype SC m a =
   SC
-    (ReaderT Interpretation
-      (ReaderT [String] -- [String] is a reversed arguments list
+    (ReaderT Env
       (LogicT
-      (StateT Stats m)))
+      (StateT Stats m))
     a)
   deriving
     ( Functor
@@ -77,18 +95,20 @@ newtype SC m a =
     , MonadLogic)
 
 instance MonadTrans SC where
-  lift a = SC $ lift . lift . lift . lift $ a
+  lift a = SC $ lift . lift . lift $ a
 
-runSC :: Monad m => SC m a -> m (Maybe a, Stats)
-runSC (SC a) =
+runSC :: Monad m => Depth -> SC m a -> m (Maybe a, Stats)
+runSC depth (SC a) =
   flip runStateT initialState $
   (\l -> runLogicT l (\x _ -> return $ Just x) (return Nothing)) $
-  flip runReaderT [] $
-  flip runReaderT counterexampleI a
+  flip runReaderT (Env counterexampleI [] depth) a
 
 record :: Monad m => TestResult -> SC m Example
 record res = SC $ do
-  Interpretation interp <- ask
+  Env
+    { interpretation = Interpretation interp
+    , arguments = revExample
+    } <- ask
   st <- get
   let
     st' = st
@@ -97,12 +117,15 @@ record res = SC $ do
           (case res of Inappropriate -> (+1); _ -> id) (badTests st)
       }
   put $! st'
-  example <- reverse <$> lift ask
-  lift $ lift $ interp example res
+  lift $ interp (reverse revExample) res
 
 addArgument :: Monad m => String -> SC m a -> SC m a
 addArgument arg (SC a) = SC $
-  ReaderT $ \r -> local (arg:) (runReaderT a r)
+  flip local a $ \env ->
+    env { arguments = arg : arguments env }
 
-fromList :: [a] -> SC m a
-fromList = foldr (<|>) empty . map return
+getDepth :: SC m Depth
+getDepth = SC $ asks depth
+
+localDepth :: (Depth -> Depth) -> SC m a -> SC m a
+localDepth f (SC a) = SC $ local (\env -> env { depth = f (depth env) }) a

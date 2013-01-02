@@ -10,6 +10,10 @@ Version 0.7
   deprecated in favour of `smallCheck`.
 * Remove mkProperty function and TestCase data type
 * Hide `resultIsOk` and `TestResult` functions
+* `\/` and `><` combinators are deprecated in favour of the Applicative
+  interface
+* Add numeric instances for N
+* Change the types of test, Property
 
 Version 0.6.1
 -----------
