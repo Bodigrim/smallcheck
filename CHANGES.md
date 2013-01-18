@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 0.6.2
+-----------
+* Derive Typeable Property instance
+* Add smallCheckPure
+
 Version 0.6.1
 -----------
 
