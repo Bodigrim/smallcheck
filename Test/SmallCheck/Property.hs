@@ -7,6 +7,7 @@
 --
 -- Properties and tools to construct them.
 --------------------------------------------------------------------
+{-# LANGUAGE DeriveDataTypeable #-}
 module Test.SmallCheck.Property (
   -- * Basic definitions
   TestCase(..),
@@ -29,6 +30,7 @@ module Test.SmallCheck.Property (
   ) where
 
 import Test.SmallCheck.Series
+import Data.Typeable
 
 data TestResult
     = Pass
@@ -40,6 +42,7 @@ data TestCase = TestCase { result :: TestResult, arguments :: [String] }
 
 -- | Wrapper type for 'Testable's
 newtype Property = Property (Depth -> [TestCase])
+  deriving Typeable
 
 -- | Wrap a 'Testable' into a 'Property'
 property :: Testable a => a -> Property
