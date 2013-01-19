@@ -135,10 +135,11 @@ module Test.SmallCheck.Series (
   (\/), (><),
   N(..), Nat, Natural,
   depth,
-  generate
+  generate,
+  list
   ) where
 
-import Data.List (intersperse)
+import Data.Maybe
 import Test.SmallCheck.Monad
 import Control.Monad.Logic
 import Control.Applicative
@@ -493,3 +494,6 @@ instance (Serial m a, Show a, Show b) => Show (a->b) where
     height = length . lines
     (widthLimit,lengthLimit,depthLimit) = (80,20,3)::(Int,Int,Depth)
 -}
+
+list :: Depth -> SC Identity a -> [a]
+list d s = fromMaybe [] $ fst $ runIdentity $ runSC d $ unwind s
