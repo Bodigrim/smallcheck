@@ -18,7 +18,7 @@ import Test.SmallCheck.Property
 import Test.SmallCheck.Monad
 import Text.Printf
 
-smallCheck :: Testable a IO => Depth -> a -> IO ()
+smallCheck :: Testable IO a => Depth -> a -> IO ()
 smallCheck d a = do
   (mbEx, Stats { badTests = badTests, testsRun = testsRun } ) <- smallCheckM d a
   case mbEx of
@@ -31,8 +31,8 @@ smallCheck d a = do
       mapM_ putStrLn x
 
 {-# DEPRECATED depthCheck "Please use smallCheck instead." #-}
-depthCheck :: Testable a IO => Depth -> a -> IO ()
+depthCheck :: Testable IO a => Depth -> a -> IO ()
 depthCheck = smallCheck
 
-smallCheckM :: Testable a m => Depth -> a -> m (Maybe Example, Stats)
+smallCheckM :: Testable m a => Depth -> a -> m (Maybe Example, Stats)
 smallCheckM d a = runSC d $ test a

@@ -35,33 +35,33 @@ import Control.Monad.Logic
 newtype Property m = Property (SC m Example)
 
 -- | Wrap a 'Testable' into a 'Property'
-property :: Testable a m => a -> Property m
+property :: Testable m a => a -> Property m
 property = Property . test
 
 -- | Anything of a 'Testable' type can be regarded as a \"test\"
-class Monad m => Testable a m where
+class Monad m => Testable m a where
   test :: a -> SC m Example
 
-instance Monad m => Testable Bool m where
+instance Monad m => Testable m Bool where
   test b = record $ boolToResult b
 
-instance (Serial m a, Show a, Testable b m) => Testable (a->b) m where
+instance (Serial m a, Show a, Testable m b) => Testable m (a->b) where
   test f = f' where Property f' = forAll series f
 
-instance (Monad m, m ~ n) => Testable (Property m) n where
+instance (Monad m, m ~ n) => Testable n (Property m) where
   test (Property f) = f
 
-forAll :: (Show a, Testable b m) => Series m a -> (a->b) -> Property m
+forAll :: (Show a, Testable m b) => Series m a -> (a->b) -> Property m
 forAll xs f = Property $ do
   x <- xs
   searchCounterexamples $
     addArgument (show x) $
     test (f x)
 
-forAllElem :: (Show a, Testable b m) => [a] -> (a->b) -> Property m
+forAllElem :: (Show a, Testable m b) => [a] -> (a->b) -> Property m
 forAllElem xs = forAll $ generate $ const xs
 
-existence :: (Show a, Testable b m) => Bool -> Series m a -> (a->b) -> Property m
+existence :: (Show a, Testable m b) => Bool -> Series m a -> (a->b) -> Property m
 existence u xs f = Property $ do
   let
     search = do
@@ -95,26 +95,26 @@ resultIsOk r =
 boolToResult :: Bool -> TestResult
 boolToResult b = if b then Pass else Fail
 
-thereExists :: (Show a, Testable b m) => Series m a -> (a->b) -> Property m
+thereExists :: (Show a, Testable m b) => Series m a -> (a->b) -> Property m
 thereExists = existence False
 
-thereExists1 :: (Show a, Testable b m) => Series m a -> (a->b) -> Property m
+thereExists1 :: (Show a, Testable m b) => Series m a -> (a->b) -> Property m
 thereExists1 = existence True
 
-thereExistsElem :: (Show a, Testable b m) => [a] -> (a->b) -> Property m
+thereExistsElem :: (Show a, Testable m b) => [a] -> (a->b) -> Property m
 thereExistsElem xs = thereExists $ generate $ const xs
 
-thereExists1Elem :: (Show a, Testable b m) => [a] -> (a->b) -> Property m
+thereExists1Elem :: (Show a, Testable m b) => [a] -> (a->b) -> Property m
 thereExists1Elem xs = thereExists1 $ generate $ const xs
 
 -- | @'exists' p@ holds iff it is possible to find an argument @a@ (within the
 -- depth constraints!) satisfying the predicate @p@
-exists :: (Show a, Serial m a, Testable b m) => (a->b) -> Property m
+exists :: (Show a, Serial m a, Testable m b) => (a->b) -> Property m
 exists = thereExists series
 
 -- | Like 'exists', but additionally require the uniqueness of the
 -- argument satisfying the predicate
-exists1 :: (Show a, Serial m a, Testable b m) => (a->b) -> Property m
+exists1 :: (Show a, Serial m a, Testable m b) => (a->b) -> Property m
 exists1 = thereExists1 series
 
 -- | The default testing of existentials is bounded by the same depth as their
@@ -133,12 +133,12 @@ exists1 = thereExists1 series
 --
 -- >prop_append2 :: [Bool] -> [Bool] -> Property m
 -- >prop_append2 xs ys = existsDeeperBy (*2) $ \zs -> zs == xs++ys
-existsDeeperBy :: (Show a, Serial m a, Testable b m) => (Depth->Depth) -> (a->b) -> Property m
+existsDeeperBy :: (Show a, Serial m a, Testable m b) => (Depth->Depth) -> (a->b) -> Property m
 existsDeeperBy f = thereExists $ localDepth f series
 
 -- | Like 'existsDeeperBy', but additionally require the uniqueness of the
 -- argument satisfying the predicate
-exists1DeeperBy :: (Show a, Serial m a, Testable b m) => (Depth->Depth) -> (a->b) -> Property m
+exists1DeeperBy :: (Show a, Serial m a, Testable m b) => (Depth->Depth) -> (a->b) -> Property m
 exists1DeeperBy f = thereExists1 $ localDepth f series
 
 infixr 0 ==>
@@ -164,6 +164,6 @@ infixr 0 ==>
 -- The second definition is far better as the test-space is
 -- reduced from PE to T'+TE where P, T, T' and E are the numbers of
 -- propositions, tautologies, non-tautologies and environments.
-(==>) :: Testable a m => Bool -> a -> Property m
+(==>) :: Testable m a => Bool -> a -> Property m
 True ==>  x = Property (test x)
 False ==> x = Property $ record Inappropriate
