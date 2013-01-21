@@ -9,7 +9,7 @@
 --------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 module Test.SmallCheck.Drivers (
-  smallCheck, depthCheck, smallCheckM
+  smallCheck, depthCheck, smallCheckM, runSC
   ) where
 
 import Control.Monad (when)

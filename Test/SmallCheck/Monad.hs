@@ -98,6 +98,7 @@ newtype SC m a =
 instance MonadTrans SC where
   lift a = SC $ lift . lift . lift $ a
 
+-- | This is a low-level runner function. You most probably don't need it.
 runSC :: Monad m => Depth -> m () -> SC m a -> m (Maybe a, Stats)
 runSC depth hook (SC a) =
   flip runStateT initialState $
