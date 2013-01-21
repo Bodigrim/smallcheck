@@ -70,10 +70,11 @@ data Stats = Stats
   deriving Show
 
 -- | Scoped environment for SC
-data Env = Env
+data Env m = Env
   { interpretation :: Interpretation
   , arguments :: [String] -- ^ reversed arguments list
   , depth :: !Depth
+  , testHook :: m () -- ^ an action to execute when one test case is run
   }
 
 initialState :: Stats
@@ -82,7 +83,7 @@ initialState = Stats 0 0
 -- | The backtracking monad used by SmallCheck
 newtype SC m a =
   SC
-    (ReaderT Env
+    (ReaderT (Env m)
       (LogicT
       (StateT Stats m))
     a)
@@ -97,11 +98,11 @@ newtype SC m a =
 instance MonadTrans SC where
   lift a = SC $ lift . lift . lift $ a
 
-runSC :: Monad m => Depth -> SC m a -> m (Maybe a, Stats)
-runSC depth (SC a) =
+runSC :: Monad m => Depth -> m () -> SC m a -> m (Maybe a, Stats)
+runSC depth hook (SC a) =
   flip runStateT initialState $
   (\l -> runLogicT l (\x _ -> return $ Just x) (return Nothing)) $
-  flip runReaderT (Env counterexampleI [] depth) a
+  flip runReaderT (Env counterexampleI [] depth hook) a
 
 record :: Monad m => TestResult -> SC m Example
 record res = SC $ do
@@ -129,3 +130,8 @@ getDepth = SC $ asks depth
 
 localDepth :: (Depth -> Depth) -> SC m a -> SC m a
 localDepth f (SC a) = SC $ local (\env -> env { depth = f (depth env) }) a
+
+runTestHook :: Monad m => SC m ()
+runTestHook = SC $ do
+  hook <- asks testHook
+  lift . lift . lift $ hook

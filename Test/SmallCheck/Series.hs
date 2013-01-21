@@ -496,4 +496,4 @@ instance (Serial m a, Show a, Show b) => Show (a->b) where
 -}
 
 list :: Depth -> SC Identity a -> [a]
-list d s = fromMaybe [] $ fst $ runIdentity $ runSC d $ unwind s
+list d s = fromMaybe [] $ fst $ runIdentity $ runSC d (return ()) $ unwind s

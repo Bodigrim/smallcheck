@@ -35,4 +35,4 @@ depthCheck :: Testable IO a => Depth -> a -> IO ()
 depthCheck = smallCheck
 
 smallCheckM :: Testable m a => Depth -> a -> m (Maybe Example, Stats)
-smallCheckM d a = runSC d $ test a
+smallCheckM d a = runSC d (return ()) $ test a
