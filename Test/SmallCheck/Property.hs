@@ -7,7 +7,8 @@
 --
 -- Properties and tools to construct them.
 --------------------------------------------------------------------
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeFamilies,
+             ScopedTypeVariables #-}
 module Test.SmallCheck.Property (
   -- * Basic definitions
   Property, Depth, Testable(..),
@@ -30,9 +31,17 @@ import Test.SmallCheck.Series
 import Test.SmallCheck.Monad
 import Control.Monad
 import Control.Monad.Logic
+import Data.Typeable
 
 -- | Wrapper type for 'Testable's
 newtype Property m = Property (SC m Example)
+
+instance Typeable1 m => Typeable (Property m)
+  where
+    typeOf _ =
+      mkTyConApp
+        (mkTyCon3 "smallcheck" "Test.SmallCheck.Property" "Property")
+        [typeOf (undefined :: m ())]
 
 -- | Wrap a 'Testable' into a 'Property'
 property :: Testable m a => a -> Property m
