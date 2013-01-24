@@ -32,6 +32,7 @@ import Test.SmallCheck.Monad
 import Control.Monad
 import Control.Monad.Logic
 import Data.Typeable
+import Control.Applicative
 
 -- | Wrapper type for 'Testable's
 newtype Property m = Property (SC m Example)
@@ -52,7 +53,7 @@ class Monad m => Testable m a where
   test :: a -> SC m Example
 
 instance Monad m => Testable m Bool where
-  test b = record $ boolToResult b
+  test b = record (boolToResult b) <* runTestHook
 
 instance (Serial m a, Show a, Testable m b) => Testable m (a->b) where
   test f = f' where Property f' = forAll series f

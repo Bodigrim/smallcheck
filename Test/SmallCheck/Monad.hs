@@ -12,6 +12,7 @@ module Test.SmallCheck.Monad
   , addArgument
   , getDepth
   , localDepth
+  , runTestHook
   ) where
 
 import Control.Monad.State.Strict
