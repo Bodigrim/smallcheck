@@ -1,8 +1,0 @@
-First see ../../README.
-
-In this directory, compile or interpret ListProps.main (SmallCheck is
-the only other module required) for a small selection of self-introducing
-tests of list-processing functions.
-
-The definition of isPrefix is deliberately incorrect: the completeness
-property still holds, but the existential soundness property fails.

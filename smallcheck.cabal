@@ -1,5 +1,5 @@
 Name:          smallcheck
-Version:       0.6.2
+Version:       0.7
 Cabal-Version: >= 1.6
 License:       BSD3
 License-File:  LICENSE
@@ -39,17 +39,19 @@ Source-repository head
 Source-repository this
   type:     git
   location: git://github.com/feuerbach/smallcheck.git
-  tag:      v0.6.2
+  tag:      v0.7
 
 Library
 
-    Build-Depends: base == 4.*
+    Build-Depends: base == 4.*, mtl, logict
 
     Exposed-modules:
         Test.SmallCheck
         Test.SmallCheck.Drivers
         Test.SmallCheck.Property
         Test.SmallCheck.Series
+    Other-modules:
+        Test.SmallCheck.Monad
 
     if impl(ghc >= 7.2.1)
       cpp-options: -DGENERICS

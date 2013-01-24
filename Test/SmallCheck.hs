@@ -64,7 +64,7 @@ module Test.SmallCheck (
   --
   -- To use SmallCheck properties with test-framework, install
   -- @test-framework-smallcheck@ package.
-  smallCheck, depthCheck, smallCheckI,
+  smallCheck, depthCheck, smallCheckM,
   Depth
   ) where
 

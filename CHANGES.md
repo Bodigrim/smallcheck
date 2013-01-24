@@ -1,6 +1,20 @@
 Changes
 =======
 
+Version 0.7
+-----------
+
+* Monadic tests
+* Remove smallCheckI (interactive version)
+* `smallCheck` now behaves exactly like `depthCheck`. `depthCheck` is
+  deprecated in favour of `smallCheck`.
+* Remove mkProperty function and TestCase data type
+* Hide `resultIsOk` and `TestResult` functions
+* `\/` and `><` combinators are deprecated in favour of the Applicative
+  interface
+* Add numeric instances for N
+* Change the types of test, Property
+
 Version 0.6.2
 -----------
 * Derive Typeable Property instance
