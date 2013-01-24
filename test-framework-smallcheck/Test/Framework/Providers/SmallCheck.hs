@@ -7,7 +7,8 @@
 --
 -- This module allows to use SmallCheck properties in test-framework.
 --------------------------------------------------------------------
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts,
+             TypeOperators #-}
 module Test.Framework.Providers.SmallCheck
     ( testProperty
     , withDepth
@@ -15,13 +16,20 @@ module Test.Framework.Providers.SmallCheck
 
 import Test.Framework.Providers.API
 import qualified Test.SmallCheck.Property as SC
+import Test.SmallCheck.Drivers
 import Data.Maybe
 import Data.List
 import Data.Monoid
+import Data.IORef
+import qualified Control.Monad.IO.Class as T
+import System.Timeout
+import Control.Concurrent.Chan
+import Control.Applicative
 
 -- | Create a 'Test' for a SmallCheck 'SC.Testable' property
-testProperty :: SC.Testable a => TestName -> a -> Test
-testProperty name prop = Test name $ SC.property prop
+-- testProperty :: TestName -> (forall m . T.MonadIO m => SC.Testable m a) -> Test
+testProperty :: SC.Testable IO a => TestName -> a -> Test
+testProperty name prop = Test name $ (SC.property prop :: SC.Property IO)
 
 -- | Change the default maximum test depth for a given 'Test'.
 --
@@ -44,20 +52,43 @@ instance TestResultlike Int Result where
     testSucceeded Pass = True
     testSucceeded _    = False
 
-instance Testlike Int Result SC.Property where
-    testTypeName _ = "Properties"
+instance Testlike Int Result (SC.Property IO) where
+  testTypeName _ = "Properties"
 
-    runTest topts prop = runImprovingIO $ do
-        let timeout = unK $ topt_timeout topts
-            depth   = unK $ topt_maximum_test_depth topts
-        mb_result <- maybeTimeoutImprovingIO timeout $
-            runSmallCheck prop depth
-        return $ fromMaybe Timeout mb_result
+  runTest topts prop = do
+    let
+      timeoutAmount = unK $ topt_timeout topts
+      depth = unK $ topt_maximum_test_depth topts
 
-runSmallCheck :: SC.Property -> SC.Depth -> ImprovingIO Int f Result
-runSmallCheck prop depth = foldr go (const $ return Pass) (SC.test prop depth) 1
-    where
-    go test rest n =
-        if SC.resultIsOk (SC.result test)
-            then yieldImprovement n >> (rest $! n+1)
-            else return $ Fail $ SC.arguments test
+    chan <- newChan
+
+    -- Execute the test, writing () to the channel after completion of each
+    -- individual test
+    let
+      action = do
+        mb_result <- timeout (fromMaybe (-1) timeoutAmount) $ runSC depth (writeChan chan (Left ())) (SC.test prop)
+        writeChan chan $ Right $
+          case mb_result of
+            Nothing -> Timeout
+            Just (Nothing, _) -> Pass
+            Just (Just x, _) -> Fail x
+
+    improving <- reifyListToImproving . accumulate <$> getChanContents chan
+
+    return (improving, action)
+
+accumulate :: [Either () a] -> [Either Int a]
+accumulate xs =
+  (\f -> snd $ mapAccumL f 0 xs) $
+  \n e ->
+    case e of
+      Left {} ->
+        let n' = n+1
+        in n' `seq` (n', Left n')
+      Right x -> (n, Right x)
+
+-- Copy-pasted from test-framework (because it's not exported)
+reifyListToImproving :: [Either i f] -> (i :~> f)
+reifyListToImproving (Left improvement:rest) = Improving improvement (reifyListToImproving rest)
+reifyListToImproving (Right final:_)         = Finished final
+reifyListToImproving []                      = error "reifyListToImproving: list finished before a final value arrived"
