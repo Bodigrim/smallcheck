@@ -348,25 +348,30 @@ decDepthChecked b r = do
     then b
     else decDepth r
 
+checkDepth :: SC m ()
+checkDepth = do
+  d <- getDepth
+  guard $ d > 0
+
 cons0 :: a -> Series m a
 cons0 = pure
 
 cons1 :: Serial m a => (a->b) -> Series m b
-cons1 f = f <$> decDepth series
+cons1 f = checkDepth >> f <$> decDepth series
 
 cons2 :: (Serial m a, Serial m b) => (a->b->c) -> Series m c
-cons2 f = f <$> decDepth series <*> decDepth series
+cons2 f = checkDepth >> f <$> decDepth series <*> decDepth series
 
 cons3 :: (Serial m a, Serial m b, Serial m c) =>
          (a->b->c->d) -> Series m d
-cons3 f =
+cons3 f = checkDepth >>
   f <$> decDepth series
     <*> decDepth series
     <*> decDepth series
 
 cons4 :: (Serial m a, Serial m b, Serial m c, Serial m d) =>
          (a->b->c->d->e) -> Series m e
-cons4 f =
+cons4 f = checkDepth >>
   f <$> decDepth series
     <*> decDepth series
     <*> decDepth series
