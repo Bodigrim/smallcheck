@@ -8,15 +8,11 @@
 -- Generation of test data.
 --------------------------------------------------------------------
 {-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
-    GeneralizedNewtypeDeriving, FlexibleContexts #-}
+             GeneralizedNewtypeDeriving, FlexibleContexts #-}
 
 #ifdef GENERICS
-{-# LANGUAGE DefaultSignatures
-           , FlexibleContexts
-           , TypeOperators
-           , TypeSynonymInstances
-           , FlexibleInstances
-  #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators,
+             TypeSynonymInstances, FlexibleInstances #-}
 #endif
 
 module Test.SmallCheck.Series (
