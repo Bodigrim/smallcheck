@@ -15,6 +15,7 @@ Version 0.7
 * Add numeric instances for N
 * Change the types of test, Property
 * Remove `depth`. Use `decDepth` and `localDepth` instead.
+* Split `coseries` into a separate class, `CoSerial`
 
 Version 0.6.2
 -----------

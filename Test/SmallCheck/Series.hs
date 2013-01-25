@@ -175,6 +175,8 @@ a >< b = a >>- \a -> b >>- \b -> return (a,b)
 
 class Monad m => Serial m a where
   series   :: Series m a
+
+class Monad m => CoSerial m a where
   -- | A proper 'coseries' implementation should pass the depth unchanged to
   -- its first argument. Doing otherwise will make enumeration of curried
   -- functions non-uniform in their arguments.
@@ -253,12 +255,14 @@ instance GSerial f => GSerialSum (C1 c f) where
 
 instance Monad m => Serial m () where
   series = return ()
+instance Monad m => CoSerial m () where
   coseries rs = constM rs
 
 instance Monad m => Serial m Int where
   series =
     generate (\d -> [0..d]) `interleave`
     generate (\d -> map negate [1..d])
+instance Monad m => CoSerial m Int where
   coseries rs =
     alts0 rs >>- \z ->
     alts1 rs >>- \f ->
@@ -271,6 +275,7 @@ instance Monad m => Serial m Int where
 
 instance Monad m => Serial m Integer where
   series = (toInteger :: Int -> Integer) <$> series
+instance Monad m => CoSerial m Integer where
   coseries rs = (. (fromInteger :: Integer->Int)) <$> coseries rs
 
 -- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
@@ -285,6 +290,7 @@ instance Show a => Show (N a) where
 instance (Integral a, Serial m a) => Serial m (N a) where
   series = generate $ \d -> map (N . fromIntegral) [0..d]
 
+instance (Integral a, Serial m a) => CoSerial m (N a) where
   coseries rs =
     alts0 rs >>- \z ->
     alts1 rs >>- \f ->
@@ -301,31 +307,37 @@ instance Monad m => Serial m Float where
     series >>- \(sig, exp) ->
     guard (odd sig || sig==0 && exp==0) >>
     return (encodeFloat sig exp)
+instance Monad m => CoSerial m Float where
   coseries rs =
     coseries rs >>- \f ->
       return $ f . decodeFloat
 
 instance Monad m => Serial m Double where
   series = series >>- (return . (realToFrac :: Float -> Double))
+instance Monad m => CoSerial m Double where
   coseries rs =
     coseries rs >>- \f -> return $ (f . (realToFrac :: Double -> Float))
 
 instance Monad m => Serial m Char where
   series = generate $ \d -> take (d+1) ['a'..'z']
+instance Monad m => CoSerial m Char where
   coseries rs =
     coseries rs >>- \f ->
     return $ \c -> f (N (fromEnum c - fromEnum 'a'))
 
 instance (Monad m, Serial m a, Serial m b) => Serial m (a,b) where
   series = cons2 (,)
+instance (Monad m, CoSerial m a, CoSerial m b) => CoSerial m (a,b) where
   coseries rs = uncurry <$> alts2 rs
 
 instance (Monad m, Serial m a, Serial m b, Serial m c) => Serial m (a,b,c) where
   series = cons3 (,,)
+instance (Monad m, CoSerial m a, CoSerial m b, CoSerial m c) => CoSerial m (a,b,c) where
   coseries rs = uncurry3 <$> alts3 rs
 
 instance (Monad m, Serial m a, Serial m b, Serial m c, Serial m d) => Serial m (a,b,c,d) where
   series = cons4 (,,,)
+instance (Monad m, CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) => CoSerial m (a,b,c,d) where
   coseries rs = uncurry4 <$> alts4 rs
 
 uncurry3 :: (a->b->c->d) -> ((a,b,c)->d)
@@ -381,26 +393,26 @@ constM = liftM const
 alts0 :: Series m a -> Series m a
 alts0 s = s
 
-alts1 :: (Monad m, Serial m a) => Series m b -> Series m (a->b)
+alts1 :: (Monad m, CoSerial m a) => Series m b -> Series m (a->b)
 alts1 rs =
   decDepthChecked (constM rs) (coseries rs)
 
 alts2
-  :: (Serial m a, Serial m b)
+  :: (CoSerial m a, CoSerial m b)
   => Series m c -> Series m (a->b->c)
 alts2 rs =
   decDepthChecked
     (constM $ constM rs)
     (coseries $ coseries rs)
 
-alts3 ::  (Serial m a, Serial m b, Serial m c) =>
+alts3 ::  (CoSerial m a, CoSerial m b, CoSerial m c) =>
             Series m d -> Series m (a->b->c->d)
 alts3 rs =
   decDepthChecked
     (constM $ constM $ constM rs)
     (coseries $ coseries $ coseries rs)
 
-alts4 ::  (Serial m a, Serial m b, Serial m c, Serial m d) =>
+alts4 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) =>
             Series m e -> Series m (a->b->c->d->e)
 alts4 rs =
   decDepthChecked
@@ -409,6 +421,7 @@ alts4 rs =
 
 instance Monad m => Serial m Bool where
   series = cons0 True \/ cons0 False
+instance Monad m => CoSerial m Bool where
   coseries rs =
     rs >>- \r1 ->
     rs >>- \r2 ->
@@ -416,6 +429,7 @@ instance Monad m => Serial m Bool where
 
 instance (Monad m, Serial m a) => Serial m (Maybe a) where
   series = cons0 Nothing \/ cons1 Just
+instance (Monad m, CoSerial m a) => CoSerial m (Maybe a) where
   coseries rs =
     alts0 rs >>- \z ->
     alts1 rs >>- \f ->
@@ -423,6 +437,7 @@ instance (Monad m, Serial m a) => Serial m (Maybe a) where
 
 instance (Monad m, Serial m a, Serial m b) => Serial m (Either a b) where
   series = cons1 Left \/ cons1 Right
+instance (Monad m, CoSerial m a, CoSerial m b) => CoSerial m (Either a b) where
   coseries rs =
     alts1 rs >>- \f ->
     alts1 rs >>- \g ->
@@ -430,15 +445,17 @@ instance (Monad m, Serial m a, Serial m b) => Serial m (Either a b) where
 
 instance Serial m a => Serial m [a] where
   series = cons0 [] \/ cons2 (:)
+instance CoSerial m a => CoSerial m [a] where
   coseries rs =
     alts0 rs >>- \y ->
     alts2 rs >>- \f ->
     return $ \xs -> case xs of [] -> y; x:xs' -> f x xs'
 
+instance (CoSerial m a, Serial m b, Monad m) => Serial m (a->b) where
+  series = coseries series
 -- Thanks to Ralf Hinze for the definition of coseries
 -- using the nest auxiliary.
-instance (Serial m a, Serial m b, Monad m) => Serial m (a->b) where
-  series = coseries series
+instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b, Monad m) => CoSerial m (a->b) where
   coseries r = do
     args <- unwind series
 
@@ -447,7 +464,7 @@ instance (Serial m a, Serial m b, Monad m) => Serial m (a->b) where
 
     where
 
-    nest :: forall a b m c . Serial m b => Series m c -> [a] -> Series m ([b] -> c)
+    nest :: forall a b m c . (Serial m b, CoSerial m b) => Series m c -> [a] -> Series m ([b] -> c)
     nest rs args = do
       case args of
         [] -> const `liftM` rs
