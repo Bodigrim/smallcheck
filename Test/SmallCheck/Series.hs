@@ -181,6 +181,11 @@ a <~> b = a >>- (<$> b)
 class Monad m => Serial m a where
   series   :: Series m a
 
+#ifdef GENERICS
+  default series :: (Generic a, GSerial m (Rep a)) => Series m a
+  series = to <$> gSeries
+#endif
+
 class Monad m => CoSerial m a where
   -- | A proper 'coseries' implementation should pass the depth unchanged to
   -- its first argument. Doing otherwise will make enumeration of curried
@@ -188,74 +193,58 @@ class Monad m => CoSerial m a where
   coseries :: Series m b -> Series m (a->b)
 
 #ifdef GENERICS
-{-
-  default series :: (Generic a, GSerial (Rep a)) => Series m a
-  series = map to . gSeries
+  default coseries :: (Generic a, GCoSerial m (Rep a)) => Series m b -> Series m (a->b)
+  coseries rs = (. from) <$> gCoseries rs
+#endif
 
-  default coseries :: (Generic a, GSerial (Rep a)) => Series m b -> Series m (a->b)
-  coseries rs = map (. from) . gCoseries rs
-
-class GSerial f where
-  gSeries   :: Series m (f a)
+#ifdef GENERICS
+class GSerial m f where
+  gSeries :: Series m (f a)
+class GCoSerial m f where
   gCoseries :: Series m b -> Series m (f a -> b)
 
-instance GSerial f => GSerial (M1 i c f) where
-  gSeries      = map M1 . gSeries
-  gCoseries rs = map (. unM1) . gCoseries rs
+instance GSerial m f => GSerial m (M1 i c f) where
+  gSeries = M1 <$> gSeries
   {-# INLINE gSeries #-}
+instance GCoSerial m f => GCoSerial m (M1 i c f) where
+  gCoseries rs = (. unM1) <$> gCoseries rs
   {-# INLINE gCoseries #-}
 
-instance Serial c => GSerial (K1 i c) where
-  gSeries      = map K1 . series
-  gCoseries rs = map (. unK1) . coseries rs
+instance Serial m c => GSerial m (K1 i c) where
+  gSeries = K1 <$> series
   {-# INLINE gSeries #-}
+instance CoSerial m c => GCoSerial m (K1 i c) where
+  gCoseries rs = (. unK1) <$> coseries rs
   {-# INLINE gCoseries #-}
 
-instance GSerial U1 where
-  gSeries        = cons0 U1
-  gCoseries rs d = [\U1 -> b | b <- rs d]
+instance GSerial m U1 where
+  gSeries = cons0 U1
   {-# INLINE gSeries #-}
+instance GCoSerial m U1 where
+  gCoseries rs = constM rs
   {-# INLINE gCoseries #-}
 
-instance (GSerial a, GSerial b) => GSerial (a :*: b) where
-  gSeries    d = [x :*: y | x <- gSeries d, y <- gSeries d]
-  gCoseries rs = map uncur . gCoseries (gCoseries rs)
+instance (Monad m, GSerial m a, GSerial m b) => GSerial m (a :*: b) where
+  gSeries = (:*:) <$> gSeries <~> gSeries
+  {-# INLINE gSeries #-}
+instance (Monad m, GCoSerial m a, GCoSerial m b) => GCoSerial m (a :*: b) where
+  gCoseries rs = uncur <$> gCoseries (gCoseries rs)
       where
         uncur f (x :*: y) = f x y
-  {-# INLINE gSeries #-}
   {-# INLINE gCoseries #-}
 
-instance (GSerialSum a, GSerialSum b) => GSerial (a :+: b) where
-  gSeries   = toList . gSeriesSum
-  gCoseries = gCoseriesSum
+instance (Monad m, GSerial m a, GSerial m b) => GSerial m (a :+: b) where
+  gSeries = (L1 <$> gSeries) `interleave` (R1 <$> gSeries)
   {-# INLINE gSeries #-}
+instance (Monad m, GCoSerial m a, GCoSerial m b) => GCoSerial m (a :+: b) where
+  gCoseries rs =
+    gCoseries rs >>- \f ->
+    gCoseries rs >>- \g ->
+    return $
+    \e -> case e of
+      L1 x -> f x
+      R1 y -> g y
   {-# INLINE gCoseries #-}
-
-class GSerialSum f where
-  gSeriesSum   :: DSeries (f a)
-  gCoseriesSum :: Series b -> Series m (f a -> b)
-
-type DSeries a = Depth -> DList a
-
-instance (GSerialSum a, GSerialSum b) => GSerialSum (a :+: b) where
-  gSeriesSum      d = fmap L1 (gSeriesSum d) `mappend` fmap R1 (gSeriesSum d)
-  gCoseriesSum rs d = [ \e -> case e of
-                                L1 x -> f x
-                                R1 y -> g y
-                      | f <- gCoseriesSum rs d
-                      , g <- gCoseriesSum rs d
-                      ]
-  {-# INLINE gSeriesSum #-}
-  {-# INLINE gCoseriesSum #-}
-
-instance GSerial f => GSerialSum (C1 c f) where
-  gSeriesSum      d | d > 0     = generate $ gSeries (d-1)
-                    | otherwise = mempty
-  gCoseriesSum rs d | d > 0     = gCoseries rs (d-1)
-                    | otherwise = [\_ -> x | x <- rs d]
-  {-# INLINE gSeriesSum #-}
-  {-# INLINE gCoseriesSum #-}
--}
 #endif
 
 instance Monad m => Serial m () where
