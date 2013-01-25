@@ -1,0 +1,4 @@
+.hpc
+*.tix
+test/html
+test/test
