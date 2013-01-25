@@ -14,6 +14,7 @@ Version 0.7
   interface
 * Add numeric instances for N
 * Change the types of test, Property
+* Remove `depth`. Use `decDepth` and `localDepth` instead.
 
 Version 0.6.2
 -----------

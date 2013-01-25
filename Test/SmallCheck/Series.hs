@@ -134,7 +134,8 @@ module Test.SmallCheck.Series (
   -- * Other useful definitions
   (\/), (><),
   N(..), Nat, Natural,
-  depth,
+  localDepth,
+  decDepth,
   generate,
   list
   ) where
@@ -463,20 +464,8 @@ unwind a =
   msplit a >>=
   maybe (return []) (\(x,a') -> (x:) `liftM` unwind a')
 
--- | For customising the depth measure. Use with care!
-depth :: Depth -> Depth -> Depth
-depth = undefined
+
 {-
-depth d d' | d >= 0    = d'+1-d
-           | otherwise = error "SmallCheck.depth: argument < 0"
-
-dec :: Depth -> Depth
-dec d | d > 0     = d-1
-      | otherwise = error "SmallCheck.dec: argument <= 0"
-
-inc :: Depth -> Depth
-inc d = d+1
-
 -- show the extension of a function (in part, bounded both by
 -- the number and depth of arguments)
 instance (Serial m a, Show a, Show b) => Show (a->b) where
