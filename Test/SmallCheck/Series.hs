@@ -8,7 +8,7 @@
 -- Generation of test data.
 --------------------------------------------------------------------
 {-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
-    GeneralizedNewtypeDeriving #-}
+    GeneralizedNewtypeDeriving, FlexibleContexts #-}
 
 #ifdef GENERICS
 {-# LANGUAGE DefaultSignatures
@@ -147,6 +147,7 @@ import Control.Applicative
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Data.Monoid
+import Data.List
 
 #ifdef GENERICS
 import GHC.Generics
@@ -464,11 +465,9 @@ unwind a =
   msplit a >>=
   maybe (return []) (\(x,a') -> (x:) `liftM` unwind a')
 
-
-{-
 -- show the extension of a function (in part, bounded both by
 -- the number and depth of arguments)
-instance (Serial m a, Show a, Show b) => Show (a->b) where
+instance (Serial Identity a, Show a, Show b) => Show (a->b) where
   show f =
     if maxarheight == 1
     && sumarwidth + length ars * length "->;" < widthLimit then
@@ -479,7 +478,7 @@ instance (Serial m a, Show a, Show b) => Show (a->b) where
       concat $ [a++"->\n"++indent r | (a,r) <- ars]
     where
     ars = take lengthLimit [ (show x, show (f x))
-                           | x <- series depthLimit ]
+                           | x <- list depthLimit series ]
     maxarheight = maximum  [ max (height a) (height r)
                            | (a,r) <- ars ]
     sumarwidth = sum       [ length a + length r
@@ -487,7 +486,6 @@ instance (Serial m a, Show a, Show b) => Show (a->b) where
     indent = unlines . map ("  "++) . lines
     height = length . lines
     (widthLimit,lengthLimit,depthLimit) = (80,20,3)::(Int,Int,Depth)
--}
 
 list :: Depth -> SC Identity a -> [a]
 list d s = fromMaybe [] $ fst $ runIdentity $ runSC d (return ()) $ unwind s
