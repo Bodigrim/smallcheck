@@ -147,8 +147,6 @@ import Data.List
 
 #ifdef GENERICS
 import GHC.Generics
-import Data.DList (DList, toList, fromList)
-import Data.Monoid (mempty, mappend)
 #endif
 
 -- | 'Series' is a function from the depth to a finite list of values.
