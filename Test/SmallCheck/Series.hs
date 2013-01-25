@@ -128,7 +128,7 @@ module Test.SmallCheck.Series (
   -- default definitions that use the 'Generic' instance.
 
   -- * Other useful definitions
-  (\/), (><),
+  (\/), (><), (<~>),
   N(..), Nat, Natural,
   localDepth,
   decDepth,
@@ -172,6 +172,11 @@ infixr 7 \/
 infixr 8 ><
 (><) :: Monad m => Series m a -> Series m b -> Series m (a,b)
 a >< b = a >>- \a -> b >>- \b -> return (a,b)
+
+-- | Fair version of 'ap' and '<*>'
+infixl 4 <~>
+(<~>) :: Monad m => SC m (a -> b) -> SC m a -> SC m b
+a <~> b = a >>- (<$> b)
 
 class Monad m => Serial m a where
   series   :: Series m a
@@ -370,22 +375,22 @@ cons1 :: Serial m a => (a->b) -> Series m b
 cons1 f = checkDepth >> f <$> decDepth series
 
 cons2 :: (Serial m a, Serial m b) => (a->b->c) -> Series m c
-cons2 f = checkDepth >> f <$> decDepth series <*> decDepth series
+cons2 f = checkDepth >> f <$> decDepth series <~> decDepth series
 
 cons3 :: (Serial m a, Serial m b, Serial m c) =>
          (a->b->c->d) -> Series m d
 cons3 f = checkDepth >>
   f <$> decDepth series
-    <*> decDepth series
-    <*> decDepth series
+    <~> decDepth series
+    <~> decDepth series
 
 cons4 :: (Serial m a, Serial m b, Serial m c, Serial m d) =>
          (a->b->c->d->e) -> Series m e
 cons4 f = checkDepth >>
   f <$> decDepth series
-    <*> decDepth series
-    <*> decDepth series
-    <*> decDepth series
+    <~> decDepth series
+    <~> decDepth series
+    <~> decDepth series
 
 constM :: Monad m => m b -> m (a -> b)
 constM = liftM const
