@@ -1,5 +1,5 @@
 {-# LANGUAGE BangPatterns, ScopedTypeVariables, FlexibleContexts,
-             ExistentialQuantification #-}
+             ExistentialQuantification, RankNTypes #-}
 import Test.Framework
 import Test.Framework.Providers.SmallCheck
 import Test.SmallCheck
@@ -10,6 +10,7 @@ import Data.Maybe
 import Control.Monad.Identity
 import Data.Proxy
 import Data.List
+import qualified Data.Set as Set
 
 ------------------------------
 -- Auxiliary definitions
@@ -18,7 +19,7 @@ import Data.List
 class Serial Identity a => SizeTest a where
   size :: Proxy a -> Integer -> Integer
 
-data TestableType = forall a . SizeTest a => TestableType String (Proxy a)
+data TestableType = forall a . (Ord a, SizeTest a) => TestableType String (Proxy a)
 
 count :: Depth -> SC Identity a -> Integer
 count d a = genericLength $ list d a
@@ -34,8 +35,16 @@ prop_size proxy = property $
   \d ->
     count d (series :: SC Identity a) == size proxy (fromIntegral d)
 
-test_size :: TestableType -> Test
-test_size (TestableType name p) = testProperty name $ prop_size p
+prop_distinct
+  :: forall a m . (Ord a, Serial Identity a, Monad m)
+  => Proxy a -> Property m
+prop_distinct proxy = property $
+  \d ->
+    let s = list d $ (series :: SC Identity a)
+    in length s == Set.size (Set.fromList s)
+
+testp :: (forall a m . (SizeTest a, Ord a, Monad m) => Proxy a -> Property m) -> TestableType -> Test
+testp prop (TestableType name p) = testProperty name $ prop p
 
 ------------------------------
 -- SizeTest instances
@@ -76,6 +85,7 @@ types =
 -- Actual testing
 ------------------------------
 
-main = defaultMain [sizeTests]
+main = defaultMain [sizeTests, distinctTests]
 
-sizeTests = testGroup "Size tests" $ map test_size types
+sizeTests = testGroup "Size tests" $ map (testp prop_size) types
+distinctTests = testGroup "Distinct tests" $ map (testp prop_distinct) types
