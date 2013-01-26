@@ -15,11 +15,13 @@ module Test.SmallCheck (
   -- * Constructing tests
 
   -- | The simplest kind of test is a function (possibly of many
-  -- arguments) returning 'Bool'.
+  -- arguments) returning 'Bool'. The test succeeds if for every
+  -- combination of arguments the function returns 'True'.
   --
   -- In addition, you can use the combinators shown below. For more
   -- advanced combinators, see "Test.SmallCheck.Property".
 
+  -- * Main types
   Testable,
   Property,
 
@@ -41,7 +43,7 @@ module Test.SmallCheck (
   -- We can also test the following property, which involves an existentially
   -- quantified variable:
   --
-  -- >prop_isPrefix2 :: String -> String -> Property
+  -- >prop_isPrefix2 :: Monad m => String -> String -> Property m
   -- >prop_isPrefix2 xs ys = isPrefix xs ys ==> exists $ \xs' -> ys == xs++xs'
 
   exists,
@@ -55,16 +57,17 @@ module Test.SmallCheck (
   -- * Running tests
   -- | The functions below can be used to run SmallCheck tests.
   --
-  -- As an alternative, consider using @test-framework@ package.
+  -- As an alternative, consider using the @test-framework@ package:
+  -- <http://hackage.haskell.org/package/test-framework>
   --
   -- It allows to organize SmallCheck properties into a test suite (possibly
   -- together with HUnit or QuickCheck tests), apply timeouts, get nice
   -- statistics etc.
   --
   -- To use SmallCheck properties with test-framework, install
-  -- @test-framework-smallcheck@ package.
-  smallCheck, depthCheck, smallCheckM,
-  Depth
+  -- the @test-framework-smallcheck@ package: <http://hackage.haskell.org/package/test-framework>
+  Depth,
+  smallCheck, depthCheck, smallCheckM
   ) where
 
 import Test.SmallCheck.Property

@@ -47,7 +47,9 @@ instance Typeable1 m => Typeable (Property m)
 property :: Testable m a => a -> Property m
 property = Property . test
 
--- | Anything of a 'Testable' type can be regarded as a \"test\"
+-- | Class of tests that can be run in a monad. For pure tests, it is
+-- recommended to keep their types polymorphic in @m@ rather than
+-- specialising it to 'Identity'.
 class Monad m => Testable m a where
   test :: a -> SC m Example
 
@@ -135,12 +137,12 @@ exists1 = thereExists1 series
 -- interpretation of existential properties can make testing of a valid property
 -- fail at all depths. Here is a contrived but illustrative example:
 --
--- >prop_append1 :: [Bool] -> [Bool] -> Property m
+-- >prop_append1 :: Monad m => [Bool] -> [Bool] -> Property m
 -- >prop_append1 xs ys = exists $ \zs -> zs == xs++ys
 --
 -- 'existsDeeperBy' transforms the depth bound by a given @'Depth' -> 'Depth'@ function:
 --
--- >prop_append2 :: [Bool] -> [Bool] -> Property m
+-- >prop_append2 :: Monad m => [Bool] -> [Bool] -> Property m
 -- >prop_append2 xs ys = existsDeeperBy (*2) $ \zs -> zs == xs++ys
 existsDeeperBy :: (Show a, Serial m a, Testable m b) => (Depth->Depth) -> (a->b) -> Property m
 existsDeeperBy f = thereExists $ localDepth f series
@@ -154,21 +156,18 @@ infixr 0 ==>
 
 -- | The '==>' operator can be used to express a
 -- restricting condition under which a property should hold. For example,
--- testing a propositional-logic module (see examples/logical), we might
--- define:
+-- testing a propositional-logic module, we might define:
 --
--- >prop_tautEval :: Proposition -> Environment -> Property m
--- >prop_tautEval p e =
--- >  tautology p ==> eval p e
+-- >prop_tautEval :: Monad m => Proposition -> Environment -> Property m
+-- >prop_tautEval p e = tautology p ==> eval p e
 --
 -- But here is an alternative definition:
 --
--- >prop_tautEval :: Proposition -> Property m
--- >prop_taut p =
--- >  tautology p ==> \e -> eval p e
+-- >prop_tautEval :: Monad m => Proposition -> Property m
+-- >prop_taut p = tautology p ==> \e -> eval p e
 --
 -- The first definition generates p and e for each test, whereas the
--- second only generates e if the tautology p holds.
+-- second only generates @e@ if the tautology @p@ holds.
 --
 -- The second definition is far better as the test-space is
 -- reduced from PE to T'+TE where P, T, T' and E are the numbers of
