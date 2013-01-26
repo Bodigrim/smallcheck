@@ -169,7 +169,7 @@ infixr 7 \/
 -- | Product of series
 infixr 8 ><
 (><) :: Monad m => Series m a -> Series m b -> Series m (a,b)
-a >< b = a >>- \a -> b >>- \b -> return (a,b)
+a >< b = (,) <$> a <~> b
 
 -- | Fair version of 'ap' and '<*>'
 infixl 4 <~>
@@ -305,10 +305,10 @@ instance Monad m => CoSerial m Float where
       return $ f . decodeFloat
 
 instance Monad m => Serial m Double where
-  series = series >>- (return . (realToFrac :: Float -> Double))
+  series = (realToFrac :: Float -> Double) <$> series
 instance Monad m => CoSerial m Double where
   coseries rs =
-    coseries rs >>- \f -> return $ (f . (realToFrac :: Double -> Float))
+    (. (realToFrac :: Double -> Float)) <$> coseries rs
 
 instance Monad m => Serial m Char where
   series = generate $ \d -> take (d+1) ['a'..'z']
@@ -423,17 +423,13 @@ instance (Monad m, Serial m a) => Serial m (Maybe a) where
   series = cons0 Nothing \/ cons1 Just
 instance (Monad m, CoSerial m a) => CoSerial m (Maybe a) where
   coseries rs =
-    alts0 rs >>- \z ->
-    alts1 rs >>- \f ->
-    return $ maybe z f
+    maybe <$> alts0 rs <~> alts1 rs
 
 instance (Monad m, Serial m a, Serial m b) => Serial m (Either a b) where
   series = cons1 Left \/ cons1 Right
 instance (Monad m, CoSerial m a, CoSerial m b) => CoSerial m (Either a b) where
   coseries rs =
-    alts1 rs >>- \f ->
-    alts1 rs >>- \g ->
-    return $ either f g
+    either <$> alts1 rs <~> alts1 rs
 
 instance Serial m a => Serial m [a] where
   series = cons0 [] \/ cons2 (:)
