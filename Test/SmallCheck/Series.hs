@@ -1,3 +1,5 @@
+-- vim:fdm=marker:foldtext=foldtext()
+
 --------------------------------------------------------------------
 -- |
 -- Module    : Test.SmallCheck.Series
@@ -7,6 +9,7 @@
 --
 -- Generation of test data.
 --------------------------------------------------------------------
+
 {-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
              GeneralizedNewtypeDeriving, FlexibleContexts #-}
 
@@ -16,6 +19,7 @@
 #endif
 
 module Test.SmallCheck.Series (
+  -- {{{
   -- * Basic definitions
   Depth, Series, Serial(..),
 
@@ -134,6 +138,7 @@ module Test.SmallCheck.Series (
   decDepth,
   generate,
   list
+  -- }}}
   ) where
 
 import Data.Maybe
@@ -149,32 +154,17 @@ import Data.List
 import GHC.Generics
 #endif
 
+------------------------------
+-- Main types and classes
+------------------------------
+--{{{
+
 -- | 'Series' is a function from the depth to a finite list of values.
 --
 -- If @s@ is a 'Series', @s n@ is expected to yield values of depth up to @n@.
 --
 -- (In particular, @series d@ is expected to be a subset of @series (d+1)@.)
 type Series m a = SC m a
-
-generate :: (Depth -> [a]) -> Series m a
-generate f = do
-  d <- getDepth
-  msum $ map return $ f d
-
--- | Sum (union) of series
-infixr 7 \/
-(\/) :: Monad m => Series m a -> Series m a -> Series m a
-(\/) = interleave
-
--- | Product of series
-infixr 8 ><
-(><) :: Monad m => Series m a -> Series m b -> Series m (a,b)
-a >< b = (,) <$> a <~> b
-
--- | Fair version of 'ap' and '<*>'
-infixl 4 <~>
-(<~>) :: Monad m => SC m (a -> b) -> SC m a -> SC m b
-a <~> b = a >>- (<$> b)
 
 class Monad m => Serial m a where
   series   :: Series m a
@@ -194,6 +184,134 @@ class Monad m => CoSerial m a where
   default coseries :: (Generic a, GCoSerial m (Rep a)) => Series m b -> Series m (a->b)
   coseries rs = (. from) <$> gCoseries rs
 #endif
+
+-- }}}
+
+------------------------------
+-- Helper functions
+------------------------------
+-- {{{
+
+generate :: (Depth -> [a]) -> Series m a
+generate f = do
+  d <- getDepth
+  msum $ map return $ f d
+
+list :: Depth -> SC Identity a -> [a]
+list d s = fromMaybe [] $ fst $ runIdentity $ runSC d (return ()) $ unwind s
+
+-- | Sum (union) of series
+infixr 7 \/
+(\/) :: Monad m => Series m a -> Series m a -> Series m a
+(\/) = interleave
+
+-- | Product of series
+infixr 8 ><
+(><) :: Monad m => Series m a -> Series m b -> Series m (a,b)
+a >< b = (,) <$> a <~> b
+
+-- | Fair version of 'ap' and '<*>'
+infixl 4 <~>
+(<~>) :: Monad m => SC m (a -> b) -> SC m a -> SC m b
+a <~> b = a >>- (<$> b)
+
+uncurry3 :: (a->b->c->d) -> ((a,b,c)->d)
+uncurry3 f (x,y,z) = f x y z
+
+uncurry4 :: (a->b->c->d->e) -> ((a,b,c,d)->e)
+uncurry4 f (w,x,y,z) = f w x y z
+
+decDepth :: Series m a -> Series m a
+decDepth a = localDepth (subtract 1) a
+
+constM :: Monad m => m b -> m (a -> b)
+constM = liftM const
+
+-- | If the current depth is 0, evaluate the first argument. Otherwise,
+-- evaluate the second argument with decremented depth.
+decDepthChecked :: SC m a -> SC m a -> SC m a
+decDepthChecked b r = do
+  d <- getDepth
+  if d == 0
+    then b
+    else decDepth r
+
+checkDepth :: SC m ()
+checkDepth = do
+  d <- getDepth
+  guard $ d > 0
+
+unwind :: MonadLogic m => m a -> m [a]
+unwind a =
+  msplit a >>=
+  maybe (return []) (\(x,a') -> (x:) `liftM` unwind a')
+
+-- }}}
+
+------------------------------
+-- cons* and alts* functions
+------------------------------
+-- {{{
+
+cons0 :: a -> Series m a
+cons0 = pure
+
+cons1 :: Serial m a => (a->b) -> Series m b
+cons1 f = checkDepth >> f <$> decDepth series
+
+cons2 :: (Serial m a, Serial m b) => (a->b->c) -> Series m c
+cons2 f = checkDepth >> f <$> decDepth series <~> decDepth series
+
+cons3 :: (Serial m a, Serial m b, Serial m c) =>
+         (a->b->c->d) -> Series m d
+cons3 f = checkDepth >>
+  f <$> decDepth series
+    <~> decDepth series
+    <~> decDepth series
+
+cons4 :: (Serial m a, Serial m b, Serial m c, Serial m d) =>
+         (a->b->c->d->e) -> Series m e
+cons4 f = checkDepth >>
+  f <$> decDepth series
+    <~> decDepth series
+    <~> decDepth series
+    <~> decDepth series
+
+alts0 :: Series m a -> Series m a
+alts0 s = s
+
+alts1 :: (Monad m, CoSerial m a) => Series m b -> Series m (a->b)
+alts1 rs =
+  decDepthChecked (constM rs) (coseries rs)
+
+alts2
+  :: (CoSerial m a, CoSerial m b)
+  => Series m c -> Series m (a->b->c)
+alts2 rs =
+  decDepthChecked
+    (constM $ constM rs)
+    (coseries $ coseries rs)
+
+alts3 ::  (CoSerial m a, CoSerial m b, CoSerial m c) =>
+            Series m d -> Series m (a->b->c->d)
+alts3 rs =
+  decDepthChecked
+    (constM $ constM $ constM rs)
+    (coseries $ coseries $ coseries rs)
+
+alts4 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) =>
+            Series m e -> Series m (a->b->c->d->e)
+alts4 rs =
+  decDepthChecked
+    (constM $ constM $ constM $ constM rs)
+    (coseries $ coseries $ coseries $ coseries rs)
+
+-- }}}
+
+------------------------------
+-- Generic instances
+------------------------------
+-- {{{
 
 #ifdef GENERICS
 class GSerial m f where
@@ -245,6 +363,12 @@ instance (Monad m, GCoSerial m a, GCoSerial m b) => GCoSerial m (a :+: b) where
   {-# INLINE gCoseries #-}
 #endif
 
+-- }}}
+
+------------------------------
+-- Instances for basic types
+------------------------------
+-- {{{
 instance Monad m => Serial m () where
   series = return ()
 instance Monad m => CoSerial m () where
@@ -332,85 +456,6 @@ instance (Monad m, Serial m a, Serial m b, Serial m c, Serial m d) => Serial m (
 instance (Monad m, CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) => CoSerial m (a,b,c,d) where
   coseries rs = uncurry4 <$> alts4 rs
 
-uncurry3 :: (a->b->c->d) -> ((a,b,c)->d)
-uncurry3 f (x,y,z) = f x y z
-
-uncurry4 :: (a->b->c->d->e) -> ((a,b,c,d)->e)
-uncurry4 f (w,x,y,z) = f w x y z
-
-decDepth :: Series m a -> Series m a
-decDepth a = localDepth (subtract 1) a
-
--- | If the current depth is 0, evaluate the first argument. Otherwise,
--- evaluate the second argument with decremented depth.
-decDepthChecked :: SC m a -> SC m a -> SC m a
-decDepthChecked b r = do
-  d <- getDepth
-  if d == 0
-    then b
-    else decDepth r
-
-checkDepth :: SC m ()
-checkDepth = do
-  d <- getDepth
-  guard $ d > 0
-
-cons0 :: a -> Series m a
-cons0 = pure
-
-cons1 :: Serial m a => (a->b) -> Series m b
-cons1 f = checkDepth >> f <$> decDepth series
-
-cons2 :: (Serial m a, Serial m b) => (a->b->c) -> Series m c
-cons2 f = checkDepth >> f <$> decDepth series <~> decDepth series
-
-cons3 :: (Serial m a, Serial m b, Serial m c) =>
-         (a->b->c->d) -> Series m d
-cons3 f = checkDepth >>
-  f <$> decDepth series
-    <~> decDepth series
-    <~> decDepth series
-
-cons4 :: (Serial m a, Serial m b, Serial m c, Serial m d) =>
-         (a->b->c->d->e) -> Series m e
-cons4 f = checkDepth >>
-  f <$> decDepth series
-    <~> decDepth series
-    <~> decDepth series
-    <~> decDepth series
-
-constM :: Monad m => m b -> m (a -> b)
-constM = liftM const
-
-alts0 :: Series m a -> Series m a
-alts0 s = s
-
-alts1 :: (Monad m, CoSerial m a) => Series m b -> Series m (a->b)
-alts1 rs =
-  decDepthChecked (constM rs) (coseries rs)
-
-alts2
-  :: (CoSerial m a, CoSerial m b)
-  => Series m c -> Series m (a->b->c)
-alts2 rs =
-  decDepthChecked
-    (constM $ constM rs)
-    (coseries $ coseries rs)
-
-alts3 ::  (CoSerial m a, CoSerial m b, CoSerial m c) =>
-            Series m d -> Series m (a->b->c->d)
-alts3 rs =
-  decDepthChecked
-    (constM $ constM $ constM rs)
-    (coseries $ coseries $ coseries rs)
-
-alts4 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) =>
-            Series m e -> Series m (a->b->c->d->e)
-alts4 rs =
-  decDepthChecked
-    (constM $ constM $ constM $ constM rs)
-    (coseries $ coseries $ coseries $ coseries rs)
-
 instance Monad m => Serial m Bool where
   series = cons0 True \/ cons0 False
 instance Monad m => CoSerial m Bool where
@@ -461,11 +506,6 @@ instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b, Monad m) => CoSeri
           f <- sf
           return $ \(b:bs) -> f b bs
 
-unwind :: MonadLogic m => m a -> m [a]
-unwind a =
-  msplit a >>=
-  maybe (return []) (\(x,a') -> (x:) `liftM` unwind a')
-
 -- show the extension of a function (in part, bounded both by
 -- the number and depth of arguments)
 instance (Serial Identity a, Show a, Show b) => Show (a->b) where
@@ -488,5 +528,4 @@ instance (Serial Identity a, Show a, Show b) => Show (a->b) where
     height = length . lines
     (widthLimit,lengthLimit,depthLimit) = (80,20,3)::(Int,Int,Depth)
 
-list :: Depth -> SC Identity a -> [a]
-list d s = fromMaybe [] $ fst $ runIdentity $ runSC d (return ()) $ unwind s
+-- }}}
