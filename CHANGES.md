@@ -4,18 +4,23 @@ Changes
 Version 0.7
 -----------
 
-* Monadic tests
-* Remove smallCheckI (interactive version)
+* Make properties monadic. Change the types and classes appropriately.
 * `smallCheck` now behaves exactly like `depthCheck`. `depthCheck` is
   deprecated in favour of `smallCheck`.
-* Remove mkProperty function and TestCase data type
-* Hide `resultIsOk` and `TestResult` functions
-* `\/` and `><` combinators are deprecated in favour of the Applicative
-  interface
+* Remove or hide the following functions and types:
+    * `mkProperty`
+    * `TestCase`
+    * `TestResult`
+    * `resultIsOk`
+    * `smallCheckI`
+
+    It is expected that these entities were not used a lot. If you use any of
+    these, feel free to submit an issue.
 * Add numeric instances for N
-* Change the types of test, Property
 * Remove `depth`. Use `decDepth` and `localDepth` instead.
+* Remove `smallCheckPure`. Use `smallCheckM` with the `Identity` monad instead.
 * Split `coseries` into a separate class, `CoSerial`
+* Add many new functions and types
 
 Version 0.6.2
 -----------
