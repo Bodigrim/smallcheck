@@ -16,10 +16,12 @@ Version 0.7
 
     It is expected that these entities were not used a lot. If you use any of
     these, feel free to submit an issue.
-* Add numeric instances for N
+* Do not expose `property` from `Test.SmallCheck`. It can be still imported from
+  `Test.SmallCheck.Property` should you need it.
 * Remove `depth`. Use `decDepth` and `localDepth` instead.
 * Remove `smallCheckPure`. Use `smallCheckM` with the `Identity` monad instead.
 * Split `coseries` into a separate class, `CoSerial`
+* Add numeric instances for N
 * Add many new functions and types
 
 Version 0.6.2

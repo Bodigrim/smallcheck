@@ -22,7 +22,6 @@ module Test.SmallCheck (
 
   Testable,
   Property,
-  property,
 
   -- ** Existential quantification
 
