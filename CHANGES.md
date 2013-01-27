@@ -20,6 +20,8 @@ Version 0.7
   `Test.SmallCheck.Property` should you need it.
 * Remove `depth`. Use `decDepth` and `localDepth` instead.
 * Remove `smallCheckPure`. Use `smallCheckM` with the `Identity` monad instead.
+* `cons0` now counts as one level of depth. This also has impact on some
+  standard instances, such as `Maybe a` or `[a]`.
 * Split `coseries` into a separate class, `CoSerial`
 * Add numeric instances for N
 * Add many new functions and types
