@@ -13,6 +13,14 @@
 -- You'll typically need the following extensions:
 --
 -- >{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+--
+-- SmallCheck itself defines data generators for all the data types used
+-- by the "Prelude".
+--
+-- In order to generate values and functions of your own types, you need
+-- to make them instances of 'Serial' (for values) and 'CoSerial' (for
+-- functions). There are two main ways to do so: using Generics or writing
+-- the instances by hand.
 --------------------------------------------------------------------
 
 {-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
@@ -24,12 +32,31 @@
 #endif
 
 module Test.SmallCheck.Series (
+  -- * Generic instances
+  -- | The simples way to create the necessary instances is to use GHC
+  -- generics (available starting with GHC 7.2.1).
+  --
+  -- Here's a complete example:
+  --
+  -- >{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+  -- >{-# LANGUAGE DeriveGeneric #-}
+  -- >
+  -- >import Test.SmallCheck.Series
+  -- >import GHC.Generics
+  -- >
+  -- >data Tree a = Null | Fork (Tree a) a (Tree a)
+  -- >    deriving Generic
+  -- >
+  -- >instance Serial m a => Serial m (Tree a)
+  --
+  -- Here we enable the @DeriveGeneric@ extension which allows to derive 'Generic'
+  -- instance for our data type. Then we declare that @Tree a@ is an instance of
+  -- 'Serial', but do not provide any definitions. This causes GHC to use the
+  -- default definitions that use the 'Generic' instance.
+
   -- {{{
   -- * Data Generators
-  -- | SmallCheck itself defines data generators for all the data types used
-  -- by the "Prelude".
-  --
-  -- Writing SmallCheck generators for application-specific types is
+  -- | Writing 'Serial' instances for application-specific types is
   -- straightforward. You need to define a 'series' generator, typically using
   -- @consN@ family of generic combinators where N is constructor arity.
   --
@@ -112,25 +139,6 @@ module Test.SmallCheck.Series (
   -- types) and return values produced by @s@.
 
   alts0, alts1, alts2, alts3, alts4, newtypeAlts,
-
-  -- * Generic instances
-  -- | For GHC users starting from GHC 7.2.1 there's also an option to use GHC's
-  -- Generics to get 'Serial' instance for free.
-  --
-  -- Example:
-  --
-  -- >{-# LANGUAGE DeriveGeneric #-}
-  -- >import Test.SmallCheck
-  -- >import GHC.Generics
-  -- >
-  -- >data Tree a = Null | Fork (Tree a) a (Tree a)
-  -- >    deriving Generic
-  -- >instance Serial a => Serial (Tree a)
-  --
-  -- Here we enable the @DeriveGeneric@ extension which allows to derive 'Generic'
-  -- instance for our data type. Then we declare that @Tree a@ is an instance of
-  -- 'Serial', but do not provide any definitions. This causes GHC to use the
-  -- default definitions that use the 'Generic' instance.
 
   -- * Basic definitions
   Depth, Series, Serial(..), CoSerial(..),
