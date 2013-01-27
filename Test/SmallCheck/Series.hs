@@ -66,20 +66,26 @@ module Test.SmallCheck.Series (
   cons0, cons1, cons2, cons3, cons4, newtypeCons,
   -- * Function Generators
 
-  -- | To generate functions of an application-specific argument type
-  -- requires a second method 'coseries'.  Again there is a standard
-  -- pattern, this time using the altsN combinators where again N is
-  -- constructor arity.  Here are Tree and Light instances:
+  -- | To generate functions of an application-specific argument type,
+  -- make the type an instance of 'CoSerial'.
   --
-  -- >coseries rs d = [ \t -> case t of
-  -- >                        Null         -> z
-  -- >                        Fork t1 x t2 -> f t1 x t2
-  -- >                |  z <- alts0 rs d ,
-  -- >                   f <- alts3 rs d ]
-  -- >
-  -- >coseries rs d = [ \l -> case l of
-  -- >                        Light x -> f x
-  -- >                |  f <- (alts1 rs . depth 0) d ]
+  -- Again there is a standard pattern, this time using the altsN
+  -- combinators where again N is constructor arity.  Here are @Tree@ and
+  -- @Light@ instances:
+  --
+  -- >coseries rs =
+  -- >  alts0 >>- \z ->
+  -- >  alts3 >>- \f ->
+  -- >  return $ \t ->
+  -- >    case t of
+  -- >      Null -> z
+  -- >      Fork t1 x t2 -> f t1 x t2
+  --
+  -- >coseries rs =
+  -- >  newtypeAlts >>-
+  -- >  return $ \l ->
+  -- >    case l of
+  -- >      Light x -> f x
 
   -- ** What does altsN do, exactly?
 
@@ -91,11 +97,12 @@ module Test.SmallCheck.Series (
   --
   -- >t_1 -> ... -> t_N -> t
   --
-  -- If @d <= 0@, these are constant functions, one for each value of @s 0@.
+  -- If @d <= 0@, these are constant functions, one for each value produced
+  -- by @s@.
   --
-  -- If @d > 0@, these functions inspect each of their arguments up to depth
+  -- If @d > 0@, these functions inspect each of their arguments up to the depth
   -- @d-1@ (as defined by the 'coseries' functions for the corresponding
-  -- types) and return values given by @s d@.
+  -- types) and return values produced by @s@.
 
   alts0, alts1, alts2, alts3, alts4, newtypeAlts,
 
