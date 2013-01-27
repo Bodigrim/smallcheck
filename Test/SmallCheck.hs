@@ -21,6 +21,9 @@ module Test.SmallCheck (
   --
   -- In addition, you can use the combinators shown below. For more
   -- advanced combinators, see "Test.SmallCheck.Property".
+  --
+  -- To generate test cases for your own types, refer to
+  -- "Test.SmallCheck.Series".
 
   -- * Main types
   Testable,
@@ -67,6 +70,8 @@ module Test.SmallCheck (
   --
   -- To use SmallCheck properties with test-framework, install
   -- the @test-framework-smallcheck@ package: <http://hackage.haskell.org/package/test-framework>
+  --
+  -- For more ways to run the tests, see "Test.SmallCheck.Drivers".
   Depth,
   smallCheck, depthCheck
   ) where
