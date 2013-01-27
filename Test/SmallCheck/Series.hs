@@ -34,7 +34,7 @@
 module Test.SmallCheck.Series (
   -- {{{
   -- * Generic instances
-  -- | The simples way to create the necessary instances is to use GHC
+  -- | The easiest way to create the necessary instances is to use GHC
   -- generics (available starting with GHC 7.2.1).
   --
   -- Here's a complete example:
