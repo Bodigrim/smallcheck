@@ -66,7 +66,7 @@ instance Testlike Int Result (SC.Property IO) where
     -- individual test
     let
       action = do
-        mb_result <- timeout (fromMaybe (-1) timeoutAmount) $ runSC depth (writeChan chan (Left ())) (SC.test prop)
+        mb_result <- timeout (fromMaybe (-1) timeoutAmount) $ smallCheckWithHook depth (writeChan chan (Left ())) prop
         writeChan chan $ Right $
           case mb_result of
             Nothing -> Timeout
