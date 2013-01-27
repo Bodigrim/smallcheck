@@ -157,11 +157,19 @@ import GHC.Generics
 ------------------------------
 --{{{
 
--- | 'Series' is a function from the depth to a finite list of values.
+-- | 'Series' is a `MonadLogic` action that enumerates values of a certain
+-- type, up to some depth.
 --
--- If @s@ is a 'Series', @s n@ is expected to yield values of depth up to @n@.
+-- The depth bound is tracked in the 'SC' monad and can be extracted using
+-- 'getDepth' and changed using 'localDepth'.
 --
--- (In particular, @series d@ is expected to be a subset of @series (d+1)@.)
+-- To manipulate series at the lowest level you can use its 'Monad',
+-- 'MonadPlus' and 'MonadLogic' instances. This module provides some
+-- higher-level combinators which simplify creating series.
+--
+-- A proper 'Series' should be monotonic with respect to the depth — i.e.
+-- @localDepth (+1) s@ should emit all the values that @s@ emits (and
+-- possibly some more).
 type Series m a = SC m a
 
 class Monad m => Serial m a where
