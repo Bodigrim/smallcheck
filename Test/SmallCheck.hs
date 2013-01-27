@@ -68,7 +68,7 @@ module Test.SmallCheck (
   -- To use SmallCheck properties with test-framework, install
   -- the @test-framework-smallcheck@ package: <http://hackage.haskell.org/package/test-framework>
   Depth,
-  smallCheck, depthCheck, smallCheckM
+  smallCheck, depthCheck
   ) where
 
 import Test.SmallCheck.Property
