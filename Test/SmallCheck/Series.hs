@@ -221,6 +221,8 @@ class Monad m => CoSerial m a where
 ------------------------------
 -- {{{
 
+-- | A simple series specified by a function from depth to the list of
+-- values up to that depth.
 generate :: (Depth -> [a]) -> Series m a
 generate f = do
   d <- getDepth
