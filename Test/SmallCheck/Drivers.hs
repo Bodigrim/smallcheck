@@ -9,7 +9,7 @@
 --------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 module Test.SmallCheck.Drivers (
-  smallCheck, depthCheck, smallCheckM, runSC
+  smallCheck, depthCheck, smallCheckM, smallCheckWithHook
   ) where
 
 import Control.Monad (when)
@@ -35,4 +35,12 @@ depthCheck :: Testable IO a => Depth -> a -> IO ()
 depthCheck = smallCheck
 
 smallCheckM :: Testable m a => Depth -> a -> m (Maybe Example, Stats)
-smallCheckM d a = runSC d (return ()) $ test a
+smallCheckM d a = smallCheckWithHook d (return ()) a
+
+-- | Like `smallCheckM`, but allows to specify a monadic hook that gets
+-- executed after each test is run.
+--
+-- Useful for applications that want to report progress information to the
+-- user.
+smallCheckWithHook :: Testable m a => Depth -> m () -> a -> m (Maybe Example, Stats)
+smallCheckWithHook d hook a = runSC d hook $ test a
