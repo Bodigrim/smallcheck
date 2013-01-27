@@ -255,7 +255,7 @@ unwind a =
 -- {{{
 
 cons0 :: a -> Series m a
-cons0 = pure
+cons0 x = checkDepth >> pure x
 
 cons1 :: Serial m a => (a->b) -> Series m b
 cons1 f = checkDepth >> f <$> decDepth series
