@@ -12,6 +12,7 @@ then
   (cd ../test-framework-smallcheck && cabal_install)
 fi
 
+rm -f test.tix
 ghc -fforce-recomp -fhpc test.hs
 ./test
 hpc markup --srcdir=. --srcdir=../ --srcdir=../test-framework-smallcheck --destdir=html test.tix

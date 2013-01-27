@@ -51,7 +51,7 @@ testp prop (TestableType name p) = testProperty name $ prop p
 ------------------------------
 
 instance SizeTest Bool where
-  size _ d = 2
+  size _ d = if d > 0 then 2 else 0
 
 instance SizeTest Int where
   size _ d = max 0 $ 2*d+1
@@ -60,10 +60,10 @@ instance SizeTest Integer where
   size _ d = max 0 $ 2*d+1
 
 instance SizeTest a => SizeTest (Maybe a) where
-  size _ d = max 0 $ size (Proxy :: Proxy a) (d-1) + 1
+  size _ d = if d > 0 then size (Proxy :: Proxy a) (d-1) + 1 else 0
 
 instance SizeTest a => SizeTest [a] where
-  size _ d | d <= 0 = 1
+  size _ d | d <= 0 = 0
   size p d = 1 + size (Proxy :: Proxy a) (d-1) * size p (d-1)
 
 -- instance (SizeTest a, SizeTest b) => SizeTest (a -> b)
