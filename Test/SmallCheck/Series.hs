@@ -36,18 +36,14 @@ module Test.SmallCheck.Series (
   -- >instance Serial a => Serial (Tree a) where
   -- >  series = cons0 Null \/ cons3 Fork
   --
-  -- The default interpretation of depth for datatypes is the depth of nested
-  -- construction: constructor functions, including those for newtypes, build
-  -- results with depth one greater than their deepest argument.  But this
-  -- default can be over-ridden by composing a @consN@ application with an
-  -- application of 'depth', like this:
+  -- For newtypes use 'newtypeCons' instead of 'cons1'.
+  -- The difference is that 'cons1' is counts as one level of depth, while
+  -- 'newtypeCons' doesn't affect the depth.
   --
   -- >newtype Light a = Light a
   -- >
   -- >instance Serial a => Serial (Light a) where
-  -- >  series = cons1 Light . depth 0
-  --
-  -- The depth of @Light x@ is just the depth of @x@.
+  -- >  series = newtypeCons Light
 
   -- ** What does consN do, exactly?
 
@@ -261,6 +257,7 @@ cons0 x = checkDepth >> pure x
 cons1 :: Serial m a => (a->b) -> Series m b
 cons1 f = checkDepth >> f <$> decDepth series
 
+-- | Same as 'cons1', but preserves the depth.
 newtypeCons :: Serial m a => (a->b) -> Series m b
 newtypeCons f = f <$> series
 
