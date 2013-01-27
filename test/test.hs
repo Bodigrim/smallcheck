@@ -66,7 +66,7 @@ instance SizeTest a => SizeTest [a] where
   size _ d | d <= 0 = 1
   size p d = 1 + size (Proxy :: Proxy a) (d-1) * size p (d-1)
 
-instance (SizeTest a, SizeTest b) => SizeTest (a -> b)
+-- instance (SizeTest a, SizeTest b) => SizeTest (a -> b)
 
 ------------------------------
 -- Testable types
