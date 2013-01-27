@@ -262,6 +262,11 @@ decDepth a = do
   checkDepth
   localDepth (subtract 1) a
 
+checkDepth :: SC m ()
+checkDepth = do
+  d <- getDepth
+  guard $ d > 0
+
 constM :: Monad m => m b -> m (a -> b)
 constM = liftM const
 
@@ -273,11 +278,6 @@ decDepthChecked b r = do
   if d == 0
     then b
     else decDepth r
-
-checkDepth :: SC m ()
-checkDepth = do
-  d <- getDepth
-  guard $ d > 0
 
 unwind :: MonadLogic m => m a -> m [a]
 unwind a =
@@ -292,32 +292,32 @@ unwind a =
 -- {{{
 
 cons0 :: a -> Series m a
-cons0 x = checkDepth >> pure x
+cons0 x = decDepth $ pure x
 
 cons1 :: Serial m a => (a->b) -> Series m b
-cons1 f = checkDepth >> f <$> decDepth series
+cons1 f = decDepth $ f <$> series
 
 -- | Same as 'cons1', but preserves the depth.
 newtypeCons :: Serial m a => (a->b) -> Series m b
 newtypeCons f = f <$> series
 
 cons2 :: (Serial m a, Serial m b) => (a->b->c) -> Series m c
-cons2 f = checkDepth >> f <$> decDepth series <~> decDepth series
+cons2 f = decDepth $ f <$> series <~> series
 
 cons3 :: (Serial m a, Serial m b, Serial m c) =>
          (a->b->c->d) -> Series m d
-cons3 f = checkDepth >>
-  f <$> decDepth series
-    <~> decDepth series
-    <~> decDepth series
+cons3 f = decDepth $
+  f <$> series
+    <~> series
+    <~> series
 
 cons4 :: (Serial m a, Serial m b, Serial m c, Serial m d) =>
          (a->b->c->d->e) -> Series m e
-cons4 f = checkDepth >>
-  f <$> decDepth series
-    <~> decDepth series
-    <~> decDepth series
-    <~> decDepth series
+cons4 f = decDepth $
+  f <$> series
+    <~> series
+    <~> series
+    <~> series
 
 alts0 :: Series m a -> Series m a
 alts0 s = s
