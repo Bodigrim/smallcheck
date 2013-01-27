@@ -20,7 +20,7 @@ import Control.Monad.Reader
 import Control.Monad.Logic
 import Control.Applicative
 
--- | Maximum depth of generated test values
+-- | Maximum depth of generated test values.
 --
 -- For data values, it is the depth of nested constructor applications.
 --

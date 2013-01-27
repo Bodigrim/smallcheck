@@ -7,7 +7,8 @@
 -- License   : BSD3
 -- Maintainer: Roman Cheplyaka <roma@ro-che.info>
 --
--- Generation of test data.
+-- You need this module if you want to generate test values of your own
+-- types.
 --------------------------------------------------------------------
 
 {-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
@@ -20,12 +21,9 @@
 
 module Test.SmallCheck.Series (
   -- {{{
-  -- * Basic definitions
-  Depth, Series, Serial(..),
-
   -- * Data Generators
   -- | SmallCheck itself defines data generators for all the data types used
-  -- by the Prelude.
+  -- by the "Prelude".
   --
   -- Writing SmallCheck generators for application-specific types is
   -- straightforward. You need to define a 'series' generator, typically using
@@ -130,6 +128,9 @@ module Test.SmallCheck.Series (
   -- instance for our data type. Then we declare that @Tree a@ is an instance of
   -- 'Serial', but do not provide any definitions. This causes GHC to use the
   -- default definitions that use the 'Generic' instance.
+
+  -- * Basic definitions
+  Depth, Series, Serial(..), CoSerial(..),
 
   -- * Other useful definitions
   (\/), (><), (<~>),
