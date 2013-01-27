@@ -66,7 +66,7 @@ module Test.SmallCheck.Series (
   --
   -- If @d <= 0@, no values are produced.
 
-  cons0, cons1, cons2, cons3, cons4,
+  cons0, cons1, cons2, cons3, cons4, newtypeCons,
   -- * Function Generators
 
   -- | To generate functions of an application-specific argument type
@@ -258,6 +258,9 @@ cons0 = pure
 
 cons1 :: Serial m a => (a->b) -> Series m b
 cons1 f = checkDepth >> f <$> decDepth series
+
+newtypeCons :: Serial m a => (a->b) -> Series m b
+newtypeCons f = f <$> series
 
 cons2 :: (Serial m a, Serial m b) => (a->b->c) -> Series m c
 cons2 f = checkDepth >> f <$> decDepth series <~> decDepth series
