@@ -136,6 +136,7 @@ module Test.SmallCheck.Series (
   N(..), Nat, Natural,
   localDepth,
   decDepth,
+  getDepth,
   generate,
   list
   -- }}}
