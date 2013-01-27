@@ -58,6 +58,9 @@ module Test.SmallCheck.Series (
   -- where @x_i@ ranges over all values of type @t_i@ of depth up to @d-1@
   -- (as defined by the 'series' functions for @t_i@).
   --
+  -- @consN@ functions also ensure that x_i are enumerated in the
+  -- breadth-first order. Thus, combinations of smaller depth come first.
+  --
   -- If @d <= 0@, no values are produced.
 
   cons0, cons1, cons2, cons3, cons4, newtypeCons,
@@ -170,6 +173,9 @@ import GHC.Generics
 -- A proper 'Series' should be monotonic with respect to the depth — i.e.
 -- @localDepth (+1) s@ should emit all the values that @s@ emits (and
 -- possibly some more).
+--
+-- It is also desirable that values of smaller depth come before the values
+-- of greater depth.
 type Series m a = SC m a
 
 class Monad m => Serial m a where
