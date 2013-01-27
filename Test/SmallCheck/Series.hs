@@ -97,7 +97,7 @@ module Test.SmallCheck.Series (
   -- @d-1@ (as defined by the 'coseries' functions for the corresponding
   -- types) and return values given by @s d@.
 
-  alts0, alts1, alts2, alts3, alts4,
+  alts0, alts1, alts2, alts3, alts4, newtypeAlts,
 
   -- * Automated Derivation of Generators
 
@@ -321,6 +321,10 @@ alts4 rs =
   decDepthChecked
     (constM $ constM $ constM $ constM rs)
     (coseries $ coseries $ coseries $ coseries rs)
+
+-- | Same as 'alts1', but preserves the depth.
+newtypeAlts :: (Monad m, CoSerial m a) => Series m b -> Series m (a->b)
+newtypeAlts = coseries
 
 -- }}}
 
