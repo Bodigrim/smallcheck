@@ -139,7 +139,7 @@ module Test.SmallCheck.Series (
   Depth, Series, Serial(..), CoSerial(..),
 
   -- * Other useful definitions
-  (\/), (><), (<~>),
+  (\/), (><), (<~>), (>>-),
   N(..), Nat, Natural,
   localDepth,
   decDepth,
