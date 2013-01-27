@@ -32,6 +32,7 @@
 #endif
 
 module Test.SmallCheck.Series (
+  -- {{{
   -- * Generic instances
   -- | The simples way to create the necessary instances is to use GHC
   -- generics (available starting with GHC 7.2.1).
@@ -54,7 +55,6 @@ module Test.SmallCheck.Series (
   -- 'Serial', but do not provide any definitions. This causes GHC to use the
   -- default definitions that use the 'Generic' instance.
 
-  -- {{{
   -- * Data Generators
   -- | Writing 'Serial' instances for application-specific types is
   -- straightforward. You need to define a 'series' generator, typically using
