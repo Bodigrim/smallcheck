@@ -11,6 +11,7 @@
 -- to the README at
 -- <https://github.com/feuerbach/smallcheck/blob/master/README.md>
 --------------------------------------------------------------------
+{-# OPTIONS_HADDOCK prune #-}
 module Test.SmallCheck (
   -- * Constructing tests
 

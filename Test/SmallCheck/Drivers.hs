@@ -8,6 +8,7 @@
 -- Functions to run SmallCheck tests.
 --------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_HADDOCK prune #-}
 module Test.SmallCheck.Drivers (
   smallCheck, depthCheck, smallCheckM, smallCheckWithHook
   ) where
@@ -18,6 +19,8 @@ import Test.SmallCheck.Property
 import Test.SmallCheck.Monad
 import Text.Printf
 
+-- | A simple driver that runs the test in the 'IO' monad and prints the
+-- results.
 smallCheck :: Testable IO a => Depth -> a -> IO ()
 smallCheck d a = do
   (mbEx, Stats { badTests = badTests, testsRun = testsRun } ) <- smallCheckM d a
@@ -34,6 +37,11 @@ smallCheck d a = do
 depthCheck :: Testable IO a => Depth -> a -> IO ()
 depthCheck = smallCheck
 
+-- | Use this if:
+--
+-- * You need to run a test in a monad different from 'IO'
+--
+-- * You need to analyse the results rather than just print them
 smallCheckM :: Testable m a => Depth -> a -> m (Maybe Example, Stats)
 smallCheckM d a = smallCheckWithHook d (return ()) a
 
