@@ -113,17 +113,7 @@ module Test.SmallCheck.Series (
 
   alts0, alts1, alts2, alts3, alts4, newtypeAlts,
 
-  -- * Automated Derivation of Generators
-
-  -- | For small examples, Series instances are easy enough to define by hand,
-  -- following the above patterns.  But for programs with many or large data
-  -- type definitions, automatic derivation using a tool such as \"derive\"
-  -- is a better option. For example, the following command-line appends to
-  -- Prog.hs the Series instances for all data types defined there.
-  --
-  -- >$ derive Prog.hs -d Serial --append
-
-  -- ** Using GHC Generics
+  -- * Generic instances
   -- | For GHC users starting from GHC 7.2.1 there's also an option to use GHC's
   -- Generics to get 'Serial' instance for free.
   --
