@@ -54,6 +54,10 @@ module Test.SmallCheck.Series (
   -- instance for our data type. Then we declare that @Tree a@ is an instance of
   -- 'Serial', but do not provide any definitions. This causes GHC to use the
   -- default definitions that use the 'Generic' instance.
+  --
+  -- One minor limitation of generic instances is that there's currently no
+  -- way to distinguish newtypes and datatypes. Thus, newtype constructors
+  -- will also count as one level of depth.
 
   -- * Data Generators
   -- | Writing 'Serial' instances for application-specific types is
