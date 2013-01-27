@@ -3,7 +3,7 @@ Version:       0.7
 Cabal-Version: >= 1.6
 License:       BSD3
 License-File:  LICENSE
-Author:        Colin Runciman
+Author:        Colin Runciman, Roman Cheplyaka
 Maintainer:    Roman Cheplyaka <roma@ro-che.info>
 Homepage:      https://github.com/feuerbach/smallcheck
 Bug-reports:   https://github.com/feuerbach/smallcheck/issues
