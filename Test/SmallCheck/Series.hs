@@ -9,6 +9,10 @@
 --
 -- You need this module if you want to generate test values of your own
 -- types.
+--
+-- You'll typically need the following extensions:
+--
+-- >{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 --------------------------------------------------------------------
 
 {-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
@@ -33,7 +37,7 @@ module Test.SmallCheck.Series (
   --
   -- >data Tree a = Null | Fork (Tree a) a (Tree a)
   -- >
-  -- >instance Serial a => Serial (Tree a) where
+  -- >instance Serial m a => Serial m (Tree a) where
   -- >  series = cons0 Null \/ cons3 Fork
   --
   -- For newtypes use 'newtypeCons' instead of 'cons1'.
@@ -42,7 +46,7 @@ module Test.SmallCheck.Series (
   --
   -- >newtype Light a = Light a
   -- >
-  -- >instance Serial a => Serial (Light a) where
+  -- >instance Serial m a => Serial m (Light a) where
   -- >  series = newtypeCons Light
 
   -- ** What does consN do, exactly?
@@ -73,19 +77,22 @@ module Test.SmallCheck.Series (
   -- combinators where again N is constructor arity.  Here are @Tree@ and
   -- @Light@ instances:
   --
-  -- >coseries rs =
-  -- >  alts0 >>- \z ->
-  -- >  alts3 >>- \f ->
-  -- >  return $ \t ->
-  -- >    case t of
-  -- >      Null -> z
-  -- >      Fork t1 x t2 -> f t1 x t2
   --
-  -- >coseries rs =
-  -- >  newtypeAlts >>-
-  -- >  return $ \l ->
-  -- >    case l of
-  -- >      Light x -> f x
+  -- >instance CoSerial m a => CoSerial m (Tree a) where
+  -- >  coseries rs =
+  -- >    alts0 rs >>- \z ->
+  -- >    alts3 rs >>- \f ->
+  -- >    return $ \t ->
+  -- >      case t of
+  -- >        Null -> z
+  -- >        Fork t1 x t2 -> f t1 x t2
+  --
+  -- >instance CoSerial m a => CoSerial m (Light a) where
+  -- >  coseries rs =
+  -- >    newtypeAlts rs >>- \f ->
+  -- >    return $ \l ->
+  -- >      case l of
+  -- >        Light x -> f x
 
   -- ** What does altsN do, exactly?
 
