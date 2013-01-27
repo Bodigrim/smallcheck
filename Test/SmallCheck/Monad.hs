@@ -126,9 +126,11 @@ addArgument arg (SC a) = SC $
   flip local a $ \env ->
     env { arguments = arg : arguments env }
 
+-- | Get the maximum depth of generated values.
 getDepth :: SC m Depth
 getDepth = SC $ asks depth
 
+-- | Change the maximum depth of generated values.
 localDepth :: (Depth -> Depth) -> SC m a -> SC m a
 localDepth f (SC a) = SC $ local (\env -> env { depth = f (depth env) }) a
 
