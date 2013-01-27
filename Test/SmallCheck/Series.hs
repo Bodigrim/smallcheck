@@ -90,7 +90,8 @@ module Test.SmallCheck.Series (
   -- (as defined by the 'series' functions for @t_i@).
   --
   -- @consN@ functions also ensure that x_i are enumerated in the
-  -- breadth-first order. Thus, combinations of smaller depth come first.
+  -- breadth-first order. Thus, combinations of smaller depth come first
+  -- (assuming the same is true for @t_i@).
   --
   -- If @d <= 0@, no values are produced.
 
