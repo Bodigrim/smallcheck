@@ -254,8 +254,13 @@ uncurry3 f (x,y,z) = f x y z
 uncurry4 :: (a->b->c->d->e) -> ((a,b,c,d)->e)
 uncurry4 f (w,x,y,z) = f w x y z
 
+-- | Run a 'Series' with the depth decreased by 1.
+--
+-- If the current depth is less or equal to 0, the result is 'mzero'.
 decDepth :: Series m a -> Series m a
-decDepth a = localDepth (subtract 1) a
+decDepth a = do
+  checkDepth
+  localDepth (subtract 1) a
 
 constM :: Monad m => m b -> m (a -> b)
 constM = liftM const
