@@ -91,18 +91,6 @@ existence u xs f = Property $ do
 
       | otherwise -> mzero
 
-unique :: [a] -> Bool
-unique [_] = True
-unique  _  = False
-
--- | Return 'False' iff the result is 'Fail'
-resultIsOk :: TestResult -> Bool
-resultIsOk r =
-    case r of
-        Fail -> False
-        Pass -> True
-        Inappropriate -> True
-
 boolToResult :: Bool -> TestResult
 boolToResult b = if b then Pass else Fail
 
@@ -174,4 +162,4 @@ infixr 0 ==>
 -- propositions, tautologies, non-tautologies and environments.
 (==>) :: Testable m a => Bool -> a -> Property m
 True ==>  x = Property (test x)
-False ==> x = Property $ runTestHook >> record Inappropriate
+False ==> _ = Property $ runTestHook >> record Inappropriate

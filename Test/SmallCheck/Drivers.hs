@@ -14,7 +14,6 @@ module Test.SmallCheck.Drivers (
   ) where
 
 import Control.Monad (when)
-import Control.Applicative
 import Test.SmallCheck.Property
 import Test.SmallCheck.Monad
 import Text.Printf

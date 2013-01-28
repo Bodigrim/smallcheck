@@ -164,8 +164,6 @@ import Test.SmallCheck.Monad
 import Control.Monad.Logic
 import Control.Applicative
 import Control.Monad.Identity
-import Control.Monad.Reader
-import Data.Monoid
 import Data.List
 
 #ifdef GENERICS
