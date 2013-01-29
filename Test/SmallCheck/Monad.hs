@@ -4,11 +4,11 @@ module Test.SmallCheck.Monad
   , Stats(..)
   , runSC
   , TestResult(..)
-  , Example
+  , PropertySuccess(..)
+  , PropertyFailure(..)
   , Depth
-  , record
-  , searchCounterexamples
-  , searchExamples
+  , quantify
+  , getQuantification
   , addArgument
   , getDepth
   , localDepth
@@ -19,6 +19,8 @@ import Control.Monad.State.Strict
 import Control.Monad.Reader
 import Control.Monad.Logic
 import Control.Applicative
+import Text.Printf
+import Data.List
 
 -- | Maximum depth of generated test values.
 --
@@ -35,33 +37,36 @@ data TestResult
         -- ^ 'Inappropriate' means that the precondition of '==>'
         -- was not satisfied
 
-type Example = [String]
+type Argument = String
 
-newtype Interpretation =
-  Interpretation
-    ( forall m example
-    . example -> TestResult -> LogicT m example
-    )
+data PropertySuccess
+  = Exist [Argument]
+  | PropertyTrue
 
-searchExamples :: SC m a -> SC m a
-searchExamples (SC a) = SC $
-  flip local a $ \env -> env { interpretation = exampleI }
+data PropertyFailure
+  = NotExist
+  | AtLeastTwo [Argument] [Argument] PropertySuccess
+  | PropertyFalse
 
-searchCounterexamples :: SC m a -> SC m a
-searchCounterexamples (SC a) = SC $
-  flip local a $ \env -> env { interpretation = counterexampleI }
+instance Show PropertyFailure where
+instance Show PropertySuccess where
+  {-
+  show (CounterExample es) =
+    printf "Counterexample:\n%s\n" $ formatExamples es
+  show NonExistence =
+    printf "Examples were not found\n"
+  show (NonUniqueness es1 es2) =
+    printf "Example is not unique.\n%s\nExample 1:\nExample 2:\n%s:\n"
+      (formatExamples es1)
+      (formatExamples es2)
+  -}
+formatExamples :: [String] -> String
+formatExamples = intercalate "\n"
 
-exampleI :: Interpretation
-exampleI = Interpretation $ \ex res ->
-  case res of
-    Pass -> return ex
-    _ -> mzero
-
-counterexampleI :: Interpretation
-counterexampleI = Interpretation $ \ex res ->
-  case res of
-    Fail -> return ex
-    _ -> mzero
+data Quantification
+  = Forall
+  | Exists
+  | ExistsUnique
 
 -- | Statistics about a SmallCheck run
 data Stats = Stats
@@ -72,7 +77,7 @@ data Stats = Stats
 
 -- | Scoped environment for SC
 data Env m = Env
-  { interpretation :: Interpretation
+  { quantification :: Quantification
   , arguments :: [String] -- ^ reversed arguments list
   , depth :: !Depth
   , testHook :: m () -- ^ an action to execute when one test case is run
@@ -103,8 +108,9 @@ runSC :: Monad m => Depth -> m () -> SC m a -> m (Maybe a, Stats)
 runSC depth hook (SC a) =
   flip runStateT initialState $
   (\l -> runLogicT l (\x _ -> return $ Just x) (return Nothing)) $
-  flip runReaderT (Env counterexampleI [] depth hook) a
+  flip runReaderT (Env Forall [] depth hook) a
 
+{-
 record :: Monad m => TestResult -> SC m Example
 record res = SC $ do
   Env
@@ -119,7 +125,8 @@ record res = SC $ do
           (case res of Inappropriate -> (+1); _ -> id) (badTests st)
       }
   put $! st'
-  lift $ interp (reverse revExample) res
+  lift $ interp (CounterExample $ reverse revExample) res
+-}
 
 addArgument :: Monad m => String -> SC m a -> SC m a
 addArgument arg (SC a) = SC $
@@ -133,6 +140,12 @@ getDepth = SC $ asks depth
 -- | Change the maximum depth of generated values.
 localDepth :: (Depth -> Depth) -> SC m a -> SC m a
 localDepth f (SC a) = SC $ local (\env -> env { depth = f (depth env) }) a
+
+quantify :: Quantification -> SC m a -> SC m a
+quantify q (SC a) = SC $ local (\env -> env { quantification = q }) a
+
+getQuantification :: SC m Quantification
+getQuantification = SC $ asks quantification
 
 runTestHook :: Monad m => SC m ()
 runTestHook = SC $ do

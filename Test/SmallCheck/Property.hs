@@ -82,12 +82,12 @@ existence u xs f = Property $ do
   first <- msplit search
 
   case first of
-    Nothing -> return ["non-existence"]
+    Nothing -> return NonExistence
     Just (x1, search') | u -> do
       second <- msplit search'
       case second of
         Nothing -> mzero
-        Just (x2, _) -> return $ concat [["non-uniqueness"], x1, x2]
+        Just (x2, _) -> return $ NonUniqueness x1 x2
 
       | otherwise -> mzero
 
