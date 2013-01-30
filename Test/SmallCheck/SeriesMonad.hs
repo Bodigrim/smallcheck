@@ -39,5 +39,8 @@ newtype Series m a = Series (ReaderT Depth (LogicT m) a)
     , Alternative
     , MonadLogic)
 
+instance MonadTrans Series where
+  lift a = Series $ lift . lift $ a
+
 runSeries :: Depth -> Series m a -> LogicT m a
 runSeries d (Series a) = runReaderT a d
