@@ -12,29 +12,65 @@
 module Test.SmallCheck.Property (
   -- * Basic definitions
   Property, Depth, Testable(..),
-  SC, Stats(..), Example,
-  property,
+  Series, -- Example,
 
   -- * Constructing tests
-  (==>), exists, existsDeeperBy, exists1, exists1DeeperBy,
+  -- (==>), exists, existsDeeperBy, exists1, exists1DeeperBy,
   -- ** Series- and list-based constructors
   -- | Combinators below can be used to explicitly specify the domain of
   -- quantification (as 'Series' or lists).
   --
   -- Hopefully, their meaning is evident from their names and types.
+  {-
   forAll, forAllElem,
   thereExists, thereExistsElem,
-  thereExists1, thereExists1Elem
+  thereExists1, thereExists1Elem -}
   ) where
 
 import Test.SmallCheck.Series
-import Test.SmallCheck.Monad
 import Control.Monad
 import Control.Monad.Logic
+import Control.Monad.Reader
+import Control.Applicative
 import Data.Typeable
 
--- | Wrapper type for 'Testable's
-newtype Property m = Property (SC m Example)
+data Quantification
+  = Forall
+  | Exists
+  | ExistsUnique
+
+data TestQuality
+    = GoodTest
+    | BadTest
+
+data Env m =
+  Env
+    { quantification :: Quantification
+    , testHook :: TestQuality -> m ()
+    }
+
+newtype Property m = Property { unProprty :: Reader (Env m) (PropertyPair m) }
+
+type Argument = String
+
+data PropertySuccess
+  = Exist [Argument] PropertySuccess
+  | ExistUnique [Argument] PropertySuccess
+  | PropertyTrue
+
+data PropertyFailure
+  = NotExist
+  | AtLeastTwo [Argument] [Argument] PropertySuccess
+  | CounterExample [Argument] PropertyFailure
+  | PropertyFalse
+
+unProp q (Property p) = runReader p q
+
+data PropertyPair m =
+  PropertyPair
+    { searchExamples        :: Series m PropertySuccess
+    , searchCounterExamples :: Series m PropertyFailure
+    }
 
 instance Typeable1 m => Typeable (Property m)
   where
@@ -43,32 +79,75 @@ instance Typeable1 m => Typeable (Property m)
         (mkTyCon3 "smallcheck" "Test.SmallCheck.Property" "Property")
         [typeOf (undefined :: m ())]
 
--- | Wrap a 'Testable' into a 'Property'
-property :: Testable m a => a -> Property m
-property = Property . test
+fromSuccess :: Monad m => Series m PropertySuccess -> PropertyPair m
+fromSuccess search =
+  PropertyPair
+    search
+    (PropertyFalse <$ lnot search)
+
+fromFailure :: Monad m => Series m PropertyFailure -> PropertyPair m
+fromFailure search =
+  PropertyPair
+    (PropertyTrue <$ lnot search)
+    search
 
 -- | Class of tests that can be run in a monad. For pure tests, it is
 -- recommended to keep their types polymorphic in @m@ rather than
 -- specialising it to 'Identity'.
 class Monad m => Testable m a where
-  test :: a -> SC m Example
+  test :: a -> Property m
 
 instance Monad m => Testable m Bool where
-  test b = runTestHook >> record (boolToResult b)
+  test b = Property $ do
+    env <- ask
+    return $ fromSuccess $ do
+      lift $ testHook env GoodTest
+      if b then return PropertyTrue else mzero
 
 instance (Serial m a, Show a, Testable m b) => Testable m (a->b) where
-  test f = f' where Property f' = forAll series f
+  test = testFunction
 
 instance (Monad m, m ~ n) => Testable n (Property m) where
-  test (Property f) = f
+  test = id
 
-forAll :: (Show a, Testable m b) => Series m a -> (a->b) -> Property m
-forAll xs f = Property $ do
-  x <- xs
-  searchCounterexamples $
-    addArgument (show x) $
-    test (f x)
+testFunction
+  :: (Monad m, Serial m a, Show a, Testable m b)
+  => (a -> b) -> Property m
+testFunction f = Property $ do
+  env <- ask
+  case quantification env of
+    Forall ->
+      return . fromFailure $ do
+        x <- series
+        failure <- searchCounterExamples $ unProp env $ test $ f x
+        let arg = show x
+        return $
+          case failure of
+            CounterExample args etc -> CounterExample (arg:args) etc
+            _ -> CounterExample [arg] failure
+    Exists ->
+      return . fromSuccess $ do
+        x <- series
+        success <- searchExamples $ unProp env $ test $ f x
+        let arg = show x
+        return $
+          case success of
+            Exist args etc -> Exist (arg:args) etc
+            _ -> Exist [arg] success
 
+quantify :: Quantification -> Property m -> Property m
+quantify q (Property a) = Property $ local (\env -> env { quantification = q }) a
+
+forAll :: Property m -> Property m
+forAll = quantify Forall
+
+exists :: Property m -> Property m
+exists = quantify Exists
+
+exists1 :: Property m -> Property m
+exists1 = quantify ExistsUnique
+
+{-
 forAllElem :: (Show a, Testable m b) => [a] -> (a->b) -> Property m
 forAllElem xs = forAll $ generate $ const xs
 
@@ -163,3 +242,4 @@ infixr 0 ==>
 (==>) :: Testable m a => Bool -> a -> Property m
 True ==>  x = Property (test x)
 False ==> _ = Property $ runTestHook >> record Inappropriate
+-}
