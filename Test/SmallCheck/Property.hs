@@ -175,9 +175,13 @@ quantify q (Property a) = Property $ local (\env -> env { quantification = q }) 
 forAll :: Property m -> Property m
 forAll = quantify Forall
 
+-- | @'exists' p@ holds iff it is possible to find an argument @a@ (within the
+-- depth constraints!) satisfying the predicate @p@
 exists :: Property m -> Property m
 exists = quantify Exists
 
+-- | Like 'exists', but additionally require the uniqueness of the
+-- argument satisfying the predicate
 exists1 :: Property m -> Property m
 exists1 = quantify ExistsUnique
 
@@ -190,53 +194,6 @@ instance (Monad m, Testable m b, Show a) => Testable m (Over m a b) where
   test (Over s f) = testFunction s f
 
 {-
-forAllElem :: (Show a, Testable m b) => [a] -> (a->b) -> Property m
-forAllElem xs = forAll $ generate $ const xs
-
-existence :: (Show a, Testable m b) => Bool -> Series m a -> (a->b) -> Property m
-existence u xs f = Property $ do
-  let
-    search = do
-      x <- xs
-      searchExamples $ addArgument (show x) $ test (f x)
-
-  first <- msplit search
-
-  case first of
-    Nothing -> return NonExistence
-    Just (x1, search') | u -> do
-      second <- msplit search'
-      case second of
-        Nothing -> mzero
-        Just (x2, _) -> return $ NonUniqueness x1 x2
-
-      | otherwise -> mzero
-
-boolToResult :: Bool -> TestResult
-boolToResult b = if b then Pass else Fail
-
-thereExists :: (Show a, Testable m b) => Series m a -> (a->b) -> Property m
-thereExists = existence False
-
-thereExists1 :: (Show a, Testable m b) => Series m a -> (a->b) -> Property m
-thereExists1 = existence True
-
-thereExistsElem :: (Show a, Testable m b) => [a] -> (a->b) -> Property m
-thereExistsElem xs = thereExists $ generate $ const xs
-
-thereExists1Elem :: (Show a, Testable m b) => [a] -> (a->b) -> Property m
-thereExists1Elem xs = thereExists1 $ generate $ const xs
-
--- | @'exists' p@ holds iff it is possible to find an argument @a@ (within the
--- depth constraints!) satisfying the predicate @p@
-exists :: (Show a, Serial m a, Testable m b) => (a->b) -> Property m
-exists = thereExists series
-
--- | Like 'exists', but additionally require the uniqueness of the
--- argument satisfying the predicate
-exists1 :: (Show a, Serial m a, Testable m b) => (a->b) -> Property m
-exists1 = thereExists1 series
-
 -- | The default testing of existentials is bounded by the same depth as their
 -- context. This rule has important consequences. Just as a universal property
 -- may be satisfied when the depth bound is shallow but fail when it is deeper,
