@@ -39,4 +39,4 @@ Library
         Test.SmallCheck.Property
         Test.SmallCheck.Series
     Other-modules:
-        Test.SmallCheck.Monad
+        Test.SmallCheck.SeriesMonad
