@@ -60,7 +60,7 @@ data PropertySuccess
 
 data PropertyFailure
   = NotExist
-  | AtLeastTwo [Argument] [Argument] PropertySuccess
+  | AtLeastTwo [Argument] PropertySuccess [Argument] PropertySuccess
   | CounterExample [Argument] PropertyFailure
   | PropertyFalse
 
@@ -125,15 +125,49 @@ testFunction f = Property $ do
           case failure of
             CounterExample args etc -> CounterExample (arg:args) etc
             _ -> CounterExample [arg] failure
-    Exists ->
-      return . fromSuccess $ do
-        x <- series
-        success <- searchExamples $ unProp env $ test $ f x
-        let arg = show x
-        return $
-          case success of
-            Exist args etc -> Exist (arg:args) etc
-            _ -> Exist [arg] success
+
+    Exists -> return $ PropertyPair success (NotExist <$ lnot success)
+      where
+        success = do
+          x <- series
+          s <- searchExamples $ unProp env $ test $ f x
+          let arg = show x
+
+          return $
+            case s of
+              Exist args etc -> Exist (arg:args) etc
+              _ -> Exist [arg] s
+
+    ExistsUnique -> return $ PropertyPair success failure
+      where
+        search = atMost 2 $ do
+          x <- series
+          liftM ((,) (show x)) $ searchExamples $ unProp env $ test $ f x
+
+        success =
+          search >>=
+            \examples ->
+              case examples of
+                [(x,s)] -> return $ ExistUnique [x] s -- FIXME flatten x
+                _ -> mzero
+
+        failure =
+          search >>=
+            \examples ->
+              case examples of
+                [] -> return NotExist
+                (x1,s1):(x2,s2):_ -> return $ AtLeastTwo [x1] s1 [x2] s2 -- FIXME flatten
+                _ -> mzero
+
+atMost :: MonadLogic m => Int -> m a -> m [a]
+atMost n m
+  | n <= 0 = return []
+  | otherwise = do
+      m' <- msplit m
+      case m' of
+        Nothing -> return []
+        Just (x,rest) ->
+          (x:) `liftM` atMost (n-1) rest
 
 quantify :: Quantification -> Property m -> Property m
 quantify q (Property a) = Property $ local (\env -> env { quantification = q }) a
