@@ -105,20 +105,20 @@ instance Monad m => Testable m Bool where
       if b then return PropertyTrue else mzero
 
 instance (Serial m a, Show a, Testable m b) => Testable m (a->b) where
-  test = testFunction
+  test = testFunction series
 
 instance (Monad m, m ~ n) => Testable n (Property m) where
   test = id
 
 testFunction
-  :: (Monad m, Serial m a, Show a, Testable m b)
-  => (a -> b) -> Property m
-testFunction f = Property $ do
+  :: (Monad m, Show a, Testable m b)
+  => Series m a -> (a -> b) -> Property m
+testFunction s f = Property $ do
   env <- ask
   case quantification env of
     Forall ->
       return . fromFailure $ do
-        x <- series
+        x <- s
         failure <- searchCounterExamples $ unProp env $ test $ f x
         let arg = show x
         return $
@@ -129,7 +129,7 @@ testFunction f = Property $ do
     Exists -> return $ PropertyPair success (NotExist <$ lnot success)
       where
         success = do
-          x <- series
+          x <- s
           s <- searchExamples $ unProp env $ test $ f x
           let arg = show x
 
@@ -141,7 +141,7 @@ testFunction f = Property $ do
     ExistsUnique -> return $ PropertyPair success failure
       where
         search = atMost 2 $ do
-          x <- series
+          x <- s
           liftM ((,) (show x)) $ searchExamples $ unProp env $ test $ f x
 
         success =
@@ -180,6 +180,14 @@ exists = quantify Exists
 
 exists1 :: Property m -> Property m
 exists1 = quantify ExistsUnique
+
+data Over m a b = Over (Series m a) (a -> b)
+
+over :: Series m a -> (a -> b) -> Over m a b
+over = Over
+
+instance (Monad m, Testable m b, Show a) => Testable m (Over m a b) where
+  test (Over s f) = testFunction s f
 
 {-
 forAllElem :: (Show a, Testable m b) => [a] -> (a->b) -> Property m
