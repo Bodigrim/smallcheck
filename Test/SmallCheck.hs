@@ -52,11 +52,9 @@ module Test.SmallCheck (
 
   exists,
   exists1,
-  existsDeeperBy,
-  exists1DeeperBy,
 
   -- ** Conditioning
-  (==>),
+  --(==>),
 
   -- * Running tests
   -- | The functions below can be used to run SmallCheck tests.
@@ -72,8 +70,8 @@ module Test.SmallCheck (
   -- the @test-framework-smallcheck@ package: <http://hackage.haskell.org/package/test-framework>
   --
   -- For more ways to run the tests, see "Test.SmallCheck.Drivers".
-  Depth,
-  smallCheck, depthCheck
+  -- Depth,
+  -- smallCheck, depthCheck
   ) where
 
 import Test.SmallCheck.Property
