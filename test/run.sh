@@ -3,6 +3,7 @@
 set -eu
 
 cabal_install () {
+  cabal clean
   cabal install --force-reinstalls --ghc-options=-fhpc --disable-library-profiling --disable-documentation
 }
 
