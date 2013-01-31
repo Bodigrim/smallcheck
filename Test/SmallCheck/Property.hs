@@ -58,14 +58,14 @@ data PropertySuccess
   = Exist [Argument] PropertySuccess
   | ExistUnique [Argument] PropertySuccess
   | PropertyTrue
-  deriving Show
+  deriving (Eq, Show)
 
 data PropertyFailure
   = NotExist
   | AtLeastTwo [Argument] PropertySuccess [Argument] PropertySuccess
   | CounterExample [Argument] PropertyFailure
   | PropertyFalse
-  deriving Show
+  deriving (Eq, Show)
 
 unProp q (Property p) = runReader p q
 
