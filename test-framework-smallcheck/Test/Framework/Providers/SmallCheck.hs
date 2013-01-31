@@ -16,6 +16,7 @@ module Test.Framework.Providers.SmallCheck
 
 import Test.Framework.Providers.API
 import qualified Test.SmallCheck.Property as SC
+import qualified Test.SmallCheck.Series   as SC
 import Test.SmallCheck.Drivers
 import Data.Maybe
 import Data.List
@@ -29,7 +30,7 @@ import Control.Applicative
 -- | Create a 'Test' for a SmallCheck 'SC.Testable' property
 -- testProperty :: TestName -> (forall m . T.MonadIO m => SC.Testable m a) -> Test
 testProperty :: SC.Testable IO a => TestName -> a -> Test
-testProperty name prop = Test name $ (SC.property prop :: SC.Property IO)
+testProperty name prop = Test name $ (SC.test prop :: SC.Property IO)
 
 -- | Change the default maximum test depth for a given 'Test'.
 --
@@ -40,13 +41,12 @@ withDepth d = plusTestOptions mempty { topt_maximum_test_depth = Just d }
 data Result
     = Timeout
     | Pass
-    | Fail [String]
+    | Fail SC.PropertyFailure
 
 instance Show Result where
     show Timeout  = "Timed out"
     show Pass     = "OK"
-    show (Fail s) =
-        intercalate "\n" $ "Failed with arguments: " : s
+    show (Fail s) = show s
 
 instance TestResultlike Int Result where
     testSucceeded Pass = True
@@ -66,12 +66,12 @@ instance Testlike Int Result (SC.Property IO) where
     -- individual test
     let
       action = do
-        mb_result <- timeout (fromMaybe (-1) timeoutAmount) $ smallCheckWithHook depth (writeChan chan (Left ())) prop
+        mb_result <- timeout (fromMaybe (-1) timeoutAmount) $ smallCheckWithHook depth (const $ writeChan chan (Left ())) prop
         writeChan chan $ Right $
           case mb_result of
             Nothing -> Timeout
-            Just (Nothing, _) -> Pass
-            Just (Just x, _) -> Fail x
+            Just Nothing -> Pass
+            Just (Just x) -> Fail x
 
     improving <- reifyListToImproving . accumulate <$> getChanContents chan
 
