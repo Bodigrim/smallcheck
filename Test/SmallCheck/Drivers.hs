@@ -9,17 +9,18 @@
 --------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_HADDOCK prune #-}
-module Test.SmallCheck.Drivers (
+module Test.SmallCheck.Drivers {-(
   smallCheck, depthCheck, smallCheckM, smallCheckWithHook
-  ) where
+  )-} where
 
 import Control.Monad (when)
 import Test.SmallCheck.Property
-import Test.SmallCheck.Monad
+import Test.SmallCheck.SeriesMonad
 import Text.Printf
 
 -- | A simple driver that runs the test in the 'IO' monad and prints the
 -- results.
+{-
 smallCheck :: Testable IO a => Depth -> a -> IO ()
 smallCheck d a = do
   (mbEx, Stats { badTests = badTests, testsRun = testsRun } ) <- smallCheckM d a
@@ -35,19 +36,20 @@ smallCheck d a = do
 {-# DEPRECATED depthCheck "Please use smallCheck instead." #-}
 depthCheck :: Testable IO a => Depth -> a -> IO ()
 depthCheck = smallCheck
+-}
 
 -- | Use this if:
 --
 -- * You need to run a test in a monad different from 'IO'
 --
 -- * You need to analyse the results rather than just print them
-smallCheckM :: Testable m a => Depth -> a -> m (Maybe Example, Stats)
-smallCheckM d a = smallCheckWithHook d (return ()) a
+smallCheckM :: Testable m a => Depth -> a -> m (Maybe PropertyFailure)
+smallCheckM d a = smallCheckWithHook d (const $ return ()) a
 
 -- | Like `smallCheckM`, but allows to specify a monadic hook that gets
 -- executed after each test is run.
 --
 -- Useful for applications that want to report progress information to the
 -- user.
-smallCheckWithHook :: Testable m a => Depth -> m () -> a -> m (Maybe Example, Stats)
-smallCheckWithHook d hook a = runSC d hook $ test a
+-- smallCheckWithHook :: Testable m a => Depth -> m () -> a -> m (Maybe PropertyFailure)
+smallCheckWithHook d hook a = runProperty d hook $ test a

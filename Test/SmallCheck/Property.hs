@@ -9,7 +9,7 @@
 --------------------------------------------------------------------
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeFamilies,
              ScopedTypeVariables #-}
-module Test.SmallCheck.Property (
+module Test.SmallCheck.Property {-(
   -- * Basic definitions
   Property, Depth, Testable(..),
   Series, -- Example,
@@ -25,9 +25,10 @@ module Test.SmallCheck.Property (
   forAll, forAllElem,
   thereExists, thereExistsElem,
   thereExists1, thereExists1Elem -}
-  ) where
+  )-} where
 
 import Test.SmallCheck.Series
+import Test.SmallCheck.SeriesMonad
 import Control.Monad
 import Control.Monad.Logic
 import Control.Monad.Reader
@@ -49,7 +50,7 @@ data Env m =
     , testHook :: TestQuality -> m ()
     }
 
-newtype Property m = Property { unProprty :: Reader (Env m) (PropertyPair m) }
+newtype Property m = Property { unProperty :: Reader (Env m) (PropertyPair m) }
 
 type Argument = String
 
@@ -65,6 +66,19 @@ data PropertyFailure
   | PropertyFalse
 
 unProp q (Property p) = runReader p q
+
+runProperty
+  :: Monad m
+  => Depth
+  -> (TestQuality -> m ())
+  -> Property m
+  -> m (Maybe PropertyFailure)
+runProperty depth hook prop =
+  (\l -> runLogicT l (\x _ -> return $ Just x) (return Nothing)) $
+  runSeries depth $
+  searchCounterExamples $
+  flip runReader (Env Forall hook) $
+  unProperty prop
 
 data PropertyPair m =
   PropertyPair
