@@ -91,7 +91,11 @@ types =
 check :: Testable Identity a => a -> Maybe PropertyFailure
 check = runIdentity . smallCheckM 5
 
-propertyTests = [ testGroup "Simple" simplePropertyTests ]
+propertyTests =
+  [ testGroup "Simple" simplePropertyTests
+  , testGroup "Combined quantifiers" combinedPropertyTests
+  ]
+
 simplePropertyTests =
   [ testCase "Forall/no" $ check (\x -> (x^2 :: Integer) >= 2)
       @?= Just (CounterExample ["0"] PropertyFalse)
@@ -113,6 +117,35 @@ simplePropertyTests =
 
   , testCase "ExistsUnique/yes" $ check (exists1 $ \x -> (x^2 :: Integer) < 0)
       @?= Just NotExist
+  ]
+
+combinedPropertyTests =
+  [ testCase "Forall+Forall/no" $ check (\x y -> x /= (y+2 :: Integer))
+      @?= Just (CounterExample ["0","-2"] PropertyFalse)
+
+  , testCase "Forall+Exists/no" $ check (\x -> exists $ \y -> x == (y^2 :: Integer))
+      @?= Just (CounterExample ["-1"] NotExist)
+
+  , testCase "Exists+Forall/no" $ check (exists $ \x -> forAll $ \y -> x * y == (y^2 :: Integer))
+      @?= Just NotExist
+
+  , testCase "Exists+Forall/yes" $ check (exists $ \x -> forAll $ \y -> x * y == (y :: Integer))
+      @?= Nothing
+
+  , testCase "Exists+Exists/no" $ check (exists $ \x y -> 2 * x == (2 * y + 1 :: Integer))
+      @?= Just NotExist
+
+  , testCase "Exists+Exists/yes" $ check (exists $ \x y -> x + y == (x * y :: Integer))
+      @?= Nothing
+
+  , testCase "ExistsUnique+ExistsUnique/yes" $ check (exists1 $ \x y -> x^2 + y^2 == (0 :: Integer))
+      @?= Nothing
+
+  , testCase "ExistsUnique+ExistsUnique/doesn't exist" $ check (exists1 $ \x y -> x^2 + y^2 < (0 :: Integer))
+      @?= Just NotExist
+
+  , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ \x y -> abs x == (abs y :: Integer))
+      @?= Just (AtLeastTwo ["??"] PropertyTrue ["??"] PropertyTrue)
   ]
 
 
