@@ -188,18 +188,18 @@ atMost n m
 quantify :: Quantification -> Property m -> Property m
 quantify q (Property a) = Property $ local (\env -> env { quantification = q }) a
 
-forAll :: Property m -> Property m
-forAll = quantify Forall
+forAll :: Testable m a => a -> Property m
+forAll = quantify Forall . test
 
 -- | @'exists' p@ holds iff it is possible to find an argument @a@ (within the
 -- depth constraints!) satisfying the predicate @p@
-exists :: Property m -> Property m
-exists = quantify Exists
+exists :: Testable m a => a -> Property m
+exists = quantify Exists . test
 
 -- | Like 'exists', but additionally require the uniqueness of the
 -- argument satisfying the predicate
-exists1 :: Property m -> Property m
-exists1 = quantify ExistsUnique
+exists1 :: Testable m a => a -> Property m
+exists1 = quantify ExistsUnique . test
 
 data Over m a b = Over (Series m a) (a -> b)
 
