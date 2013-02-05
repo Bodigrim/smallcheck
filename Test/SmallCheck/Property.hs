@@ -113,6 +113,9 @@ fromFailure search =
 class Monad m => Testable m a where
   test :: a -> Property m
 
+  unc :: a -> Series m (Property m, [Argument])
+  unc x = return (test x, [])
+
 instance Monad m => Testable m Bool where
   test b = Property $ do
     env <- ask
@@ -123,8 +126,18 @@ instance Monad m => Testable m Bool where
 instance (Serial m a, Show a, Testable m b) => Testable m (a->b) where
   test = testFunction series
 
+  unc = uncFunction series
+
 instance (Monad m, m ~ n) => Testable n (Property m) where
   test = id
+
+uncFunction
+  :: (Show a, Testable m b)
+  => Series m a -> (a -> b) -> Series m (Property m, [String])
+uncFunction s f  = do
+  x <- s
+  (p, args) <- unc $ f x
+  return (p, show x : args)
 
 testFunction
   :: (Monad m, Show a, Testable m b)
@@ -157,14 +170,15 @@ testFunction s f = Property $ do
     ExistsUnique -> return $ PropertyPair success failure
       where
         search = atMost 2 $ do
-          x <- s
-          liftM ((,) (show x)) $ searchExamples $ unProp env $ test $ f x
+          (prop, args) <- uncFunction s f
+          ex <- once $ searchExamples $ unProp env $ test prop
+          return (args, ex)
 
         success =
           search >>=
             \examples ->
               case examples of
-                [(x,s)] -> return $ ExistUnique [x] s -- FIXME flatten x
+                [(x,s)] -> return $ ExistUnique x s
                 _ -> mzero
 
         failure =
@@ -172,7 +186,7 @@ testFunction s f = Property $ do
             \examples ->
               case examples of
                 [] -> return NotExist
-                (x1,s1):(x2,s2):_ -> return $ AtLeastTwo [x1] s1 [x2] s2 -- FIXME flatten
+                (x1,s1):(x2,s2):_ -> return $ AtLeastTwo x1 s1 x2 s2
                 _ -> mzero
 
 atMost :: MonadLogic m => Int -> m a -> m [a]
@@ -206,8 +220,10 @@ data Over m a b = Over (Series m a) (a -> b)
 over :: Series m a -> (a -> b) -> Over m a b
 over = Over
 
-instance (Monad m, Testable m b, Show a) => Testable m (Over m a b) where
+instance (m ~ n, Monad m, Testable m b, Show a) => Testable m (Over n a b) where
   test (Over s f) = testFunction s f
+
+  unc (Over s f) = uncFunction s f
 
 {-
 -- | The default testing of existentials is bounded by the same depth as their
