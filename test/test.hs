@@ -94,6 +94,7 @@ check = runIdentity . smallCheckM 5
 propertyTests =
   [ testGroup "Simple" simplePropertyTests
   , testGroup "Combined quantifiers" combinedPropertyTests
+  , testGroup "'over' tests" overTests
   ]
 
 simplePropertyTests =
@@ -147,6 +148,24 @@ combinedPropertyTests =
   , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ \x y -> abs x == (abs y :: Integer))
       @?= Just (AtLeastTwo ["(0,0)"] PropertyTrue ["(-1,-1)"] PropertyTrue)
   ]
+
+overTests =
+  [ testCase "over+Forall/yes" $ check (over odds odd)
+      @?= Nothing
+  , testCase "over+Forall/no" $ check (over odds (<3))
+      @?= Just (CounterExample ["3"] PropertyFalse)
+  , testCase "over+Exists/yes" $ check (exists $ over odds (>3))
+      @?= Nothing
+  , testCase "over+Exists/no" $ check (exists $ over odds even)
+      @?= Just NotExist
+  , testCase "over+Exists/no" $ check (exists $ over odds even)
+      @?= Just NotExist
+  , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ over series $ \x -> over series $ \y -> abs x == (abs y :: Integer))
+      @?= Just (AtLeastTwo ["(0,0)"] PropertyTrue ["(-1,-1)"] PropertyTrue)
+  ]
+  where
+  odds :: Monad m => Series m Integer
+  odds = series >>= \x -> guard (odd x) >> return x
 
 
 ------------------------------
