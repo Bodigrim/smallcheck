@@ -234,16 +234,31 @@ atMost n m
 quantify :: Quantification -> Property m -> Property m
 quantify q (Property a) = Property $ local (\env -> env { quantification = q }) a
 
+-- | Set the universal quantification context.
 forAll :: Testable m a => a -> Property m
 forAll = quantify Forall . test
 
--- | @'exists' p@ holds iff it is possible to find an argument @a@ (within the
--- depth constraints!) satisfying the predicate @p@
+-- | Set the existential quantification context.
 exists :: Testable m a => a -> Property m
 exists = quantify Exists . test
 
--- | Like 'exists', but additionally require the uniqueness of the
--- argument satisfying the predicate
+-- | Set the uniqueness quantification context.
+--
+-- Bear in mind that ∃! (x, y): p x y is not the same as ∃! x: ∃! y: p x y.
+--
+-- For example, ∃! x: ∃! y: |x| = |y| is true (it holds only when x=0), but ∃! (x,y): |x| = |y| is false (there are many such pairs).
+--
+-- As is customary in mathematics,
+-- @'exists1' $ \\x y -> p x y@ is equivalent to
+-- @'exists1' $ \\(x,y) -> p x y@ and not to
+-- @'exists1' $ \\x -> 'exists1' $ \\y -> p x y@
+-- (the latter, of course, may be explicitly written when desired).
+--
+-- More precisely, in the uniqueness context, a contiguous
+-- sequence of variables are quantified as one tuple, where contiguous
+-- means that the variables are not separated by any quantification
+-- operator (including 'exists1' itself), 'test' or '==>'. (They may be separated
+-- by 'over', though.)
 exists1 :: Testable m a => a -> Property m
 exists1 = quantify ExistsUnique . test
 

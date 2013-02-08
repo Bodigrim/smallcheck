@@ -30,15 +30,15 @@ module Test.SmallCheck (
   -- * Quantification
 
   -- | 'forAll', 'exists' and 'exists1' functions set the quantification
-  -- context. The quantification context determines how functions are
-  -- interpreted. Depending on the quantification context, the test
-  -- @\\x y -> p x y@ may be equivalent to:
+  -- context for function arguments. The quantification context determines
+  -- how functions are interpreted. Depending on the quantification
+  -- context, the test @\\x y -> p x y@ may be equivalent to:
   --
   -- * ∀ x, y. p x y
   --
-  -- * ∃ x, y. p x y
+  -- * ∃ x, y: p x y
   --
-  -- * ∃! x, y. p x y
+  -- * ∃! x, y: p x y
   --
   -- A quantification operator affects all functions until overridden with
   -- another operator, but does not affect the left operand of '==>'. The
