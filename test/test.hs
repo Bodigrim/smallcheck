@@ -146,7 +146,7 @@ combinedPropertyTests =
       @?= Just NotExist
 
   , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ \x y -> abs x == (abs y :: Integer))
-      @?= Just (AtLeastTwo ["(0,0)"] PropertyTrue ["(-1,-1)"] PropertyTrue)
+      @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["-1","-1"] PropertyTrue)
   ]
 
 overTests =
@@ -161,7 +161,7 @@ overTests =
   , testCase "over+Exists/no" $ check (exists $ over odds even)
       @?= Just NotExist
   , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ over series $ \x -> over series $ \y -> abs x == (abs y :: Integer))
-      @?= Just (AtLeastTwo ["(0,0)"] PropertyTrue ["(-1,-1)"] PropertyTrue)
+      @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["-1","-1"] PropertyTrue)
   ]
   where
   odds :: Monad m => Series m Integer
