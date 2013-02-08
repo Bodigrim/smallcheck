@@ -14,11 +14,11 @@ then
 fi
 
 rm -f test.tix
-ghc -fforce-recomp -fhpc test.hs
+cabal build
 if [ "${1:-""}" = '--ci' ]
 then
-  ./test --jxml=j.xml
+  ./dist/build/smallcheck-test/smallcheck-test --jxml=j.xml
 else
-  ./test
+  ./dist/build/smallcheck-test/smallcheck-test
 fi
-hpc markup --srcdir=. --srcdir=../ --srcdir=../test-framework-smallcheck --destdir=html test.tix
+hpc markup --srcdir=. --srcdir=../ --srcdir=../test-framework-smallcheck --destdir=html smallcheck-test.tix
