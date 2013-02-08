@@ -1,3 +1,5 @@
+-- vim:fdm=marker:foldtext=foldtext()
+
 --------------------------------------------------------------------
 -- |
 -- Module    : Test.SmallCheck.Property
@@ -35,14 +37,19 @@ import Control.Monad.Reader
 import Control.Applicative
 import Data.Typeable
 
+------------------------------
+-- Property-related types
+------------------------------
+--{{{
+
 data Quantification
   = Forall
   | Exists
   | ExistsUnique
 
 data TestQuality
-    = GoodTest
-    | BadTest
+  = GoodTest
+  | BadTest
 
 data Env m =
   Env
@@ -68,6 +75,28 @@ data PropertyFailure
   | PropertyFalse
   deriving (Eq, Show)
 
+data PropertyPair m =
+  PropertyPair
+    { searchExamples        :: Series m PropertySuccess
+    , searchCounterExamples :: Series m PropertyFailure
+    }
+
+instance Typeable1 m => Typeable (Property m)
+  where
+    typeOf _ =
+      mkTyConApp
+        (mkTyCon3 "smallcheck" "Test.SmallCheck.Property" "Property")
+        [typeOf (undefined :: m ())]
+
+data Over m a b = Over (Series m a) (a -> b)
+
+-- }}}
+
+------------------------------------
+-- Property runners and constructors
+------------------------------------
+--{{{
+
 unProp q (Property p) = runReader p q
 
 runProperty
@@ -83,19 +112,6 @@ runProperty depth hook prop =
   flip runReader (Env Forall hook) $
   unProperty prop
 
-data PropertyPair m =
-  PropertyPair
-    { searchExamples        :: Series m PropertySuccess
-    , searchCounterExamples :: Series m PropertyFailure
-    }
-
-instance Typeable1 m => Typeable (Property m)
-  where
-    typeOf _ =
-      mkTyConApp
-        (mkTyCon3 "smallcheck" "Test.SmallCheck.Property" "Property")
-        [typeOf (undefined :: m ())]
-
 fromSuccess :: Monad m => Series m PropertySuccess -> PropertyPair m
 fromSuccess search =
   PropertyPair
@@ -107,6 +123,16 @@ fromFailure search =
   PropertyPair
     (PropertyTrue <$ lnot search)
     search
+
+over :: Series m a -> (a -> b) -> Over m a b
+over = Over
+
+-- }}}
+
+-------------------------------
+-- Testable class and instances
+-------------------------------
+-- {{{
 
 -- | Class of tests that can be run in a monad. For pure tests, it is
 -- recommended to keep their types polymorphic in @m@ rather than
@@ -128,6 +154,11 @@ instance (Serial m a, Show a, Testable m b) => Testable m (a->b) where
   test = testFunction series
 
   unc = uncFunction series
+
+instance (m ~ n, Monad m, Testable m b, Show a) => Testable m (Over n a b) where
+  test (Over s f) = testFunction s f
+
+  unc (Over s f) = uncFunction s f
 
 instance (Monad m, m ~ n) => Testable n (Property m) where
   test = id
@@ -200,6 +231,13 @@ atMost n m
         Just (x,rest) ->
           (x:) `liftM` atMost (n-1) rest
 
+-- }}}
+
+------------------------------
+-- Quantifiers
+------------------------------
+-- {{{
+
 quantify :: Quantification -> Property m -> Property m
 quantify q (Property a) = Property $ local (\env -> env { quantification = q }) a
 
@@ -215,16 +253,6 @@ exists = quantify Exists . test
 -- argument satisfying the predicate
 exists1 :: Testable m a => a -> Property m
 exists1 = quantify ExistsUnique . test
-
-data Over m a b = Over (Series m a) (a -> b)
-
-over :: Series m a -> (a -> b) -> Over m a b
-over = Over
-
-instance (m ~ n, Monad m, Testable m b, Show a) => Testable m (Over n a b) where
-  test (Over s f) = testFunction s f
-
-  unc (Over s f) = uncFunction s f
 
 {-
 -- | The default testing of existentials is bounded by the same depth as their
@@ -301,3 +329,5 @@ cond ==> prop = Property $ do
         (searchCounterExamples $ unProp env $ test prop)
 
   return $ PropertyPair success failure
+
+-- }}}
