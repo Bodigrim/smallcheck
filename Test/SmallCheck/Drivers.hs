@@ -9,34 +9,46 @@
 --------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_HADDOCK prune #-}
-module Test.SmallCheck.Drivers {-(
-  smallCheck, depthCheck, smallCheckM, smallCheckWithHook
-  )-} where
+module Test.SmallCheck.Drivers (
+  smallCheck, smallCheckM, smallCheckWithHook
+  ) where
 
 import Control.Monad (when)
 import Test.SmallCheck.Property
 import Test.SmallCheck.SeriesMonad
 import Text.Printf
+import Data.IORef
 
 -- | A simple driver that runs the test in the 'IO' monad and prints the
 -- results.
-{-
 smallCheck :: Testable IO a => Depth -> a -> IO ()
 smallCheck d a = do
-  (mbEx, Stats { badTests = badTests, testsRun = testsRun } ) <- smallCheckM d a
+  ((good, bad), mbEx) <- runTestWithStats d a
+  let testsRun = good + bad
   case mbEx of
     Nothing -> do
       printf "Completed %d tests without failure.\n" $ testsRun
-      when (badTests > 0) $
-        printf "But %d did not meet ==> condition.\n" $ badTests
+      when (bad > 0) $
+        printf "But %d did not meet ==> condition.\n" $ bad
     Just x -> do
-      printf "Failed test no. %d. Test values follow.\n" $ testsRun
-      mapM_ putStrLn x
+      printf "Failed test no. %d.\n" $ testsRun
+      print x
 
-{-# DEPRECATED depthCheck "Please use smallCheck instead." #-}
-depthCheck :: Testable IO a => Depth -> a -> IO ()
-depthCheck = smallCheck
--}
+runTestWithStats :: Testable IO a => Depth -> a -> IO ((Integer, Integer), Maybe PropertyFailure)
+runTestWithStats d prop = do
+  good <- newIORef 0
+  bad <- newIORef 0
+
+  let
+    hook GoodTest = modifyIORef' good (+1)
+    hook BadTest  = modifyIORef' bad  (+1)
+
+  r <- smallCheckWithHook d hook prop
+
+  goodN <- readIORef good
+  badN  <- readIORef bad
+
+  return ((goodN, badN), r)
 
 -- | Use this if:
 --
