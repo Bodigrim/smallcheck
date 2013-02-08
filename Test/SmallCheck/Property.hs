@@ -42,6 +42,20 @@ import Data.Typeable
 ------------------------------
 --{{{
 
+newtype Property m = Property { unProperty :: Reader (Env m) (PropertyPair m) }
+
+data PropertyPair m =
+  PropertyPair
+    { searchExamples        :: Series m PropertySuccess
+    , searchCounterExamples :: Series m PropertyFailure
+    }
+
+data Env m =
+  Env
+    { quantification :: Quantification
+    , testHook :: TestQuality -> m ()
+    }
+
 data Quantification
   = Forall
   | Exists
@@ -50,14 +64,7 @@ data Quantification
 data TestQuality
   = GoodTest
   | BadTest
-
-data Env m =
-  Env
-    { quantification :: Quantification
-    , testHook :: TestQuality -> m ()
-    }
-
-newtype Property m = Property { unProperty :: Reader (Env m) (PropertyPair m) }
+  deriving (Eq, Ord, Enum, Show)
 
 type Argument = String
 
@@ -74,12 +81,6 @@ data PropertyFailure
   | CounterExample [Argument] PropertyFailure
   | PropertyFalse
   deriving (Eq, Show)
-
-data PropertyPair m =
-  PropertyPair
-    { searchExamples        :: Series m PropertySuccess
-    , searchCounterExamples :: Series m PropertyFailure
-    }
 
 instance Typeable1 m => Typeable (Property m)
   where
