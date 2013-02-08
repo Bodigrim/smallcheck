@@ -249,7 +249,7 @@ existsDeeperBy f = thereExists $ localDepth f series
 -- argument satisfying the predicate
 exists1DeeperBy :: (Show a, Serial m a, Testable m b) => (Depth->Depth) -> (a->b) -> Property m
 exists1DeeperBy f = thereExists1 $ localDepth f series
-
+-}
 infixr 0 ==>
 
 -- | The '==>' operator can be used to express a
@@ -271,6 +271,9 @@ infixr 0 ==>
 -- reduced from PE to T'+TE where P, T, T' and E are the numbers of
 -- propositions, tautologies, non-tautologies and environments.
 (==>) :: Testable m a => Bool -> a -> Property m
-True ==>  x = Property (test x)
-False ==> _ = Property $ runTestHook >> record Inappropriate
--}
+True ==>  x = test x
+False ==> _ = Property $ do
+  env <- ask
+  return $ fromFailure $ do
+    lift $ testHook env BadTest
+    mzero
