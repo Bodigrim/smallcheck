@@ -145,7 +145,7 @@ combinedPropertyTests =
       @?= Just NotExist
 
   , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ \x y -> abs x == (abs y :: Integer))
-      @?= Just (AtLeastTwo ["??"] PropertyTrue ["??"] PropertyTrue)
+      @?= Just (AtLeastTwo ["(0,0)"] PropertyTrue ["(-1,-1)"] PropertyTrue)
   ]
 
 
