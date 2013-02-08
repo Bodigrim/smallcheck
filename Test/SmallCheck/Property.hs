@@ -11,23 +11,15 @@
 --------------------------------------------------------------------
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeFamilies,
              ScopedTypeVariables #-}
-module Test.SmallCheck.Property {-(
-  -- * Basic definitions
-  Property, Depth, Testable(..),
-  Series, -- Example,
+module Test.SmallCheck.Property (
+  -- * Quantifiers
+  forAll, exists, exists1, over, Over, (==>),
 
-  -- * Constructing tests
-  -- (==>), exists, existsDeeperBy, exists1, exists1DeeperBy,
-  -- ** Series- and list-based constructors
-  -- | Combinators below can be used to explicitly specify the domain of
-  -- quantification (as 'Series' or lists).
-  --
-  -- Hopefully, their meaning is evident from their names and types.
-  {-
-  forAll, forAllElem,
-  thereExists, thereExistsElem,
-  thereExists1, thereExists1Elem -}
-  )-} where
+  -- * Property's entrails
+  Property,
+
+  PropertySuccess(..), PropertyFailure(..), runProperty, TestQuality(..), Argument, Depth, Testable(..),
+  ) where
 
 import Test.SmallCheck.Series
 import Test.SmallCheck.SeriesMonad
