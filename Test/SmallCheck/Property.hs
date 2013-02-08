@@ -58,6 +58,7 @@ data PropertySuccess
   = Exist [Argument] PropertySuccess
   | ExistUnique [Argument] PropertySuccess
   | PropertyTrue
+  | Vacuously PropertyFailure
   deriving (Eq, Show)
 
 data PropertyFailure
@@ -270,10 +271,33 @@ infixr 0 ==>
 -- The second definition is far better as the test-space is
 -- reduced from PE to T'+TE where P, T, T' and E are the numbers of
 -- propositions, tautologies, non-tautologies and environments.
-(==>) :: Testable m a => Bool -> a -> Property m
-True ==>  x = test x
-False ==> _ = Property $ do
+(==>) :: (Testable m c, Testable m a) => c -> a -> Property m
+cond ==> prop = Property $ do
   env <- ask
-  return $ fromFailure $ do
-    lift $ testHook env BadTest
-    mzero
+
+  let
+    counterExample = once $ searchCounterExamples $ unProp env $ test cond
+
+    badTestHook = lift $ testHook env BadTest
+
+    success =
+      ifte counterExample
+        -- then
+        (\ex -> do
+          badTestHook
+          return $ Vacuously ex
+        )
+        -- else
+        (searchExamples $ unProp env $ test prop)
+
+    failure =
+      ifte counterExample
+        -- then
+        (const $ do
+          lift $ testHook env BadTest
+          mzero
+        )
+        -- else
+        (searchCounterExamples $ unProp env $ test prop)
+
+  return $ PropertyPair success failure
