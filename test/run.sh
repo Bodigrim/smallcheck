@@ -14,6 +14,7 @@ then
 fi
 
 rm -f test.tix
+cabal configure
 cabal build
 if [ "${1:-""}" = '--ci' ]
 then
