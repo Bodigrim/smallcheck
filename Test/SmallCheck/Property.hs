@@ -286,6 +286,8 @@ cond ==> prop = Property $ do
   let
     counterExample = once $ searchCounterExamples $ unProp env $ test cond
 
+    antecedent = unProp env { quantification = Forall } $ test prop
+
     badTestHook = lift $ testHook env BadTest
 
     success =
@@ -296,7 +298,7 @@ cond ==> prop = Property $ do
           return $ Vacuously ex
         )
         -- else
-        (searchExamples $ unProp env $ test prop)
+        (searchExamples antecedent)
 
     failure =
       ifte counterExample
@@ -306,7 +308,7 @@ cond ==> prop = Property $ do
           mzero
         )
         -- else
-        (searchCounterExamples $ unProp env $ test prop)
+        (searchCounterExamples antecedent)
 
   return $ PropertyPair success failure
 
