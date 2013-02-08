@@ -11,7 +11,6 @@
 -- to the README at
 -- <https://github.com/feuerbach/smallcheck/blob/master/README.md>
 --------------------------------------------------------------------
-{-# OPTIONS_HADDOCK prune #-}
 module Test.SmallCheck (
   -- * Constructing tests
 
@@ -19,8 +18,7 @@ module Test.SmallCheck (
   -- arguments) returning 'Bool'. The test succeeds if for every
   -- combination of arguments the function returns 'True'.
   --
-  -- In addition, you can use the combinators shown below. For more
-  -- advanced combinators, see "Test.SmallCheck.Property".
+  -- In addition, you can use the combinators shown below.
   --
   -- To generate test cases for your own types, refer to
   -- "Test.SmallCheck.Series".
@@ -29,32 +27,29 @@ module Test.SmallCheck (
   Testable,
   Property,
 
-  -- ** Existential quantification
+  -- * Quantification
 
-  -- | Suppose we have defined a function
+  -- | 'forAll', 'exists' and 'exists1' functions set the quantification
+  -- context. The quantification context determines how functions are
+  -- interpreted. Depending on the quantification context, the test
+  -- @\\x y -> p x y@ may be equivalent to:
   --
-  -- >isPrefix :: Eq a => [a] -> [a] -> Bool
+  -- * ∀ x, y. p x y
   --
-  -- and wish to specify it by some suitable property. We might define
+  -- * ∃ x, y. p x y
   --
-  -- >prop_isPrefix1 :: String -> String -> Bool
-  -- >prop_isPrefix1 xs ys = isPrefix xs (xs++ys)
+  -- * ∃! x, y. p x y
   --
-  -- where @xs@ and @ys@ are universally quantified. This property is necessary
-  -- but not sufficient for a correct @isPrefix@. For example, it is satisfied
-  -- by the function that always returns @True@!
-  --
-  -- We can also test the following property, which involves an existentially
-  -- quantified variable:
-  --
-  -- >prop_isPrefix2 :: Monad m => String -> String -> Property m
-  -- >prop_isPrefix2 xs ys = isPrefix xs ys ==> exists $ \xs' -> ys == xs++xs'
+  -- A quantification operator affects all functions until overridden with
+  -- another operator, but does not affect the left operand of '==>'. The
+  -- default quantification context is universal (i.e. 'forAll').
 
+  forAll,
   exists,
   exists1,
 
   -- ** Conditioning
-  --(==>),
+  (==>),
 
   -- * Running tests
   -- | The functions below can be used to run SmallCheck tests.
@@ -71,7 +66,7 @@ module Test.SmallCheck (
   --
   -- For more ways to run the tests, see "Test.SmallCheck.Drivers".
   -- Depth,
-  -- smallCheck, depthCheck
+  -- smallCheck
   ) where
 
 import Test.SmallCheck.Property
