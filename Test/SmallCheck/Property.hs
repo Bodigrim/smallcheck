@@ -117,6 +117,13 @@ fromFailure search =
     (PropertyTrue <$ lnot search)
     search
 
+-- | @'over' s $ \\x -> p x@ makes @x@ range over the 'Series' @s@ (by
+-- default, all variables range over the 'series' for their types).
+--
+-- Note that, unlike the quantification operators, this affects only the
+-- variable following the operator and not subsequent variables.
+--
+-- This does not affect the quantification context.
 over :: Series m a -> (a -> b) -> Over m a b
 over = Over
 
@@ -262,51 +269,16 @@ exists = quantify Exists . test
 exists1 :: Testable m a => a -> Property m
 exists1 = quantify ExistsUnique . test
 
-{-
--- | The default testing of existentials is bounded by the same depth as their
--- context. This rule has important consequences. Just as a universal property
--- may be satisfied when the depth bound is shallow but fail when it is deeper,
--- so the reverse may be true for an existential property. So when testing
--- properties involving existentials it may be appropriate to try deeper testing
--- after a shallow failure. However, sometimes the default same-depth-bound
--- interpretation of existential properties can make testing of a valid property
--- fail at all depths. Here is a contrived but illustrative example:
+-- | The '==>' operator can be used to express a restricting condition
+-- under which a property should hold. It corresponds to implication in the
+-- classical logic.
 --
--- >prop_append1 :: Monad m => [Bool] -> [Bool] -> Property m
--- >prop_append1 xs ys = exists $ \zs -> zs == xs++ys
---
--- 'existsDeeperBy' transforms the depth bound by a given @'Depth' -> 'Depth'@ function:
---
--- >prop_append2 :: Monad m => [Bool] -> [Bool] -> Property m
--- >prop_append2 xs ys = existsDeeperBy (*2) $ \zs -> zs == xs++ys
-existsDeeperBy :: (Show a, Serial m a, Testable m b) => (Depth->Depth) -> (a->b) -> Property m
-existsDeeperBy f = thereExists $ localDepth f series
-
--- | Like 'existsDeeperBy', but additionally require the uniqueness of the
--- argument satisfying the predicate
-exists1DeeperBy :: (Show a, Serial m a, Testable m b) => (Depth->Depth) -> (a->b) -> Property m
-exists1DeeperBy f = thereExists1 $ localDepth f series
--}
+-- In the property @a '==>' b@, the quantification context of the consequent
+-- (@b@) is the same as the quantification context of the property itself,
+-- while the quantification context of the antecedent (@a@) is fresh
+-- (universal by default, but may be overriden with the quantification
+-- operators).
 infixr 0 ==>
-
--- | The '==>' operator can be used to express a
--- restricting condition under which a property should hold. For example,
--- testing a propositional-logic module, we might define:
---
--- >prop_tautEval :: Monad m => Proposition -> Environment -> Property m
--- >prop_tautEval p e = tautology p ==> eval p e
---
--- But here is an alternative definition:
---
--- >prop_tautEval :: Monad m => Proposition -> Property m
--- >prop_taut p = tautology p ==> \e -> eval p e
---
--- The first definition generates p and e for each test, whereas the
--- second only generates @e@ if the tautology @p@ holds.
---
--- The second definition is far better as the test-space is
--- reduced from PE to T'+TE where P, T, T' and E are the numbers of
--- propositions, tautologies, non-tautologies and environments.
 (==>) :: (Testable m c, Testable m a) => c -> a -> Property m
 cond ==> prop = Property $ do
   env <- ask

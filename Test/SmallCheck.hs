@@ -7,6 +7,9 @@
 --
 -- This module exports the main pieces of SmallCheck functionality.
 --
+-- To generate test cases for your own types, refer to
+-- "Test.SmallCheck.Series".
+--
 -- For pointers to other sources of information about SmallCheck, please refer
 -- to the README at
 -- <https://github.com/feuerbach/smallcheck/blob/master/README.md>
@@ -19,15 +22,6 @@ module Test.SmallCheck (
   -- combination of arguments the function returns 'True'.
   --
   -- In addition, you can use the combinators shown below.
-  --
-  -- To generate test cases for your own types, refer to
-  -- "Test.SmallCheck.Series".
-
-  -- * Main types
-  Testable,
-  Property,
-
-  -- * Quantification
 
   -- | 'forAll', 'exists' and 'exists1' functions set the quantification
   -- context for function arguments. The quantification context determines
@@ -47,12 +41,12 @@ module Test.SmallCheck (
   forAll,
   exists,
   exists1,
+  over,
 
-  -- ** Conditioning
   (==>),
 
   -- * Running tests
-  -- | The functions below can be used to run SmallCheck tests.
+  -- | 'smallCheck' is a simple way to run a test.
   --
   -- As an alternative, consider using the @test-framework@ package:
   -- <http://hackage.haskell.org/package/test-framework>
@@ -67,6 +61,12 @@ module Test.SmallCheck (
   -- For more ways to run the tests, see "Test.SmallCheck.Drivers".
   -- Depth,
   -- smallCheck
+
+  -- * Main types and classes
+  Testable,
+  Property,
+  Over
+
   ) where
 
 import Test.SmallCheck.Property
