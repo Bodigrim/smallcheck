@@ -13,7 +13,7 @@
              ScopedTypeVariables #-}
 module Test.SmallCheck.Property (
   -- * Quantifiers
-  forAll, exists, exists1, over, Over, (==>),
+  forAll, exists, exists1, over, Over, (==>), monadic,
 
   -- * Property's entrails
   Property,
@@ -126,6 +126,17 @@ fromFailure search =
 -- This does not affect the quantification context.
 over :: Series m a -> (a -> b) -> Over m a b
 over = Over
+
+-- | Execute a monadic test
+monadic :: Testable m a => m a -> Property m
+monadic a =
+  Property $ reader $ \env ->
+
+    let pair = unProp env . test <$> lift a in
+
+    PropertyPair
+      (searchExamples =<< pair)
+      (searchCounterExamples =<< pair)
 
 -- }}}
 
@@ -264,8 +275,8 @@ exists = quantify Exists . test
 -- More precisely, in the uniqueness context, a contiguous
 -- sequence of variables are quantified as one tuple, where contiguous
 -- means that the variables are not separated by any quantification
--- operator (including 'exists1' itself), 'test' or '==>'. (They may be separated
--- by 'over', though.)
+-- operator (including 'exists1' itself), 'test', 'monadic' or '==>'. (They
+-- may be separated by 'over', though.)
 exists1 :: Testable m a => a -> Property m
 exists1 = quantify ExistsUnique . test
 

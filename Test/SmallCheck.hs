@@ -42,6 +42,7 @@ module Test.SmallCheck (
   exists,
   exists1,
   over,
+  monadic,
 
   (==>),
 
