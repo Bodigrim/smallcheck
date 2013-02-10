@@ -175,7 +175,8 @@ instance (m ~ n, Monad m, Testable m b, Show a) => Testable m (Over n a b) where
   unc (Over s f) = uncFunction s f
 
 instance (Monad m, m ~ n) => Testable n (Property m) where
-  test = id
+  -- NB: trying to use 'freshContext' here will lead to a loop
+  test = quantify Forall
 
 uncFunction
   :: (Show a, Testable m b)
