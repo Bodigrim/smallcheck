@@ -95,6 +95,7 @@ propertyTests =
   [ testGroup "Simple" simplePropertyTests
   , testGroup "Combined quantifiers" combinedPropertyTests
   , testGroup "'over' tests" overTests
+  , testGroup "Fresh contexts" freshContexts
   ]
 
 simplePropertyTests =
@@ -147,6 +148,15 @@ combinedPropertyTests =
 
   , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ \x y -> abs x == (abs y :: Integer))
       @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["-1","-1"] PropertyTrue)
+  ]
+
+freshContexts =
+  [ testCase "==>" $ check (exists1 $ \x -> (\y -> x * y >= 0) ==> (\y -> x * y == (0 :: Integer)))
+      @?= Just (AtLeastTwo ["0"] PropertyTrue ["-1"] (Vacuously (CounterExample ["1"] PropertyFalse)))
+  , testCase "test" $ check (exists $ \x -> test $ \y -> x == (y :: Bool))
+      @?= Just NotExist
+  , testCase "monadic" $ check (exists $ \x -> monadic . return $ \y -> x == (y :: Bool))
+      @?= Just NotExist
   ]
 
 overTests =
