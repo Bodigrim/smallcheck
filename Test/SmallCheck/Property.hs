@@ -123,7 +123,7 @@ fromFailure search =
 -- Note that, unlike the quantification operators, this affects only the
 -- variable following the operator and not subsequent variables.
 --
--- This does not affect the quantification context.
+-- 'over' does not affect the quantification context.
 over :: Series m a -> (a -> b) -> Over m a b
 over = Over
 
@@ -272,11 +272,8 @@ exists = quantify Exists . test
 -- @'exists1' $ \\x -> 'exists1' $ \\y -> p x y@
 -- (the latter, of course, may be explicitly written when desired).
 --
--- More precisely, in the uniqueness context, a contiguous
--- sequence of variables are quantified as one tuple, where contiguous
--- means that the variables are not separated by any quantification
--- operator (including 'exists1' itself), 'test', 'monadic' or '==>'. (They
--- may be separated by 'over', though.)
+-- That is, all the variables affected by the same uniqueness context are
+-- quantified simultaneously as a tuple.
 exists1 :: Testable m a => a -> Property m
 exists1 = quantify ExistsUnique . test
 

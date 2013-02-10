@@ -18,25 +18,47 @@ module Test.SmallCheck (
   -- * Constructing tests
 
   -- | The simplest kind of test is a function (possibly of many
-  -- arguments) returning 'Bool'. The test succeeds if for every
-  -- combination of arguments the function returns 'True'.
+  -- arguments) returning 'Bool'. The function arguments are interpreted
+  -- as being universally, existentially or uniquely quantified, depending
+  -- on the quantification context.
   --
-  -- In addition, you can use the combinators shown below.
-
-  -- | 'forAll', 'exists' and 'exists1' functions set the quantification
-  -- context for function arguments. The quantification context determines
-  -- how functions are interpreted. Depending on the quantification
+  -- The default quantification context is universal ('forAll').
+  --
+  -- 'forAll', 'exists' and 'exists1' functions set the quantification
+  -- context for function arguments. Depending on the quantification
   -- context, the test @\\x y -> p x y@ may be equivalent to:
   --
-  -- * ∀ x, y. p x y
+  -- * ∀ x, y. p x y ('forAll')
   --
-  -- * ∃ x, y: p x y
+  -- * ∃ x, y: p x y ('exists')
   --
-  -- * ∃! x, y: p x y
+  -- * ∃! x, y: p x y ('exists1')
   --
-  -- A quantification operator affects all functions until overridden with
-  -- another operator, but does not affect the left operand of '==>'. The
-  -- default quantification context is universal (i.e. 'forAll').
+  -- The quantification context affects all the variables immediately
+  -- following the quantification operator, also extending past 'over'.
+  --
+  -- However, it doesn't extend past functions like 'test', 'monadic', and
+  -- doesn't affect the operands of '==>'. As a rule of thumb, functions
+  -- returning 'Property' start a fresh quantification context.
+
+  -- ** Examples
+
+  -- |
+  -- * @\\x y -> p x y@ means ∀ x, y. p x y
+  --
+  -- * @'exists' $ \\x y -> p x y@ means ∃ x, y: p x y
+  --
+  -- * @'exists' $ \\x -> 'forAll' $ \\y -> p x y@ means ∃ x: ∀ y. p x y
+  --
+  -- * @'exists1' $ \\x y -> p x y@ means ∃! (x, y): p x y
+  --
+  -- * @'exists1' $ \\x -> 'over' s $ \\y -> p x y@ means ∃! (x, y): y ∈ s && p x y
+  --
+  -- * @'exists1' $ \\x -> 'monadic' $ \\y -> p x y@ means ∃! x: ∀ y. [p x y]
+  --
+  -- * @'exists1' $ \\x -> 'exists1' $ \\y -> p x y@ means ∃! x: ∃! y: p x y
+  --
+  -- * @'exists' $ \\x -> (\\y -> p y) '==>' (\\z -> q z)@ means ∃ x: (∀ y. p y) => (∀ z. p z)
 
   forAll,
   exists,
