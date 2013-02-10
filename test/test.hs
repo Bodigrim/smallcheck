@@ -111,13 +111,13 @@ simplePropertyTests =
   , testCase "Exists/yes" $ check (exists $ \x -> (x^2 :: Integer) > 0)
       @?= Nothing
 
-  , testCase "ExistsUnique/doesn't exist" $ check (exists1 $ \x -> (x^2 :: Integer) < 0)
+  , testCase "ExistsUnique/doesn't exist" $ check (existsUnique $ \x -> (x^2 :: Integer) < 0)
       @?= Just NotExist
 
-  , testCase "ExistsUnique/isn't unique" $ check (exists1 $ \x -> (x^2 :: Integer) > 0)
+  , testCase "ExistsUnique/isn't unique" $ check (existsUnique $ \x -> (x^2 :: Integer) > 0)
       @?= Just (AtLeastTwo ["1"] PropertyTrue ["-1"] PropertyTrue)
 
-  , testCase "ExistsUnique/yes" $ check (exists1 $ \x -> (x^2 :: Integer) < 0)
+  , testCase "ExistsUnique/yes" $ check (existsUnique $ \x -> (x^2 :: Integer) < 0)
       @?= Just NotExist
   ]
 
@@ -140,18 +140,18 @@ combinedPropertyTests =
   , testCase "Exists+Exists/yes" $ check (exists $ \x y -> x + y == (x * y :: Integer))
       @?= Nothing
 
-  , testCase "ExistsUnique+ExistsUnique/yes" $ check (exists1 $ \x y -> x^2 + y^2 == (0 :: Integer))
+  , testCase "ExistsUnique+ExistsUnique/yes" $ check (existsUnique $ \x y -> x^2 + y^2 == (0 :: Integer))
       @?= Nothing
 
-  , testCase "ExistsUnique+ExistsUnique/doesn't exist" $ check (exists1 $ \x y -> x^2 + y^2 < (0 :: Integer))
+  , testCase "ExistsUnique+ExistsUnique/doesn't exist" $ check (existsUnique $ \x y -> x^2 + y^2 < (0 :: Integer))
       @?= Just NotExist
 
-  , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ \x y -> abs x == (abs y :: Integer))
+  , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (existsUnique $ \x y -> abs x == (abs y :: Integer))
       @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["1","1"] PropertyTrue)
   ]
 
 freshContexts =
-  [ testCase "==>" $ check (exists1 $ \x -> (\y -> x * y >= 0) ==> (\y -> x * y == (0 :: Integer)))
+  [ testCase "==>" $ check (existsUnique $ \x -> (\y -> x * y >= 0) ==> (\y -> x * y == (0 :: Integer)))
       @?= Just (AtLeastTwo ["0"] PropertyTrue ["1"] (Vacuously (CounterExample ["-1"] PropertyFalse)))
   , testCase "test" $ check (exists $ \x -> test $ \y -> x == (y :: Bool))
       @?= Just NotExist
@@ -170,7 +170,7 @@ overTests =
       @?= Just NotExist
   , testCase "over+Exists/no" $ check (exists $ over odds even)
       @?= Just NotExist
-  , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ over series $ \x -> over series $ \y -> abs x == (abs y :: Integer))
+  , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (existsUnique $ over series $ \x -> over series $ \y -> abs x == (abs y :: Integer))
       @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["1","1"] PropertyTrue)
   ]
   where

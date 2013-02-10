@@ -24,7 +24,7 @@ module Test.SmallCheck (
   --
   -- The default quantification context is universal ('forAll').
   --
-  -- 'forAll', 'exists' and 'exists1' functions set the quantification
+  -- 'forAll', 'exists' and 'existsUnique' functions set the quantification
   -- context for function arguments. Depending on the quantification
   -- context, the test @\\x y -> p x y@ may be equivalent to:
   --
@@ -32,7 +32,7 @@ module Test.SmallCheck (
   --
   -- * ∃ x, y: p x y ('exists')
   --
-  -- * ∃! x, y: p x y ('exists1')
+  -- * ∃! x, y: p x y ('existsUnique')
   --
   -- The quantification context affects all the variables immediately
   -- following the quantification operator, also extending past 'over'.
@@ -50,19 +50,19 @@ module Test.SmallCheck (
   --
   -- * @'exists' $ \\x -> 'forAll' $ \\y -> p x y@ means ∃ x: ∀ y. p x y
   --
-  -- * @'exists1' $ \\x y -> p x y@ means ∃! (x, y): p x y
+  -- * @'existsUnique' $ \\x y -> p x y@ means ∃! (x, y): p x y
   --
-  -- * @'exists1' $ \\x -> 'over' s $ \\y -> p x y@ means ∃! (x, y): y ∈ s && p x y
+  -- * @'existsUnique' $ \\x -> 'over' s $ \\y -> p x y@ means ∃! (x, y): y ∈ s && p x y
   --
-  -- * @'exists1' $ \\x -> 'monadic' $ \\y -> p x y@ means ∃! x: ∀ y. [p x y]
+  -- * @'existsUnique' $ \\x -> 'monadic' $ \\y -> p x y@ means ∃! x: ∀ y. [p x y]
   --
-  -- * @'exists1' $ \\x -> 'exists1' $ \\y -> p x y@ means ∃! x: ∃! y: p x y
+  -- * @'existsUnique' $ \\x -> 'existsUnique' $ \\y -> p x y@ means ∃! x: ∃! y: p x y
   --
   -- * @'exists' $ \\x -> (\\y -> p y) '==>' (\\z -> q z)@ means ∃ x: (∀ y. p y) => (∀ z. p z)
 
   forAll,
   exists,
-  exists1,
+  existsUnique,
   over,
   monadic,
 

@@ -13,7 +13,7 @@
              ScopedTypeVariables #-}
 module Test.SmallCheck.Property (
   -- * Quantifiers
-  forAll, exists, exists1, over, Over, (==>), monadic,
+  forAll, exists, existsUnique, over, Over, (==>), monadic,
 
   -- * Property's entrails
   Property,
@@ -271,15 +271,15 @@ exists = quantify Exists . test
 -- For example, ∃! x: ∃! y: |x| = |y| is true (it holds only when x=0), but ∃! (x,y): |x| = |y| is false (there are many such pairs).
 --
 -- As is customary in mathematics,
--- @'exists1' $ \\x y -> p x y@ is equivalent to
--- @'exists1' $ \\(x,y) -> p x y@ and not to
--- @'exists1' $ \\x -> 'exists1' $ \\y -> p x y@
+-- @'existsUnique' $ \\x y -> p x y@ is equivalent to
+-- @'existsUnique' $ \\(x,y) -> p x y@ and not to
+-- @'existsUnique' $ \\x -> 'existsUnique' $ \\y -> p x y@
 -- (the latter, of course, may be explicitly written when desired).
 --
 -- That is, all the variables affected by the same uniqueness context are
 -- quantified simultaneously as a tuple.
-exists1 :: Testable m a => a -> Property m
-exists1 = quantify ExistsUnique . test
+existsUnique :: Testable m a => a -> Property m
+existsUnique = quantify ExistsUnique . test
 
 -- | The '==>' operator can be used to express a restricting condition
 -- under which a property should hold. It corresponds to implication in the
