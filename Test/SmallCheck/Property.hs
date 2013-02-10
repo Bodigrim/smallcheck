@@ -81,6 +81,9 @@ instance Typeable1 m => Typeable (Property m)
         (mkTyCon3 "smallcheck" "Test.SmallCheck.Property" "Property")
         [typeOf (undefined :: m ())]
 
+-- | @'Over' m a b@ is a function from @a@ to @b@, where @a@ ranges over
+-- some @'Series' m a@. It is an instance of 'Testable', so you can work
+-- with it as with functions or properties.
 data Over m a b = Over (Series m a) (a -> b)
 
 -- }}}
