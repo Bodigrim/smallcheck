@@ -115,7 +115,7 @@ simplePropertyTests =
       @?= Just NotExist
 
   , testCase "ExistsUnique/isn't unique" $ check (exists1 $ \x -> (x^2 :: Integer) > 0)
-      @?= Just (AtLeastTwo ["-1"] PropertyTrue ["1"] PropertyTrue)
+      @?= Just (AtLeastTwo ["1"] PropertyTrue ["-1"] PropertyTrue)
 
   , testCase "ExistsUnique/yes" $ check (exists1 $ \x -> (x^2 :: Integer) < 0)
       @?= Just NotExist
@@ -125,8 +125,8 @@ combinedPropertyTests =
   [ testCase "Forall+Forall/no" $ check (\x y -> x /= (y+2 :: Integer))
       @?= Just (CounterExample ["0","-2"] PropertyFalse)
 
-  , testCase "Forall+Exists/no" $ check (\x -> exists $ \y -> x == (y^2 :: Integer))
-      @?= Just (CounterExample ["-1"] NotExist)
+  , testCase "Forall+Exists/no" $ check (\x -> x > 0 ==> exists $ \y -> x == (y^2 :: Integer))
+      @?= Just (CounterExample ["2"] NotExist)
 
   , testCase "Exists+Forall/no" $ check (exists $ \x -> forAll $ \y -> x * y == (y^2 :: Integer))
       @?= Just NotExist
@@ -147,12 +147,12 @@ combinedPropertyTests =
       @?= Just NotExist
 
   , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ \x y -> abs x == (abs y :: Integer))
-      @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["-1","-1"] PropertyTrue)
+      @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["1","1"] PropertyTrue)
   ]
 
 freshContexts =
   [ testCase "==>" $ check (exists1 $ \x -> (\y -> x * y >= 0) ==> (\y -> x * y == (0 :: Integer)))
-      @?= Just (AtLeastTwo ["0"] PropertyTrue ["-1"] (Vacuously (CounterExample ["1"] PropertyFalse)))
+      @?= Just (AtLeastTwo ["0"] PropertyTrue ["1"] (Vacuously (CounterExample ["-1"] PropertyFalse)))
   , testCase "test" $ check (exists $ \x -> test $ \y -> x == (y :: Bool))
       @?= Just NotExist
   , testCase "monadic" $ check (exists $ \x -> monadic . return $ \y -> x == (y :: Bool))
@@ -171,7 +171,7 @@ overTests =
   , testCase "over+Exists/no" $ check (exists $ over odds even)
       @?= Just NotExist
   , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (exists1 $ over series $ \x -> over series $ \y -> abs x == (abs y :: Integer))
-      @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["-1","-1"] PropertyTrue)
+      @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["1","1"] PropertyTrue)
   ]
   where
   odds :: Monad m => Series m Integer

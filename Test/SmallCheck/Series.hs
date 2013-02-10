@@ -396,8 +396,11 @@ instance Monad m => CoSerial m () where
 
 instance Monad m => Serial m Int where
   series =
-    generate (\d -> [0..d]) `interleave`
-    generate (\d -> map negate [1..d])
+    generate (\d -> if d >= 0 then pure 0 else empty) <|>
+      nats `interleave` (fmap negate nats)
+    where
+      nats = generate $ \d -> [1..d]
+
 instance Monad m => CoSerial m Int where
   coseries rs =
     alts0 rs >>- \z ->
