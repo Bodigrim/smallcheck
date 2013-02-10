@@ -13,7 +13,7 @@ then
   (cd ../test-framework-smallcheck && cabal_install)
 fi
 
-rm -f test.tix
+rm -f smallcheck-test.tix
 cabal configure
 cabal build
 if [ "${1:-""}" = '--ci' ]
