@@ -179,8 +179,9 @@ testFunction s f = Property $ reader $ \env ->
   in
 
   case quantification env of
-    Forall ->
-      let
+    Forall -> PropertySeries success failure closest
+      -- {{{
+      where
         failure = do
           x <- s
           failure <- searchCounterExamples $ unProp env $ test $ f x
@@ -191,10 +192,10 @@ testFunction s f = Property $ reader $ \env ->
               _ -> CounterExample [arg] failure
 
         success = PropertyTrue <$ lnot failure
+      -- }}}
 
-      in PropertySeries success failure closest
-
-    Exists -> PropertySeries success (NotExist <$ lnot success) closest
+    Exists -> PropertySeries success failure closest
+      -- {{{
       where
         success = do
           x <- s
@@ -206,7 +207,11 @@ testFunction s f = Property $ reader $ \env ->
               Exist args etc -> Exist (arg:args) etc
               _ -> Exist [arg] s
 
+        failure = NotExist <$ lnot success
+      -- }}}
+
     ExistsUnique -> PropertySeries success failure closest
+      -- {{{
       where
         search = atMost 2 $ do
           (prop, args) <- closest
@@ -227,6 +232,7 @@ testFunction s f = Property $ reader $ \env ->
                 [] -> return NotExist
                 (x1,s1):(x2,s2):_ -> return $ AtLeastTwo x1 s1 x2 s2
                 _ -> mzero
+      -- }}}
 
 atMost :: MonadLogic m => Int -> m a -> m [a]
 atMost n m
