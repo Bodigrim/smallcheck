@@ -154,7 +154,7 @@ freshContexts =
   [ testCase "==>" $ check (existsUnique $ \x -> (\y -> x * y >= 0) ==> (\y -> x * y == (0 :: Integer)))
       @?= Just (AtLeastTwo ["0"] PropertyTrue ["1"] (Vacuously (CounterExample ["-1"] PropertyFalse)))
   , testCase "test" $ check (exists $ \x -> test $ \y -> x == (y :: Bool))
-      @?= Just NotExist
+      @?= Nothing
   , testCase "monadic" $ check (exists $ \x -> monadic . return $ \y -> x == (y :: Bool))
       @?= Just NotExist
   ]

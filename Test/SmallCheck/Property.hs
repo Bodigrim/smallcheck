@@ -121,15 +121,17 @@ atomicProperty s f =
 -- variable following the operator and not subsequent variables.
 --
 -- 'over' does not affect the quantification context.
-over :: Series m a -> (a -> b) -> Over m a b
-over = Over
+over
+  :: (Monad m, Show a, Testable m b)
+  => Series m a -> (a -> b) -> Property m
+over = testFunction
 
 -- | Execute a monadic test
 monadic :: Testable m a => m a -> Property m
 monadic a =
   Property $ reader $ \env ->
 
-    let pair = unProp env . test <$> lift a in
+    let pair = unProp env . freshContext <$> lift a in
 
     atomicProperty
       (searchExamples =<< pair)
@@ -165,7 +167,7 @@ instance (m ~ n, Monad m, Testable m b, Show a) => Testable m (Over n a b) where
 
 instance (Monad m, m ~ n) => Testable n (Property m) where
   -- NB: trying to use 'freshContext' here will lead to a loop
-  test = quantify Forall
+  test = id
 
 testFunction
   :: (Monad m, Show a, Testable m b)
@@ -254,6 +256,9 @@ atMost n m
 quantify :: Quantification -> Property m -> Property m
 quantify q (Property a) = Property $ local (\env -> env { quantification = q }) a
 
+freshContext :: Testable m a => a -> Property m
+freshContext = forAll
+
 -- | Set the universal quantification context.
 forAll :: Testable m a => a -> Property m
 forAll = quantify Forall . test
@@ -294,9 +299,9 @@ cond ==> prop = Property $ do
   env <- ask
 
   let
-    counterExample = once $ searchCounterExamples $ unProp env $ test cond
+    counterExample = once $ searchCounterExamples $ unProp env $ freshContext cond
 
-    antecedent = unProp env { quantification = Forall } $ test prop
+    antecedent = unProp env { quantification = Forall } $ freshContext prop
 
     badTestHook = lift $ testHook env BadTest
 
