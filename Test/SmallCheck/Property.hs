@@ -34,12 +34,13 @@ import Data.Typeable
 ------------------------------
 --{{{
 
-newtype Property m = Property { unProperty :: Reader (Env m) (PropertyPair m) }
+newtype Property m = Property { unProperty :: Reader (Env m) (PropertySeries m) }
 
-data PropertyPair m =
-  PropertyPair
+data PropertySeries m =
+  PropertySeries
     { searchExamples        :: Series m PropertySuccess
     , searchCounterExamples :: Series m PropertyFailure
+    , searchClosest         :: Series m (Property m, [Argument])
     }
 
 data Env m =
@@ -108,17 +109,10 @@ runProperty depth hook prop =
   flip runReader (Env Forall hook) $
   unProperty prop
 
-fromSuccess :: Monad m => Series m PropertySuccess -> PropertyPair m
-fromSuccess search =
-  PropertyPair
-    search
-    (PropertyFalse <$ lnot search)
-
-fromFailure :: Monad m => Series m PropertyFailure -> PropertyPair m
-fromFailure search =
-  PropertyPair
-    (PropertyTrue <$ lnot search)
-    search
+atomicProperty :: Series m PropertySuccess -> Series m PropertyFailure -> PropertySeries m
+atomicProperty s f =
+  let prop = PropertySeries s f (pure (Property $ pure prop, []))
+  in prop
 
 -- | @'over' s $ \\x -> p x@ makes @x@ range over the 'Series' @s@ (by
 -- default, all variables range over the 'series' for their types).
@@ -137,7 +131,7 @@ monadic a =
 
     let pair = unProp env . test <$> lift a in
 
-    PropertyPair
+    atomicProperty
       (searchExamples =<< pair)
       (searchCounterExamples =<< pair)
 
@@ -154,55 +148,53 @@ monadic a =
 class Monad m => Testable m a where
   test :: a -> Property m
 
-  unc :: a -> Series m (Property m, [Argument])
-  unc x = return (test x, [])
-
 instance Monad m => Testable m Bool where
-  test b = Property $ do
-    env <- ask
-    return $ fromSuccess $ do
-      lift $ testHook env GoodTest
-      if b then return PropertyTrue else mzero
+  test b = Property $ reader $ \env ->
+    let
+      success = do
+        lift $ testHook env GoodTest
+        if b then return PropertyTrue else mzero
+      failure = PropertyFalse <$ lnot success
+    in atomicProperty success failure
 
 instance (Serial m a, Show a, Testable m b) => Testable m (a->b) where
   test = testFunction series
 
-  unc = uncFunction series
-
 instance (m ~ n, Monad m, Testable m b, Show a) => Testable m (Over n a b) where
   test (Over s f) = testFunction s f
-
-  unc (Over s f) = uncFunction s f
 
 instance (Monad m, m ~ n) => Testable n (Property m) where
   -- NB: trying to use 'freshContext' here will lead to a loop
   test = quantify Forall
 
-uncFunction
-  :: (Show a, Testable m b)
-  => Series m a -> (a -> b) -> Series m (Property m, [String])
-uncFunction s f  = do
-  x <- s
-  (p, args) <- unc $ f x
-  return (p, show x : args)
-
 testFunction
   :: (Monad m, Show a, Testable m b)
   => Series m a -> (a -> b) -> Property m
-testFunction s f = Property $ do
-  env <- ask
+testFunction s f = Property $ reader $ \env ->
+  let
+    closest = do
+      x <- s
+      (p, args) <- searchClosest $ unProp env $ test $ f x
+      return (p, show x : args)
+  in
+
   case quantification env of
     Forall ->
-      return . fromFailure $ do
-        x <- s
-        failure <- searchCounterExamples $ unProp env $ test $ f x
-        let arg = show x
-        return $
-          case failure of
-            CounterExample args etc -> CounterExample (arg:args) etc
-            _ -> CounterExample [arg] failure
+      let
+        failure = do
+          x <- s
+          failure <- searchCounterExamples $ unProp env $ test $ f x
+          let arg = show x
+          return $
+            case failure of
+              CounterExample args etc -> CounterExample (arg:args) etc
+              _ -> CounterExample [arg] failure
 
-    Exists -> return $ PropertyPair success (NotExist <$ lnot success)
+        success = PropertyTrue <$ lnot failure
+
+      in PropertySeries success failure closest
+
+    Exists -> PropertySeries success (NotExist <$ lnot success) closest
       where
         success = do
           x <- s
@@ -214,10 +206,10 @@ testFunction s f = Property $ do
               Exist args etc -> Exist (arg:args) etc
               _ -> Exist [arg] s
 
-    ExistsUnique -> return $ PropertyPair success failure
+    ExistsUnique -> PropertySeries success failure closest
       where
         search = atMost 2 $ do
-          (prop, args) <- uncFunction s f
+          (prop, args) <- closest
           ex <- once $ searchExamples $ unProp env $ test prop
           return (args, ex)
 
@@ -322,6 +314,6 @@ cond ==> prop = Property $ do
         -- else
         (searchCounterExamples antecedent)
 
-  return $ PropertyPair success failure
+  return $ atomicProperty success failure
 
 -- }}}
