@@ -89,7 +89,6 @@ module Test.SmallCheck (
   -- * Main types and classes
   Testable,
   Property,
-  Over
 
   ) where
 

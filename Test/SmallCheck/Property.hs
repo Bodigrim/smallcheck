@@ -13,7 +13,7 @@
              ScopedTypeVariables #-}
 module Test.SmallCheck.Property (
   -- * Quantifiers
-  forAll, exists, existsUnique, over, Over, (==>), monadic, property,
+  forAll, exists, existsUnique, over, (==>), monadic, property,
 
   -- * Property's entrails
   Property,
@@ -81,11 +81,6 @@ instance Typeable1 m => Typeable (Property m)
       mkTyConApp
         (mkTyCon3 "smallcheck" "Test.SmallCheck.Property" "Property")
         [typeOf (undefined :: m ())]
-
--- | @'Over' m a b@ is a function from @a@ to @b@, where @a@ ranges over
--- some @'Series' m a@. It is an instance of 'Testable', so you can work
--- with it as with functions or properties.
-data Over m a b = Over (Series m a) (a -> b)
 
 -- }}}
 
@@ -170,9 +165,6 @@ instance Monad m => Testable m Bool where
 
 instance (Serial m a, Show a, Testable m b) => Testable m (a->b) where
   test = testFunction series
-
-instance (m ~ n, Monad m, Testable m b, Show a) => Testable m (Over n a b) where
-  test (Over s f) = testFunction s f
 
 instance (Monad m, m ~ n) => Testable n (Property m) where
   test = id
