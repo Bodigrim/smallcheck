@@ -171,7 +171,6 @@ instance (m ~ n, Monad m, Testable m b, Show a) => Testable m (Over n a b) where
   test (Over s f) = testFunction s f
 
 instance (Monad m, m ~ n) => Testable n (Property m) where
-  -- NB: trying to use 'freshContext' here will lead to a loop
   test = id
 
 testFunction

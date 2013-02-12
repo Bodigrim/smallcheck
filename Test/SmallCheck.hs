@@ -37,9 +37,9 @@ module Test.SmallCheck (
   -- The quantification context affects all the variables immediately
   -- following the quantification operator, also extending past 'over'.
   --
-  -- However, it doesn't extend past functions like 'test', 'monadic', and
-  -- doesn't affect the operands of '==>'. As a rule of thumb, functions
-  -- returning 'Property' start a fresh quantification context.
+  -- However, it doesn't extend past other functions, like 'monadic', and
+  -- doesn't affect the operands of '==>'. Such functions start a fresh
+  -- default quantification context.
 
   -- ** Examples
 
