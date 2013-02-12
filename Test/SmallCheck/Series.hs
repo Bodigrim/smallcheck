@@ -146,6 +146,9 @@ module Test.SmallCheck.Series (
   -- * Basic definitions
   Depth, Series, Serial(..), CoSerial(..),
 
+  -- * Convenient wrappers
+  Positive(..), NonNegative(..),
+
   -- * Other useful definitions
   (\/), (><), (<~>), (>>-),
   N(..), Nat, Natural,
@@ -557,7 +560,7 @@ instance (Serial Identity a, Show a, Show b) => Show (a->b) where
 -- }}}
 
 ------------------------------
--- Convenience wrappers
+-- Convenient wrappers
 ------------------------------
 -- {{{
 
