@@ -67,6 +67,7 @@ module Test.SmallCheck (
   monadic,
 
   (==>),
+  property,
 
   -- * Running tests
   -- | 'smallCheck' is a simple way to run a test.
