@@ -82,8 +82,8 @@ module Test.SmallCheck (
   -- the @test-framework-smallcheck@ package: <http://hackage.haskell.org/package/test-framework>
   --
   -- For more ways to run the tests, see "Test.SmallCheck.Drivers".
-  -- Depth,
-  -- smallCheck
+  Depth,
+  smallCheck,
 
   -- * Main types and classes
   Testable,
