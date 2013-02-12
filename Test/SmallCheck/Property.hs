@@ -114,6 +114,11 @@ atomicProperty s f =
   let prop = PropertySeries s f (pure (Property $ pure prop, []))
   in prop
 
+makeAtomic :: Property m -> Property m
+makeAtomic (Property prop) =
+  Property $ flip fmap prop $ \ps ->
+    atomicProperty (searchExamples ps) (searchCounterExamples ps)
+
 -- | @'over' s $ \\x -> p x@ makes @x@ range over the 'Series' @s@ (by
 -- default, all variables range over the 'series' for their types).
 --
@@ -254,7 +259,8 @@ atMost n m
 -- {{{
 
 quantify :: Quantification -> Property m -> Property m
-quantify q (Property a) = Property $ local (\env -> env { quantification = q }) a
+quantify q (Property a) =
+  makeAtomic $ Property $ local (\env -> env { quantification = q }) a
 
 freshContext :: Testable m a => a -> Property m
 freshContext = forAll

@@ -140,14 +140,18 @@ combinedPropertyTests =
   , testCase "Exists+Exists/yes" $ check (exists $ \x y -> x + y == (x * y :: Integer))
       @?= Nothing
 
-  , testCase "ExistsUnique+ExistsUnique/yes" $ check (existsUnique $ \x y -> x^2 + y^2 == (0 :: Integer))
+  , testCase "ExistsUnique (two vars)/yes" $ check (existsUnique $ \x y -> x^2 + y^2 == (0 :: Integer))
       @?= Nothing
 
-  , testCase "ExistsUnique+ExistsUnique/doesn't exist" $ check (existsUnique $ \x y -> x^2 + y^2 < (0 :: Integer))
+  , testCase "ExistsUnique (two vars)/doesn't exist" $ check (existsUnique $ \x y -> x^2 + y^2 < (0 :: Integer))
       @?= Just NotExist
 
-  , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (existsUnique $ \x y -> abs x == (abs y :: Integer))
+  , testCase "ExistsUnique (two vars)/isn't unique" $ check (existsUnique $ \x y -> abs x == (abs y :: Integer))
       @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["1","1"] PropertyTrue)
+
+  , testCase "ExistsUnique+ExistsUnique/yes" $
+      check (existsUnique $ \x -> existsUnique $ \y -> abs x == (abs y :: Integer))
+      @?= Nothing
   ]
 
 freshContexts =
