@@ -68,6 +68,7 @@ module Test.SmallCheck (
 
   (==>),
   withDepth,
+  withDepth1,
   property,
 
   -- * Running tests

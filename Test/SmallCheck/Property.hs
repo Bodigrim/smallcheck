@@ -13,7 +13,7 @@
              ScopedTypeVariables #-}
 module Test.SmallCheck.Property (
   -- * Constructors
-  forAll, exists, existsUnique, over, (==>), monadic, property, withDepth,
+  forAll, exists, existsUnique, over, (==>), monadic, property, withDepth, withDepth1,
 
   -- * Property's entrails
   Property,
@@ -339,5 +339,10 @@ withDepth modifyDepth a = Property (withDepthPS <$> unProperty (test a))
         (localDepth modifyDepth sf)
         ((\(prop, args) -> (withDepth modifyDepth prop, args)) <$>
           localDepth modifyDepth sc)
+
+-- | Quantify the function's argument over its 'series', but adjust the
+-- depth. This doesn't affect any subsequent variables.
+withDepth1 :: (Show a, Serial m a, Testable m b) => (Depth -> Depth) -> (a -> b) -> Property m
+withDepth1 modifyDepth = over $ localDepth modifyDepth series
 
 -- }}}
