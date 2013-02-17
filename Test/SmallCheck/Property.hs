@@ -12,8 +12,8 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeFamilies,
              ScopedTypeVariables #-}
 module Test.SmallCheck.Property (
-  -- * Quantifiers
-  forAll, exists, existsUnique, over, (==>), monadic, property,
+  -- * Constructors
+  forAll, exists, existsUnique, over, (==>), monadic, property, withDepth,
 
   -- * Property's entrails
   Property,
@@ -327,5 +327,16 @@ cond ==> prop = Property $ do
         (searchCounterExamples antecedent)
 
   return $ atomicProperty success failure
+
+-- | Run property with a modified depth
+withDepth :: (Depth -> Depth) -> Property m -> Property m
+withDepth modifyDepth (Property m) = Property (withDepthPS <$> m)
+  where
+    withDepthPS (PropertySeries ss sf sc) =
+      PropertySeries
+        (localDepth modifyDepth ss)
+        (localDepth modifyDepth sf)
+        ((\(prop, args) -> (withDepth modifyDepth prop, args)) <$>
+          localDepth modifyDepth sc)
 
 -- }}}
