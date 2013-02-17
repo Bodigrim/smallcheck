@@ -328,9 +328,10 @@ cond ==> prop = Property $ do
 
   return $ atomicProperty success failure
 
--- | Run property with a modified depth
-withDepth :: (Depth -> Depth) -> Property m -> Property m
-withDepth modifyDepth (Property m) = Property (withDepthPS <$> m)
+-- | Run property with a modified depth. Affects all quantified variables
+-- in the property.
+withDepth :: Testable m a => (Depth -> Depth) -> a -> Property m
+withDepth modifyDepth a = Property (withDepthPS <$> unProperty (test a))
   where
     withDepthPS (PropertySeries ss sf sc) =
       PropertySeries
