@@ -67,6 +67,7 @@ module Test.SmallCheck (
   monadic,
 
   (==>),
+  withDepth,
   property,
 
   -- * Running tests
