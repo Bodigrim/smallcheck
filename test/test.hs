@@ -1,7 +1,7 @@
 {-# LANGUAGE BangPatterns, ScopedTypeVariables, FlexibleContexts,
              ExistentialQuantification, RankNTypes #-}
 import Test.Framework
-import Test.Framework.Providers.SmallCheck
+import Test.Framework.Providers.SmallCheck (testProperty)
 import Test.Framework.Providers.HUnit
 import Test.HUnit ((@?=))
 import Test.SmallCheck
@@ -96,6 +96,7 @@ propertyTests =
   , testGroup "Combined quantifiers" combinedPropertyTests
   , testGroup "'over' tests" overTests
   , testGroup "Fresh contexts" freshContexts
+  , testGroup "'withDepth' tests" withDepthTests
   ]
 
 simplePropertyTests =
@@ -181,6 +182,20 @@ overTests =
   odds :: Monad m => Series m Integer
   odds = series >>= \x -> guard (odd x) >> return x
 
+withDepthTests = 
+  [ testCase "no-withDepth+exists (baseline)" $ check (exists $ \x -> x == (10 :: Integer))
+      @?= Just NotExist
+  , testCase "withDepth+exists" $ check (withDepth (const 10) $ exists $ \x -> x == (10 :: Integer))
+      @?= Nothing
+  , testCase "withDepth+exists (many variables)" $ check (withDepth (const 10) $ exists $ \x y z -> minimum [x,y,z] == (10 :: Integer))
+      @?= Nothing
+  , testCase "withDepth+existsUnique" $ check (withDepth (const 10) $ existsUnique $ \(x :: ()) -> exists $ \y -> y == (10 :: Integer))
+      @?= Nothing
+  , testCase "withDepth1+exists" $ check (exists $ withDepth1 (const 10) $ \x -> x == (10 :: Integer))
+      @?= Nothing
+  , testCase "withDepth1+exists (delimited scope)" $ check (exists $ withDepth1 (const 10) $ \(y :: Integer) x -> x == (10 :: Integer))
+      @?= Just NotExist
+  ]
 
 ------------------------------
 -- Actual testing
