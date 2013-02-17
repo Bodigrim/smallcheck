@@ -137,7 +137,7 @@ monadic a =
       (searchExamples =<< pair)
       (searchCounterExamples =<< pair)
 
--- | Wrap an arbitrary 'Testable' into a 'Property'.
+-- | Wrap an arbitrary 'Testable' into a 'Property'
 property :: Testable m a => a -> Property m
 property = test
 
@@ -260,11 +260,11 @@ quantify q (Property a) =
 freshContext :: Testable m a => a -> Property m
 freshContext = forAll
 
--- | Set the universal quantification context.
+-- | Set the universal quantification context
 forAll :: Testable m a => a -> Property m
 forAll = quantify Forall . test
 
--- | Set the existential quantification context.
+-- | Set the existential quantification context
 exists :: Testable m a => a -> Property m
 exists = quantify Exists . test
 
