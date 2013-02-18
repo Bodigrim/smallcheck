@@ -5,7 +5,8 @@
 -- License   : BSD3
 -- Maintainer: Roman Cheplyaka <roma@ro-che.info>
 --
--- Functions to run SmallCheck tests.
+-- You should only need this module if you wish to create your own way to
+-- run SmallCheck tests
 --------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 module Test.SmallCheck.Drivers (
