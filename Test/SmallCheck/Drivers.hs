@@ -10,7 +10,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Test.SmallCheck.Drivers (
   smallCheck, smallCheckM, smallCheckWithHook,
-  PropertyFailure, ppFailure
+  ppFailure,
+  PropertyFailure(..), PropertySuccess(..), Argument, TestQuality(..)
   ) where
 
 import Control.Monad (when)
