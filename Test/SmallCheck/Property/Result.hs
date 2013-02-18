@@ -42,10 +42,10 @@ instance Pretty PropertyFailure where
     prettyArgs args <+>
     text "such that"
     </> (pretty f)
-  pretty PropertyFalse = text "property is false"
+  pretty PropertyFalse = text "condition is false"
 
 instance Pretty PropertySuccess where
-  pretty PropertyTrue = text "property is true"
+  pretty PropertyTrue = text "condition is true"
   pretty (Exist       args s) = existsMsg False args s
   pretty (ExistUnique args s) = existsMsg True args s
   pretty (Vacuously s) = text "property is vacuously true because" </> pretty s
