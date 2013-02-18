@@ -15,6 +15,7 @@ module Test.SmallCheck.Drivers (
 
 import Control.Monad (when)
 import Test.SmallCheck.Property
+import Test.SmallCheck.Property.Result
 import Test.SmallCheck.SeriesMonad
 import Text.Printf
 import Data.IORef
@@ -32,7 +33,7 @@ smallCheck d a = do
         printf "But %d did not meet ==> condition.\n" $ bad
     Just x -> do
       printf "Failed test no. %d.\n" $ testsRun
-      print x
+      putStrLn $ ppFailure x
 
 runTestWithStats :: Testable IO a => Depth -> a -> IO ((Integer, Integer), Maybe PropertyFailure)
 runTestWithStats d prop = do
