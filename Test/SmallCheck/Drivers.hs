@@ -8,7 +8,6 @@
 -- Functions to run SmallCheck tests.
 --------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
-{-# OPTIONS_HADDOCK prune #-}
 module Test.SmallCheck.Drivers (
   smallCheck, smallCheckM, smallCheckWithHook,
   PropertyFailure, ppFailure
