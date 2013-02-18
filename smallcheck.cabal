@@ -36,8 +36,8 @@ Library
     Exposed-modules:
         Test.SmallCheck
         Test.SmallCheck.Drivers
-        Test.SmallCheck.Property
         Test.SmallCheck.Series
     Other-modules:
+        Test.SmallCheck.Property
         Test.SmallCheck.SeriesMonad
         Test.SmallCheck.Property.Result
