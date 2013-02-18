@@ -23,6 +23,7 @@ module Test.SmallCheck.Property (
 
 import Test.SmallCheck.Series
 import Test.SmallCheck.SeriesMonad
+import Test.SmallCheck.Property.Result
 import Control.Monad
 import Control.Monad.Logic
 import Control.Monad.Reader
@@ -58,22 +59,6 @@ data TestQuality
   = GoodTest
   | BadTest
   deriving (Eq, Ord, Enum, Show)
-
-type Argument = String
-
-data PropertySuccess
-  = Exist [Argument] PropertySuccess
-  | ExistUnique [Argument] PropertySuccess
-  | PropertyTrue
-  | Vacuously PropertyFailure
-  deriving (Eq, Show)
-
-data PropertyFailure
-  = NotExist
-  | AtLeastTwo [Argument] PropertySuccess [Argument] PropertySuccess
-  | CounterExample [Argument] PropertyFailure
-  | PropertyFalse
-  deriving (Eq, Show)
 
 instance Typeable1 m => Typeable (Property m)
   where
