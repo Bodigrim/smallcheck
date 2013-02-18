@@ -69,7 +69,6 @@ module Test.SmallCheck (
   (==>),
   withDepth,
   withDepth1,
-  property,
 
   -- * Running tests
   -- | 'smallCheck' is a simple way to run a test.

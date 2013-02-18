@@ -13,7 +13,7 @@
              ScopedTypeVariables #-}
 module Test.SmallCheck.Property (
   -- * Constructors
-  forAll, exists, existsUnique, over, (==>), monadic, property, withDepth, withDepth1,
+  forAll, exists, existsUnique, over, (==>), monadic, withDepth, withDepth1,
 
   -- * Property's entrails
   Property,
@@ -121,10 +121,6 @@ monadic a =
     atomicProperty
       (searchExamples =<< pair)
       (searchCounterExamples =<< pair)
-
--- | Wrap an arbitrary 'Testable' into a 'Property'
-property :: Testable m a => a -> Property m
-property = test
 
 -- }}}
 
