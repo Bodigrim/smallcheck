@@ -31,7 +31,7 @@ Source-repository this
 
 Library
 
-    Build-Depends: base == 4.*, mtl, logict, ghc-prim >= 0.2
+    Build-Depends: base == 4.*, mtl, logict, ghc-prim >= 0.2, pretty
 
     Exposed-modules:
         Test.SmallCheck
