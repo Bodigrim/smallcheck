@@ -15,8 +15,8 @@ module Test.Framework.Providers.SmallCheck
     ) where
 
 import Test.Framework.Providers.API
-import qualified Test.SmallCheck.Property as SC
-import qualified Test.SmallCheck.Series   as SC
+import qualified Test.SmallCheck as SC
+import qualified Test.SmallCheck.Drivers as SC
 import Test.SmallCheck.Drivers
 import Data.Maybe
 import Data.List
