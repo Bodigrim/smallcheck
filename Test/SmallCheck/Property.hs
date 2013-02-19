@@ -270,11 +270,8 @@ existsUnique = quantify ExistsUnique . test
 -- under which a property should hold. It corresponds to implication in the
 -- classical logic.
 --
--- In the property @a '==>' b@, the quantification context of the consequent
--- (@b@) is the same as the quantification context of the property itself,
--- while the quantification context of the antecedent (@a@) is fresh
--- (universal by default, but may be overriden with the quantification
--- operators).
+-- Note that '==>' resets the quantification context for its operands to
+-- the default (universal).
 infixr 0 ==>
 (==>) :: (Testable m c, Testable m a) => c -> a -> Property m
 cond ==> prop = Property $ do
