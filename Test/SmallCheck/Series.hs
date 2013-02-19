@@ -230,9 +230,11 @@ uncurry3 f (x,y,z) = f x y z
 uncurry4 :: (a->b->c->d->e) -> ((a,b,c,d)->e)
 uncurry4 f (w,x,y,z) = f w x y z
 
+-- | Query the current depth
 getDepth :: Series m Depth
 getDepth = Series ask
 
+-- | Run a series with a modified depth
 localDepth :: (Depth -> Depth) -> Series m a -> Series m a
 localDepth f (Series a) = Series $ local f a
 

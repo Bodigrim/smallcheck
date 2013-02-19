@@ -35,6 +35,7 @@ import Data.Typeable
 ------------------------------
 --{{{
 
+-- | The type of properties over the monad @m@
 newtype Property m = Property { unProperty :: Reader (Env m) (PropertySeries m) }
 
 data PropertySeries m =
