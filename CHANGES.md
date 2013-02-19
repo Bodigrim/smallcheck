@@ -8,6 +8,8 @@ This is a major incompatible release of SmallCheck. Virtually every function has
 changed its name, type, semantics or module. So please carefully read the docs
 when upgrading.
 
+For some highlights, see [this blog post](http://ro-che.info/articles/2013-02-19-smallcheck.html).
+
 Version 0.6.2
 -----------
 * Derive Typeable Property instance
