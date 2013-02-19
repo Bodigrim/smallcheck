@@ -5,7 +5,6 @@ import Test.Framework.Providers.SmallCheck (testProperty)
 import Test.Framework.Providers.HUnit
 import Test.HUnit ((@?=))
 import Test.SmallCheck
-import Test.SmallCheck.Property
 import Test.SmallCheck.Series
 import Test.SmallCheck.Drivers
 import Control.Monad.Logic
