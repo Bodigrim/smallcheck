@@ -151,7 +151,6 @@ module Test.SmallCheck.Series (
 
   -- * Other useful definitions
   (\/), (><), (<~>), (>>-),
-  N(..), Nat, Natural,
   localDepth,
   decDepth,
   getDepth,
@@ -426,11 +425,7 @@ instance Monad m => CoSerial m Integer where
 -- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
 -- to be generated. Generated functions of type @N a -> b@ do not distinguish
 -- different negative values of @a@.
--- See also 'Nat' and 'Natural'.
 newtype N a = N a deriving (Eq, Ord, Real, Enum, Num, Integral)
-
-instance Show a => Show (N a) where
-  show (N i) = show i
 
 instance (Integral a, Serial m a) => Serial m (N a) where
   series = generate $ \d -> map (N . fromIntegral) [0..d]
@@ -443,9 +438,6 @@ instance (Integral a, Serial m a) => CoSerial m (N a) where
       if i > 0
         then f (N $ i-1)
         else z
-
-type Nat = N Int
-type Natural = N Integer
 
 instance Monad m => Serial m Float where
   series =
