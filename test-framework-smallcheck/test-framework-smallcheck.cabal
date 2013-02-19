@@ -1,5 +1,5 @@
 Name:                test-framework-smallcheck
-Version:             0.3
+Version:             0.2
 Cabal-Version:       >= 1.6
 Category:            Testing
 Synopsis:            SmallCheck support for the test-framework package.
@@ -22,7 +22,7 @@ Source-repository head
 Source-repository this
   type:     git
   location: git://github.com/feuerbach/smallcheck.git
-  tag:      testframework-v0.3
+  tag:      testframework-v0.2
   subdir:   test-framework-smallcheck
 
 Library
