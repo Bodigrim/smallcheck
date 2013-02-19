@@ -278,9 +278,11 @@ cond ==> prop = Property $ do
   env <- ask
 
   let
-    counterExample = once $ searchCounterExamples $ unProp env $ freshContext cond
+    counterExample = once $ searchCounterExamples $ unProp env' $ freshContext cond
+      -- NB: we do not invoke the test hook in the antecedent
+      where env' = env { testHook = const $ return () }
 
-    antecedent = unProp env { quantification = Forall } $ freshContext prop
+    consequent = unProp env $ freshContext prop
 
     badTestHook = lift $ testHook env BadTest
 
@@ -292,7 +294,7 @@ cond ==> prop = Property $ do
           return $ Vacuously ex
         )
         -- else
-        (searchExamples antecedent)
+        (searchExamples consequent)
 
     failure =
       ifte counterExample
@@ -302,7 +304,7 @@ cond ==> prop = Property $ do
           mzero
         )
         -- else
-        (searchCounterExamples antecedent)
+        (searchCounterExamples consequent)
 
   return $ atomicProperty success failure
 
