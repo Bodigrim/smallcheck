@@ -27,7 +27,7 @@ Source-repository head
 Source-repository this
   type:     git
   location: git://github.com/feuerbach/smallcheck.git
-  tag:      v0.7
+  tag:      v1.0
 
 Library
 
