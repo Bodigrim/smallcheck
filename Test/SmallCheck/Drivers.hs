@@ -11,6 +11,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Test.SmallCheck.Drivers (
   smallCheck, smallCheckM, smallCheckWithHook,
+  test,
   ppFailure,
   PropertyFailure(..), PropertySuccess(..), Argument, TestQuality(..)
   ) where
