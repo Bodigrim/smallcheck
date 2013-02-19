@@ -35,7 +35,8 @@ module Test.SmallCheck (
   -- * ∃! x, y: p x y ('existsUnique')
   --
   -- The quantification context affects all the variables immediately
-  -- following the quantification operator, also extending past 'over'.
+  -- following the quantification operator, also extending past 'over',
+  -- 'changeDepth' and 'changeDepth1' functions.
   --
   -- However, it doesn't extend past other functions, like 'monadic', and
   -- doesn't affect the operands of '==>'. Such functions start a fresh
