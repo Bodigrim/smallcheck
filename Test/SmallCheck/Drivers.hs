@@ -20,7 +20,7 @@ import Control.Monad (when)
 import Test.SmallCheck.Property
 import Test.SmallCheck.Property.Result
 import Text.Printf
-import Data.IORef
+import Data.IORef (readIORef, writeIORef, IORef, newIORef) -- NB: explicit import list to avoid name clash with modifyIORef'
 
 -- | A simple driver that runs the test in the 'IO' monad and prints the
 -- results.
@@ -52,6 +52,15 @@ runTestWithStats d prop = do
   badN  <- readIORef bad
 
   return ((goodN, badN), r)
+
+-- NB: modifyIORef' is in base starting at least from GHC 7.6.1.
+--
+-- So get rid of this once 7.6.1 becomes widely adopted.
+modifyIORef' :: IORef a -> (a -> a) -> IO ()
+modifyIORef' ref f = do
+    x <- readIORef ref
+    let x' = f x
+    x' `seq` writeIORef ref x'
 
 -- | Use this if:
 --
