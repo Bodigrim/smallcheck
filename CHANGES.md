@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.0.1
+-------------
+
+Make SmallCheck build with GHC 7.4
+
 Version 1.0
 -----------
 
