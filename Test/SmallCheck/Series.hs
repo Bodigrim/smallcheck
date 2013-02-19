@@ -562,16 +562,22 @@ instance (Serial Identity a, Show a, Show b) => Show (a->b) where
 --------------------------------------------------------------------------
 -- | @Positive x@: guarantees that @x \> 0@.
 newtype Positive a = Positive { getPositive :: a }
- deriving (Eq, Ord, Show, Read, Num, Integral, Real, Enum)
+ deriving (Eq, Ord, Num, Integral, Real, Enum)
 
 instance (Num a, Ord a, Serial m a) => Serial m (Positive a) where
   series = Positive <$> series `suchThat` (> 0)
 
+instance Show a => Show (Positive a) where
+  showsPrec n (Positive x) = showsPrec n x
+
 -- | @NonNegative x@: guarantees that @x \>= 0@.
 newtype NonNegative a = NonNegative { getNonNegative :: a }
- deriving (Eq, Ord, Show, Read, Num, Integral, Real, Enum)
+ deriving (Eq, Ord, Num, Integral, Real, Enum)
 
 instance (Num a, Ord a, Serial m a) => Serial m (NonNegative a) where
   series = NonNegative <$> series `suchThat` (>= 0)
+
+instance Show a => Show (NonNegative a) where
+  showsPrec n (NonNegative x) = showsPrec n x
 
 -- }}}
