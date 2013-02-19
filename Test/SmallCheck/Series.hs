@@ -564,6 +564,7 @@ newtype Positive a = Positive { getPositive :: a }
 instance (Num a, Ord a, Serial m a) => Serial m (Positive a) where
   series = Positive <$> series `suchThat` (> 0)
 
+-- | @NonNegative x@: guarantees that @x \>= 0@.
 newtype NonNegative a = NonNegative { getNonNegative :: a }
  deriving (Eq, Ord, Show, Read, Num, Integral, Real, Enum)
 
