@@ -46,7 +46,7 @@ data Result
 instance Show Result where
     show Timeout  = "Timed out"
     show Pass     = "OK"
-    show (Fail s) = show s
+    show (Fail s) = ppFailure s
 
 instance TestResultlike Int Result where
     testSucceeded Pass = True
