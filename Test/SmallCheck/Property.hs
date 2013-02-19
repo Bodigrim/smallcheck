@@ -74,6 +74,7 @@ instance Typeable1 m => Typeable (Property m)
 ------------------------------------
 --{{{
 
+unProp :: Env t -> Property t -> PropertySeries t
 unProp q (Property p) = runReader p q
 
 runProperty

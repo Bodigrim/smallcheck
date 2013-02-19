@@ -159,7 +159,6 @@ module Test.SmallCheck.Series (
   -- }}}
   ) where
 
-import Data.Maybe
 import Control.Monad.Logic
 import Control.Monad.Reader
 import Control.Applicative
@@ -231,8 +230,10 @@ uncurry3 f (x,y,z) = f x y z
 uncurry4 :: (a->b->c->d->e) -> ((a,b,c,d)->e)
 uncurry4 f (w,x,y,z) = f w x y z
 
+getDepth :: Series m Depth
 getDepth = Series ask
 
+localDepth :: (Depth -> Depth) -> Series m a -> Series m a
 localDepth f (Series a) = Series $ local f a
 
 -- | Run a 'Series' with the depth decreased by 1.

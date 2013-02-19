@@ -19,7 +19,6 @@ module Test.SmallCheck.Drivers (
 import Control.Monad (when)
 import Test.SmallCheck.Property
 import Test.SmallCheck.Property.Result
-import Test.SmallCheck.SeriesMonad
 import Text.Printf
 import Data.IORef
 
@@ -67,5 +66,5 @@ smallCheckM d a = smallCheckWithHook d (const $ return ()) a
 --
 -- Useful for applications that want to report progress information to the
 -- user.
--- smallCheckWithHook :: Testable m a => Depth -> m () -> a -> m (Maybe PropertyFailure)
+smallCheckWithHook :: Testable m a => Depth -> (TestQuality -> m ()) -> a -> m (Maybe PropertyFailure)
 smallCheckWithHook d hook a = runProperty d hook $ test a
