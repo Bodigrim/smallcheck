@@ -67,8 +67,8 @@ module Test.SmallCheck (
   monadic,
 
   (==>),
-  withDepth,
-  withDepth1,
+  changeDepth,
+  changeDepth1,
 
   -- * Running tests
   -- | 'smallCheck' is a simple way to run a test.

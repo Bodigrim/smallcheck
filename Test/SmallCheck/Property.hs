@@ -13,7 +13,7 @@
              ScopedTypeVariables #-}
 module Test.SmallCheck.Property (
   -- * Constructors
-  forAll, exists, existsUnique, over, (==>), monadic, withDepth, withDepth1,
+  forAll, exists, existsUnique, over, (==>), monadic, changeDepth, changeDepth1,
 
   -- * Property's entrails
   Property,
@@ -310,19 +310,19 @@ cond ==> prop = Property $ do
 
 -- | Run property with a modified depth. Affects all quantified variables
 -- in the property.
-withDepth :: Testable m a => (Depth -> Depth) -> a -> Property m
-withDepth modifyDepth a = Property (withDepthPS <$> unProperty (test a))
+changeDepth :: Testable m a => (Depth -> Depth) -> a -> Property m
+changeDepth modifyDepth a = Property (changeDepthPS <$> unProperty (test a))
   where
-    withDepthPS (PropertySeries ss sf sc) =
+    changeDepthPS (PropertySeries ss sf sc) =
       PropertySeries
         (localDepth modifyDepth ss)
         (localDepth modifyDepth sf)
-        ((\(prop, args) -> (withDepth modifyDepth prop, args)) <$>
+        ((\(prop, args) -> (changeDepth modifyDepth prop, args)) <$>
           localDepth modifyDepth sc)
 
 -- | Quantify the function's argument over its 'series', but adjust the
 -- depth. This doesn't affect any subsequent variables.
-withDepth1 :: (Show a, Serial m a, Testable m b) => (Depth -> Depth) -> (a -> b) -> Property m
-withDepth1 modifyDepth = over $ localDepth modifyDepth series
+changeDepth1 :: (Show a, Serial m a, Testable m b) => (Depth -> Depth) -> (a -> b) -> Property m
+changeDepth1 modifyDepth = over $ localDepth modifyDepth series
 
 -- }}}
