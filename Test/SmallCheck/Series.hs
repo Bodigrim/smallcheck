@@ -306,7 +306,7 @@ cons4 f = decDepth $
 alts0 :: Series m a -> Series m a
 alts0 s = s
 
-alts1 :: (Monad m, CoSerial m a) => Series m b -> Series m (a->b)
+alts1 :: CoSerial m a => Series m b -> Series m (a->b)
 alts1 rs =
   decDepthChecked (constM rs) (coseries rs)
 
@@ -333,7 +333,7 @@ alts4 rs =
     (coseries $ coseries $ coseries $ coseries rs)
 
 -- | Same as 'alts1', but preserves the depth.
-newtypeAlts :: (Monad m, CoSerial m a) => Series m b -> Series m (a->b)
+newtypeAlts :: CoSerial m a => Series m b -> Series m (a->b)
 newtypeAlts = coseries
 
 -- }}}
@@ -465,19 +465,19 @@ instance Monad m => CoSerial m Char where
     coseries rs >>- \f ->
     return $ \c -> f (N (fromEnum c - fromEnum 'a'))
 
-instance (Monad m, Serial m a, Serial m b) => Serial m (a,b) where
+instance (Serial m a, Serial m b) => Serial m (a,b) where
   series = cons2 (,)
-instance (Monad m, CoSerial m a, CoSerial m b) => CoSerial m (a,b) where
+instance (CoSerial m a, CoSerial m b) => CoSerial m (a,b) where
   coseries rs = uncurry <$> alts2 rs
 
-instance (Monad m, Serial m a, Serial m b, Serial m c) => Serial m (a,b,c) where
+instance (Serial m a, Serial m b, Serial m c) => Serial m (a,b,c) where
   series = cons3 (,,)
-instance (Monad m, CoSerial m a, CoSerial m b, CoSerial m c) => CoSerial m (a,b,c) where
+instance (CoSerial m a, CoSerial m b, CoSerial m c) => CoSerial m (a,b,c) where
   coseries rs = uncurry3 <$> alts3 rs
 
-instance (Monad m, Serial m a, Serial m b, Serial m c, Serial m d) => Serial m (a,b,c,d) where
+instance (Serial m a, Serial m b, Serial m c, Serial m d) => Serial m (a,b,c,d) where
   series = cons4 (,,,)
-instance (Monad m, CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) => CoSerial m (a,b,c,d) where
+instance (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) => CoSerial m (a,b,c,d) where
   coseries rs = uncurry4 <$> alts4 rs
 
 instance Monad m => Serial m Bool where
@@ -488,15 +488,15 @@ instance Monad m => CoSerial m Bool where
     rs >>- \r2 ->
     return $ \x -> if x then r1 else r2
 
-instance (Monad m, Serial m a) => Serial m (Maybe a) where
+instance (Serial m a) => Serial m (Maybe a) where
   series = cons0 Nothing \/ cons1 Just
-instance (Monad m, CoSerial m a) => CoSerial m (Maybe a) where
+instance (CoSerial m a) => CoSerial m (Maybe a) where
   coseries rs =
     maybe <$> alts0 rs <~> alts1 rs
 
-instance (Monad m, Serial m a, Serial m b) => Serial m (Either a b) where
+instance (Serial m a, Serial m b) => Serial m (Either a b) where
   series = cons1 Left \/ cons1 Right
-instance (Monad m, CoSerial m a, CoSerial m b) => CoSerial m (Either a b) where
+instance (CoSerial m a, CoSerial m b) => CoSerial m (Either a b) where
   coseries rs =
     either <$> alts1 rs <~> alts1 rs
 
@@ -508,11 +508,11 @@ instance CoSerial m a => CoSerial m [a] where
     alts2 rs >>- \f ->
     return $ \xs -> case xs of [] -> y; x:xs' -> f x xs'
 
-instance (CoSerial m a, Serial m b, Monad m) => Serial m (a->b) where
+instance (CoSerial m a, Serial m b) => Serial m (a->b) where
   series = coseries series
 -- Thanks to Ralf Hinze for the definition of coseries
 -- using the nest auxiliary.
-instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b, Monad m) => CoSerial m (a->b) where
+instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->b) where
   coseries r = do
     args <- unwind series
 

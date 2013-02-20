@@ -109,7 +109,7 @@ makeAtomic (Property prop) =
 --
 -- 'over' does not affect the quantification context.
 over
-  :: (Monad m, Show a, Testable m b)
+  :: (Show a, Testable m b)
   => Series m a -> (a -> b) -> Property m
 over = testFunction
 
@@ -153,7 +153,7 @@ instance (Monad m, m ~ n) => Testable n (Property m) where
   test = id
 
 testFunction
-  :: (Monad m, Show a, Testable m b)
+  :: (Show a, Testable m b)
   => Series m a -> (a -> b) -> Property m
 testFunction s f = Property $ reader $ \env ->
   let
