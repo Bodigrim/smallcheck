@@ -27,7 +27,7 @@
              GeneralizedNewtypeDeriving, FlexibleContexts #-}
 -- The following is needed for generic instances
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators,
-             TypeSynonymInstances, FlexibleInstances #-}
+             TypeSynonymInstances, FlexibleInstances, OverlappingInstances #-}
 
 module Test.SmallCheck.Series (
   -- {{{
@@ -363,7 +363,7 @@ instance CoSerial m c => GCoSerial m (K1 i c) where
   {-# INLINE gCoseries #-}
 
 instance GSerial m U1 where
-  gSeries = cons0 U1
+  gSeries = pure U1
   {-# INLINE gSeries #-}
 instance GCoSerial m U1 where
   gCoseries rs = constM rs
@@ -391,6 +391,9 @@ instance (Monad m, GCoSerial m a, GCoSerial m b) => GCoSerial m (a :+: b) where
       R1 y -> g y
   {-# INLINE gCoseries #-}
 
+instance GSerial m f => GSerial m (C1 c f) where
+  gSeries = M1 <$> decDepth gSeries
+  {-# INLINE gSeries #-}
 -- }}}
 
 ------------------------------
