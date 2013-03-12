@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.0.2
+-------------
+
+Fix a bug in the generic instance
+
 Version 1.0.1
 -------------
 
