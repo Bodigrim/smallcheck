@@ -13,12 +13,14 @@ module Test.SmallCheck.Drivers (
   smallCheck, smallCheckM, smallCheckWithHook,
   test,
   ppFailure,
-  PropertyFailure(..), PropertySuccess(..), Argument, TestQuality(..)
+  smallCheckPure,
+  PropertyFailure(..), PropertySuccess(..), Argument, TestQuality(..), TestStats(..)
   ) where
 
 import Control.Monad (when)
 import Test.SmallCheck.Property
 import Test.SmallCheck.Property.Result
+import Control.Monad.Writer
 import Text.Printf
 import Data.IORef (readIORef, writeIORef, IORef, newIORef) -- NB: explicit import list to avoid name clash with modifyIORef'
 
@@ -26,7 +28,7 @@ import Data.IORef (readIORef, writeIORef, IORef, newIORef) -- NB: explicit impor
 -- results.
 smallCheck :: Testable IO a => Depth -> a -> IO ()
 smallCheck d a = do
-  ((good, bad), mbEx) <- runTestWithStats d a
+  (Stats good bad mbEx) <- runTestWithStats d a
   let testsRun = good + bad
   case mbEx of
     Nothing -> do
@@ -37,7 +39,13 @@ smallCheck d a = do
       printf "Failed test no. %d.\n" $ testsRun
       putStrLn $ ppFailure x
 
-runTestWithStats :: Testable IO a => Depth -> a -> IO ((Integer, Integer), Maybe PropertyFailure)
+-- | A simple driver that runs the test in Writer monad and returns 'TestStats'
+-- Use this if you need pure tests with pretty printed results.
+smallCheckPure :: (Monad m, Testable (WriterT (Sum Integer, Sum Integer) m) a) =>
+                        Depth -> a -> m TestStats
+smallCheckPure = runTestWithStats'
+
+runTestWithStats :: Testable IO a => Depth -> a -> IO TestStats
 runTestWithStats d prop = do
   good <- newIORef 0
   bad <- newIORef 0
@@ -51,7 +59,35 @@ runTestWithStats d prop = do
   goodN <- readIORef good
   badN  <- readIORef bad
 
-  return ((goodN, badN), r)
+  return (Stats goodN badN r)
+
+data TestStats = Stats {goodN,badN :: Integer
+                       ,failures   :: Maybe PropertyFailure}
+
+instance Show TestStats where
+  show (Stats goodN badN mbEx) =
+    let testsRun = goodN + badN
+    in case mbEx of
+    Nothing | badN <= 0 -> 
+                printf "Completed %d tests without failure." $ testsRun
+            | badN > 0 -> 
+        printf "Completed %d tests without failure.\
+               \\nBut %d did not meet ==> condition.\n" 
+               testsRun badN
+    Just x -> do
+      printf "Failed test no. %d.\n %s" testsRun (ppFailure x)
+
+
+runTestWithStats' :: (Monad m, Testable (WriterT (Sum Integer, Sum Integer) m) a) =>
+                        Depth -> a -> m TestStats
+runTestWithStats' d prop = do
+  let
+    hook GoodTest = tell (Sum 0, Sum 1)
+    hook BadTest  = tell (Sum 1, Sum 0)
+
+  (r,(Sum badN, Sum goodN)) <- runWriterT $ smallCheckWithHook d hook prop
+
+  return (Stats goodN badN r)
 
 -- NB: modifyIORef' is in base starting at least from GHC 7.6.1.
 --
