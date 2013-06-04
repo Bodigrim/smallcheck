@@ -1,3 +1,4 @@
+{-# LANGUAGE Trustworthy #-} -- GeneralizedNewtypeDeriving
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Test.SmallCheck.SeriesMonad where
 

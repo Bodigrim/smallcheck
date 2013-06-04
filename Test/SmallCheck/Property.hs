@@ -9,6 +9,9 @@
 --
 -- Properties and tools to construct them.
 --------------------------------------------------------------------
+{-# LANGUAGE Trustworthy #-}
+  -- Trustworthy is needed because of the hand-written Typeable instance.
+  -- Kind-polymorphic Typeable will solve this.
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeFamilies,
              ScopedTypeVariables #-}
 module Test.SmallCheck.Property (
