@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.0.3
+-------------
+
+Fix a bug where no test cases were generated for some functional types (#19).
+
 Version 1.0.2
 -------------
 
