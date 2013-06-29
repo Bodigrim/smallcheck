@@ -438,6 +438,11 @@ instance (Integral a, Serial m a) => Serial m (N a) where
 
 instance (Integral a, Monad m) => CoSerial m (N a) where
   coseries rs =
+    -- This is a recursive function, because @alts1 rs@ typically calls
+    -- back to 'coseries' (but with lower depth).
+    --
+    -- The recursion stops when depth == 0. Then alts1 produces a constant
+    -- function, and doesn't call back to 'coseries'.
     alts0 rs >>- \z ->
     alts1 rs >>- \f ->
     return $ \(N i) ->
