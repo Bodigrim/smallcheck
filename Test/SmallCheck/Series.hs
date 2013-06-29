@@ -436,7 +436,7 @@ newtype N a = N a deriving (Eq, Ord, Real, Enum, Num, Integral)
 instance (Integral a, Serial m a) => Serial m (N a) where
   series = generate $ \d -> map (N . fromIntegral) [0..d]
 
-instance (Integral a, Serial m a) => CoSerial m (N a) where
+instance (Integral a, Monad m) => CoSerial m (N a) where
   coseries rs =
     alts0 rs >>- \z ->
     alts1 rs >>- \f ->
