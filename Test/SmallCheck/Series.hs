@@ -259,7 +259,7 @@ constM = liftM const
 decDepthChecked :: Series m a -> Series m a -> Series m a
 decDepthChecked b r = do
   d <- getDepth
-  if d == 0
+  if d <= 0
     then b
     else decDepth r
 
