@@ -139,7 +139,8 @@ module Test.SmallCheck.Series (
   --
   -- If @d > 0@, these functions inspect each of their arguments up to the depth
   -- @d-1@ (as defined by the 'coseries' functions for the corresponding
-  -- types) and return values produced by @s@.
+  -- types) and return values produced by @s@. The depth to which the
+  -- values are enumerated does not depend on the depth of inspection.
 
   alts0, alts1, alts2, alts3, alts4, newtypeAlts,
 
@@ -254,6 +255,11 @@ checkDepth = do
 constM :: Monad m => m b -> m (a -> b)
 constM = liftM const
 
+-- | Fix the depth of a series at the current level. The resulting series
+-- will no longer depend on the \"ambient\" depth.
+fixDepth :: Series m a -> Series m (Series m a)
+fixDepth s = getDepth >>= \d -> return $ localDepth (const d) s
+
 -- | If the current depth is 0, evaluate the first argument. Otherwise,
 -- evaluate the second argument with decremented depth.
 decDepthChecked :: Series m a -> Series m a -> Series m a
@@ -307,27 +313,31 @@ alts0 :: Series m a -> Series m a
 alts0 s = s
 
 alts1 :: CoSerial m a => Series m b -> Series m (a->b)
-alts1 rs =
+alts1 rs = do
+  rs <- fixDepth rs
   decDepthChecked (constM rs) (coseries rs)
 
 alts2
   :: (CoSerial m a, CoSerial m b)
   => Series m c -> Series m (a->b->c)
-alts2 rs =
+alts2 rs = do
+  rs <- fixDepth rs
   decDepthChecked
     (constM $ constM rs)
     (coseries $ coseries rs)
 
 alts3 ::  (CoSerial m a, CoSerial m b, CoSerial m c) =>
             Series m d -> Series m (a->b->c->d)
-alts3 rs =
+alts3 rs = do
+  rs <- fixDepth rs
   decDepthChecked
     (constM $ constM $ constM rs)
     (coseries $ coseries $ coseries rs)
 
 alts4 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) =>
             Series m e -> Series m (a->b->c->d->e)
-alts4 rs =
+alts4 rs = do
+  rs <- fixDepth rs
   decDepthChecked
     (constM $ constM $ constM $ constM rs)
     (coseries $ coseries $ coseries $ coseries rs)
