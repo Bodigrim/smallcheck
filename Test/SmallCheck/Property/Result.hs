@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, DefaultSignatures #-}
+{-# LANGUAGE Safe #-}
 module Test.SmallCheck.Property.Result
   ( PropertySuccess(..)
   , PropertyFailure(..)

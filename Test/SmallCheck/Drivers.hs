@@ -9,6 +9,7 @@
 -- run SmallCheck tests
 --------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Safe #-}
 module Test.SmallCheck.Drivers (
   smallCheck, smallCheckM, smallCheckWithHook,
   test,
