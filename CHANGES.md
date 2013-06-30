@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.0.4
+-------------
+
+Fix compatibility with GHC 7.4.1
+
 Version 1.0.3
 -------------
 
