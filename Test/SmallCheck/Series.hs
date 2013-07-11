@@ -165,6 +165,7 @@ import Control.Monad.Reader
 import Control.Applicative
 import Control.Monad.Identity
 import Data.List
+import Data.Ratio
 import Test.SmallCheck.SeriesMonad
 import GHC.Generics
 
@@ -475,6 +476,13 @@ instance Monad m => Serial m Double where
 instance Monad m => CoSerial m Double where
   coseries rs =
     (. (realToFrac :: Double -> Float)) <$> coseries rs
+
+instance (Integral i, Serial m i) => Serial m (Ratio i) where
+  series = uncurry (%) <$> series
+instance (Integral i, CoSerial m i) => CoSerial m (Ratio i) where
+  coseries rs = (. ratioToPair) <$> coseries rs
+    where
+      ratioToPair r = (numerator r, denominator r)
 
 instance Monad m => Serial m Char where
   series = generate $ \d -> take (d+1) ['a'..'z']

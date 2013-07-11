@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.0.5
+-------------
+
+Add a Serial instance for Ratio
+
 Version 1.0.4
 -------------
 
