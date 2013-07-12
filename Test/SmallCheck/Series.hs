@@ -478,7 +478,9 @@ instance Monad m => CoSerial m Double where
     (. (realToFrac :: Double -> Float)) <$> coseries rs
 
 instance (Integral i, Serial m i) => Serial m (Ratio i) where
-  series = uncurry (%) <$> series
+  series = pairToRatio <$> series
+    where
+      pairToRatio (n, Positive d) = n % d
 instance (Integral i, CoSerial m i) => CoSerial m (Ratio i) where
   coseries rs = (. ratioToPair) <$> coseries rs
     where
