@@ -4,7 +4,8 @@ Changes
 Version 1.0.5
 -------------
 
-Add a Serial instance for Ratio
+* Add a Serial instance for Ratio
+* Add the `NonEmpty` wrapper for lists
 
 Version 1.0.4
 -------------
