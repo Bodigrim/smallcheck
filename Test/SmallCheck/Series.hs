@@ -148,7 +148,7 @@ module Test.SmallCheck.Series (
   Depth, Series, Serial(..), CoSerial(..),
 
   -- * Convenient wrappers
-  Positive(..), NonNegative(..),
+  Positive(..), NonNegative(..), NonEmpty(..),
 
   -- * Other useful definitions
   (\/), (><), (<~>), (>>-),
@@ -605,5 +605,14 @@ instance (Num a, Ord a, Serial m a) => Serial m (NonNegative a) where
 
 instance Show a => Show (NonNegative a) where
   showsPrec n (NonNegative x) = showsPrec n x
+
+-- | @NonEmpty xs@: guarantees that @xs@ is not null
+newtype NonEmpty a = NonEmpty { getNonEmpty :: [a] }
+
+instance (Serial m a) => Serial m (NonEmpty a) where
+  series = NonEmpty <$> cons2 (:)
+
+instance Show a => Show (NonEmpty a) where
+  showsPrec n (NonEmpty x) = showsPrec n x
 
 -- }}}
