@@ -156,7 +156,8 @@ module Test.SmallCheck.Series (
   decDepth,
   getDepth,
   generate,
-  list
+  list,
+  listM
   -- }}}
   ) where
 
@@ -210,6 +211,10 @@ suchThat s p = s >>= \x -> if p x then pure x else empty
 -- debugging 'Serial' instances.
 list :: Depth -> Series Identity a -> [a]
 list d s = runIdentity $ observeAllT $ runSeries d s
+
+-- | Monadic version of 'list'
+listM :: Monad m => Depth -> Series m a -> m [a]
+listM d s = observeAllT $ runSeries d s
 
 -- | Sum (union) of series
 infixr 7 \/
