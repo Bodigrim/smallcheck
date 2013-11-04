@@ -9,11 +9,21 @@
 --
 -- Properties and tools to construct them.
 --------------------------------------------------------------------
-{-# LANGUAGE Trustworthy #-}
-  -- Trustworthy is needed because of the hand-written Typeable instance.
-  -- Kind-polymorphic Typeable will solve this.
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeFamilies,
-             ScopedTypeVariables #-}
+             ScopedTypeVariables, DeriveDataTypeable #-}
+
+-- CPP is for Typeable1 vs Typeable
+{-# LANGUAGE CPP #-}
+
+-- Are we using new, polykinded and derivable Typeable yet?
+#define NEWTYPEABLE MIN_VERSION_base(4,7,0)
+
+#if NEWTYPEABLE
+{-# LANGUAGE Safe #-}
+#else
+-- Trustworthy is needed because of the hand-written Typeable instance
+{-# LANGUAGE Trustworthy #-}
+#endif
 module Test.SmallCheck.Property (
   -- * Constructors
   forAll, exists, existsUnique, over, (==>), monadic, changeDepth, changeDepth1,
@@ -40,6 +50,9 @@ import Data.Typeable
 
 -- | The type of properties over the monad @m@
 newtype Property m = Property { unProperty :: Reader (Env m) (PropertySeries m) }
+#if NEWTYPEABLE
+  deriving Typeable
+#endif
 
 data PropertySeries m =
   PropertySeries
@@ -64,12 +77,16 @@ data TestQuality
   | BadTest
   deriving (Eq, Ord, Enum, Show)
 
+#if !NEWTYPEABLE
+-- Typeable here is not polykinded yet, and also GHC doesn't know how to
+-- derive this.
 instance Typeable1 m => Typeable (Property m)
   where
     typeOf _ =
       mkTyConApp
         (mkTyCon3 "smallcheck" "Test.SmallCheck.Property" "Property")
         [typeOf (undefined :: m ())]
+#endif
 
 -- }}}
 

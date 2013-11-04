@@ -28,6 +28,7 @@
 -- The following is needed for generic instances
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators,
              TypeSynonymInstances, FlexibleInstances, OverlappingInstances #-}
+{-# LANGUAGE Trustworthy #-}
 
 module Test.SmallCheck.Series (
   -- {{{

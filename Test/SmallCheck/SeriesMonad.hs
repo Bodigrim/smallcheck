@@ -6,6 +6,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Logic
 import Control.Monad.Reader
+import Control.Arrow
 
 -- | Maximum depth of generated test values.
 --
@@ -38,7 +39,11 @@ newtype Series m a = Series (ReaderT Depth (LogicT m) a)
     , Applicative
     , MonadPlus
     , Alternative
-    , MonadLogic)
+    )
+
+-- This instance is written manually. Using the GND for it is not safe. 
+instance Monad m => MonadLogic (Series m) where
+  msplit (Series a) = Series $ fmap (fmap $ second Series) $ msplit a
 
 instance MonadTrans Series where
   lift a = Series $ lift . lift $ a
