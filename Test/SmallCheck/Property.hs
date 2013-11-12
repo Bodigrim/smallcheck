@@ -31,7 +31,7 @@ module Test.SmallCheck.Property (
   -- * Property's entrails
   Property,
 
-  PropertySuccess(..), PropertyFailure(..), runProperty, TestQuality(..), Argument, Depth, Testable(..),
+  PropertySuccess(..), PropertyFailure(..), runProperty, TestQuality(..), Argument, Reason, Depth, Testable(..),
   ) where
 
 import Test.SmallCheck.Series
@@ -162,8 +162,23 @@ instance Monad m => Testable m Bool where
     let
       success = do
         lift $ testHook env GoodTest
-        if b then return PropertyTrue else mzero
-      failure = PropertyFalse <$ lnot success
+        if b then return $ PropertyTrue Nothing else mzero
+      failure = PropertyFalse Nothing <$ lnot success
+    in atomicProperty success failure
+
+-- | Works like the 'Bool' instance, but includes an explanation of the result.
+--
+-- 'Left' and 'Right' correspond to test failure and success
+-- respectively.
+instance Monad m => Testable m (Either Reason Reason) where
+  test r = Property $ reader $ \env ->
+    let
+      success = do
+        lift $ testHook env GoodTest
+        either (const mzero) (pure . PropertyTrue . Just) r
+      failure = do
+        lift $ testHook env GoodTest
+        either (pure . PropertyFalse . Just) (const mzero) r
     in atomicProperty success failure
 
 instance (Serial m a, Show a, Testable m b) => Testable m (a->b) where
@@ -196,7 +211,7 @@ testFunction s f = Property $ reader $ \env ->
               CounterExample args etc -> CounterExample (arg:args) etc
               _ -> CounterExample [arg] failure
 
-        success = PropertyTrue <$ lnot failure
+        success = PropertyTrue Nothing <$ lnot failure
       -- }}}
 
     Exists -> PropertySeries success failure closest

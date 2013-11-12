@@ -4,6 +4,7 @@ module Test.SmallCheck.Property.Result
   ( PropertySuccess(..)
   , PropertyFailure(..)
   , ppFailure
+  , Reason
   , Argument
   ) where
 
@@ -11,10 +12,13 @@ import Text.PrettyPrint
 
 type Argument = String
 
+-- | An explanation for the test outcome
+type Reason = String
+
 data PropertySuccess
   = Exist [Argument] PropertySuccess
   | ExistUnique [Argument] PropertySuccess
-  | PropertyTrue
+  | PropertyTrue (Maybe Reason)
   | Vacuously PropertyFailure
   deriving (Eq, Show)
 
@@ -22,7 +26,7 @@ data PropertyFailure
   = NotExist
   | AtLeastTwo [Argument] PropertySuccess [Argument] PropertySuccess
   | CounterExample [Argument] PropertyFailure
-  | PropertyFalse
+  | PropertyFalse (Maybe Reason)
   deriving (Eq, Show)
 
 class Pretty a where
@@ -43,10 +47,12 @@ instance Pretty PropertyFailure where
     prettyArgs args <+>
     text "such that"
     </> (pretty f)
-  pretty PropertyFalse = text "condition is false"
+  pretty (PropertyFalse Nothing)  = text "condition is false"
+  pretty (PropertyFalse (Just s)) = text s
 
 instance Pretty PropertySuccess where
-  pretty PropertyTrue = text "condition is true"
+  pretty (PropertyTrue Nothing)  = text "condition is true"
+  pretty (PropertyTrue (Just s)) = text s
   pretty (Exist       args s) = existsMsg False args s
   pretty (ExistUnique args s) = existsMsg True args s
   pretty (Vacuously s) = text "property is vacuously true because" </> pretty s

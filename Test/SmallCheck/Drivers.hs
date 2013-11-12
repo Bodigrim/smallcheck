@@ -14,7 +14,7 @@ module Test.SmallCheck.Drivers (
   smallCheck, smallCheckM, smallCheckWithHook,
   test,
   ppFailure,
-  PropertyFailure(..), PropertySuccess(..), Argument, TestQuality(..)
+  PropertyFailure(..), PropertySuccess(..), Argument, Reason, TestQuality(..)
   ) where
 
 import Control.Monad (when)
