@@ -1,11 +1,13 @@
 Changes
 =======
 
-Version 1.0.5
--------------
+Version 1.1
+-----------
 
-* Add a Serial instance for Ratio
+* Add a `Serial` instance for `Ratio`
 * Add the `NonEmpty` wrapper for lists
+* Add `listM` (the monadic version of `list`)
+* Add optional explanation for test outcomes
 
 Version 1.0.4
 -------------
