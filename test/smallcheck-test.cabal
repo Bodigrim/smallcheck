@@ -17,6 +17,15 @@ cabal-version:       >=1.10
 executable smallcheck-test
   main-is:             test.hs
   -- other-modules:       
-  build-depends:       base < 5, containers, tagged, smallcheck, test-framework-smallcheck, test-framework-hunit, mtl, logict, HUnit, test-framework
+  build-depends:
+    base < 5,
+    containers,
+    tagged,
+    smallcheck >= 1,
+    mtl,
+    logict,
+    tasty >= 0.4,
+    tasty-hunit >= 0.4.1,
+    tasty-smallcheck
   default-language:    Haskell2010
   ghc-options:         -fhpc
