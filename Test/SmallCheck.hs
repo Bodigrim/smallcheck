@@ -75,15 +75,17 @@ module Test.SmallCheck (
   -- * Running tests
   -- | 'smallCheck' is a simple way to run a test.
   --
-  -- As an alternative, consider using the @test-framework@ package:
-  -- <http://hackage.haskell.org/package/test-framework>
+  -- As an alternative, consider using a testing framework.
   --
-  -- It allows to organize SmallCheck properties into a test suite (possibly
-  -- together with HUnit or QuickCheck tests), apply timeouts, get nice
-  -- statistics etc.
+  -- The packages
+  -- <http://hackage.haskell.org/package/tasty-smallcheck> and
+  -- <http://hackage.haskell.org/package/hspec-smallcheck>
+  -- provide integration with Tasty and HSpec, two popular testing
+  -- frameworks.
   --
-  -- To use SmallCheck properties with test-framework, install
-  -- the @test-framework-smallcheck@ package: <http://hackage.haskell.org/package/test-framework>
+  -- They allow to organize SmallCheck properties into a test suite (possibly
+  -- together with HUnit or QuickCheck tests) and provide other useful
+  -- features.
   --
   -- For more ways to run the tests, see "Test.SmallCheck.Drivers".
   Depth,
