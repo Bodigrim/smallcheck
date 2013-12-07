@@ -16,7 +16,7 @@ Description:   SmallCheck is a testing library that allows to verify properties
                automatically by SmallCheck.
 Build-Type:    Simple
 
-Extra-source-files: README.md, CREDITS.md, CHANGES.md
+Extra-source-files: README.md, CREDITS.md, CHANGELOG.md
 
 
 
