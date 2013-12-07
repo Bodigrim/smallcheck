@@ -24,11 +24,6 @@ Source-repository head
   type:     git
   location: git://github.com/feuerbach/smallcheck.git
 
-Source-repository this
-  type:     git
-  location: git://github.com/feuerbach/smallcheck.git
-  tag:      v1.1
-
 Library
 
     Build-Depends: base == 4.*, mtl, logict, ghc-prim >= 0.2, pretty
