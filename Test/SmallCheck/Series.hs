@@ -279,6 +279,7 @@ checkDepth = do
   d <- getDepth
   guard $ d > 0
 
+-- | @'constM' = 'liftM' 'const'@
 constM :: Monad m => m b -> m (a -> b)
 constM = liftM const
 
