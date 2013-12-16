@@ -132,6 +132,15 @@ module Test.SmallCheck.Series (
   -- >    return $ \l ->
   -- >      case l of
   -- >        Light x -> f x
+  --
+  -- For data types with more than 4 fields define @altsN@ as
+  --
+  -- >altsN rs = do
+  -- >  rs <- fixDepth rs
+  -- >  decDepthChecked
+  -- >    (constM $ constM $ ... $ constM rs)
+  -- >    (coseries $ coseries $ ... $ coseries rs)
+  -- >    {- constM and coseries are repeated N times each -}
 
   -- ** What does altsN do, exactly?
 
@@ -166,7 +175,10 @@ module Test.SmallCheck.Series (
   getDepth,
   generate,
   list,
-  listM
+  listM,
+  fixDepth,
+  decDepthChecked,
+  constM
   -- }}}
   ) where
 
