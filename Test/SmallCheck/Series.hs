@@ -78,6 +78,14 @@ module Test.SmallCheck.Series (
   -- >
   -- >instance Serial m a => Serial m (Light a) where
   -- >  series = newtypeCons Light
+  --
+  -- For data types with more than 4 fields define @consN@ as
+  --
+  -- >consN f = decDepth $
+  -- >  f <$> series
+  -- >    <~> series
+  -- >    <~> series
+  -- >    <~> ...    {- series repeated N times in total -}
 
   -- ** What does consN do, exactly?
 
