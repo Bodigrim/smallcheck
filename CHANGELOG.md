@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.1.1
+-------------
+
+Export some auxiliary functions from `T.S.Series`, and document how to express
+`consN` and `altsN` for `N > 4`.
+
 Version 1.1.0.1
 ---------------
 
