@@ -569,21 +569,24 @@ instance (CoSerial m a, Serial m b) => Serial m (a->b) where
 -- using the nest auxiliary.
 instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->b) where
   coseries r = do
+    -- Our functions act as follows: they take a function as an
+    -- argument, tabulate it over 'args' (i.e. all values of depth up to
+    -- d), and then behave like any of the functions produced by @nest
+    -- (length args)@
     args <- unwind series
 
-    g <- nest r args
-    return $ \f -> g $ map f args
+    g <- nest (length args) r
+    return $ \f -> g (map f args)
 
     where
 
-    nest :: forall a b m c . (Serial m b, CoSerial m b) => Series m c -> [a] -> Series m ([b] -> c)
-    nest rs args = do
-      case args of
-        [] -> const `liftM` rs
-        _:rest -> do
-          let sf = coseries $ nest rs rest
-          f <- sf
-          return $ \(b:bs) -> f b bs
+    -- @nest n rs@ gives a series of functions which are defined on lists of
+    -- length exactly n, and whose codomain is rs
+    nest :: forall a b m . (Serial m a, CoSerial m a) => Int -> Series m b -> Series m ([a] -> b)
+    nest 0 rs = constM rs
+    nest n rs = do
+      f <- coseries $ nest (n-1) rs
+      return $ \(b:bs) -> f b bs
 
 -- show the extension of a function (in part, bounded both by
 -- the number and depth of arguments)
