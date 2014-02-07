@@ -188,6 +188,7 @@ import Control.Applicative
 import Control.Monad.Identity
 import Data.List
 import Data.Ratio
+import Data.Maybe
 import Test.SmallCheck.SeriesMonad
 import GHC.Generics
 
@@ -207,9 +208,19 @@ class Monad m => CoSerial m a where
   -- its first argument. Doing otherwise will make enumeration of curried
   -- functions non-uniform in their arguments.
   coseries :: Series m b -> Series m (a->b)
+  coseries =
+    undefined
 
-  default coseries :: (Generic a, GCoSerial m (Rep a)) => Series m b -> Series m (a->b)
-  coseries rs = (. from) <$> gCoseries rs
+  coseriesP :: Series m b -> Series m (a -> Maybe b)
+
+  -- default coseries :: (Generic a, GCoSerial m (Rep a)) => Series m b -> Series m (a:->b)
+  -- coseries rs = (. from) <$> gCoseries rs
+
+data a :-> b = Fun
+  { function :: a -> Maybe b
+  , functionDepth :: Depth
+  , functionDefault :: Maybe b
+  }
 
 -- }}}
 
@@ -337,38 +348,44 @@ cons4 f = decDepth $
     <~> series
     <~> series
 
-alts0 :: Series m a -> Series m a
-alts0 s = s
+joinMb :: (a -> Maybe (b -> Maybe c)) -> (a -> b -> Maybe c)
+joinMb f a = fromMaybe (const Nothing) (f a)
 
-alts1 :: CoSerial m a => Series m b -> Series m (a->b)
+alts0 :: Series m a -> Series m (Maybe a)
+alts0 s = Just <$> s
+
+alts1 :: CoSerial m a => Series m b -> Series m (a -> Maybe b)
 alts1 rs = do
   rs <- fixDepth rs
-  decDepthChecked (constM rs) (coseries rs)
+  decDepthChecked (pure $ \_ -> Nothing) (coseriesP rs)
 
 alts2
   :: (CoSerial m a, CoSerial m b)
-  => Series m c -> Series m (a->b->c)
+  => Series m c -> Series m (a -> b -> Maybe c)
 alts2 rs = do
   rs <- fixDepth rs
   decDepthChecked
-    (constM $ constM rs)
-    (coseries $ coseries rs)
+    (pure $ \_ _ -> Nothing) $
+      (\f x y -> f x >>= ($ y)) <$>
+        (coseriesP . coseriesP $ rs)
 
 alts3 ::  (CoSerial m a, CoSerial m b, CoSerial m c) =>
-            Series m d -> Series m (a->b->c->d)
+            Series m d -> Series m (a -> b -> c -> Maybe d)
 alts3 rs = do
   rs <- fixDepth rs
   decDepthChecked
-    (constM $ constM $ constM rs)
-    (coseries $ coseries $ coseries rs)
+    (pure $ \_ _ _ -> Nothing) $
+      (\f x y z -> f x >>= ($ y) >>= ($ z)) <$>
+        (coseriesP . coseriesP . coseriesP $ rs)
 
 alts4 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) =>
-            Series m e -> Series m (a->b->c->d->e)
+            Series m e -> Series m (a -> b -> c -> d -> Maybe e)
 alts4 rs = do
   rs <- fixDepth rs
   decDepthChecked
-    (constM $ constM $ constM $ constM rs)
-    (coseries $ coseries $ coseries $ coseries rs)
+    (pure $ \_ _ _ _ -> Nothing) $
+      (\f x y z t -> f x >>= ($ y) >>= ($ z) >>= ($ t)) <$>
+        (coseriesP . coseriesP . coseriesP . coseriesP $ rs)
 
 -- | Same as 'alts1', but preserves the depth.
 newtypeAlts :: CoSerial m a => Series m b -> Series m (a->b)
@@ -441,7 +458,7 @@ instance GSerial m f => GSerial m (C1 c f) where
 instance Monad m => Serial m () where
   series = return ()
 instance Monad m => CoSerial m () where
-  coseries rs = constM rs
+  coseriesP rs = const <$> alts0 rs
 
 instance Monad m => Serial m Int where
   series =
@@ -450,21 +467,24 @@ instance Monad m => Serial m Int where
     where
       nats = generate $ \d -> [1..d]
 
+-- TODO check this
 instance Monad m => CoSerial m Int where
-  coseries rs =
+  coseriesP rs =
     alts0 rs >>- \z ->
     alts1 rs >>- \f ->
     alts1 rs >>- \g ->
     return $ \i -> case () of { _
       | i > 0 -> f (N (i - 1))
       | i < 0 -> g (N (abs i - 1))
-      | otherwise -> z
+      | i == 0 -> z
+      | otherwise -> Nothing
     }
 
 instance Monad m => Serial m Integer where
   series = (toInteger :: Int -> Integer) <$> series
 instance Monad m => CoSerial m Integer where
-  coseries rs = (. (fromInteger :: Integer->Int)) <$> coseries rs
+  coseriesP rs =
+    (. (fromInteger :: Integer->Int)) <$> coseriesP rs
 
 -- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
 -- to be generated. Generated functions of type @N a -> b@ do not distinguish
@@ -475,18 +495,17 @@ instance (Integral a, Serial m a) => Serial m (N a) where
   series = generate $ \d -> map (N . fromIntegral) [0..d]
 
 instance (Integral a, Monad m) => CoSerial m (N a) where
-  coseries rs =
+  coseriesP rs =
     -- This is a recursive function, because @alts1 rs@ typically calls
     -- back to 'coseries' (but with lower depth).
     --
     -- The recursion stops when depth == 0. Then alts1 produces a constant
     -- function, and doesn't call back to 'coseries'.
-    alts0 rs >>- \z ->
     alts1 rs >>- \f ->
-    return $ \(N i) ->
-      if i > 0
-        then f (N $ i-1)
-        else z
+    return $
+      \(N i) -> do
+        guard $ i > 0
+        f (N $ i-1)
 
 instance Monad m => Serial m Float where
   series =
@@ -494,81 +513,81 @@ instance Monad m => Serial m Float where
     guard (odd sig || sig==0 && exp==0) >>
     return (encodeFloat sig exp)
 instance Monad m => CoSerial m Float where
-  coseries rs =
-    coseries rs >>- \f ->
-      return $ f . decodeFloat
+  coseriesP rs =
+    (. decodeFloat) <$> alts1 rs
 
 instance Monad m => Serial m Double where
   series = (realToFrac :: Float -> Double) <$> series
 instance Monad m => CoSerial m Double where
-  coseries rs =
-    (. (realToFrac :: Double -> Float)) <$> coseries rs
+  coseriesP rs =
+    (. (realToFrac :: Double -> Float)) <$> alts1 rs
 
 instance (Integral i, Serial m i) => Serial m (Ratio i) where
   series = pairToRatio <$> series
     where
       pairToRatio (n, Positive d) = n % d
 instance (Integral i, CoSerial m i) => CoSerial m (Ratio i) where
-  coseries rs = (. ratioToPair) <$> coseries rs
+  coseriesP rs = (. ratioToPair) <$> alts1 rs
     where
       ratioToPair r = (numerator r, denominator r)
 
 instance Monad m => Serial m Char where
   series = generate $ \d -> take (d+1) ['a'..'z']
 instance Monad m => CoSerial m Char where
-  coseries rs =
-    coseries rs >>- \f ->
+  coseriesP rs =
+    alts1 rs >>- \f ->
     return $ \c -> f (N (fromEnum c - fromEnum 'a'))
 
 instance (Serial m a, Serial m b) => Serial m (a,b) where
   series = cons2 (,)
 instance (CoSerial m a, CoSerial m b) => CoSerial m (a,b) where
-  coseries rs = uncurry <$> alts2 rs
+  coseriesP rs = uncurry <$> alts2 rs
 
 instance (Serial m a, Serial m b, Serial m c) => Serial m (a,b,c) where
   series = cons3 (,,)
 instance (CoSerial m a, CoSerial m b, CoSerial m c) => CoSerial m (a,b,c) where
-  coseries rs = uncurry3 <$> alts3 rs
+  coseriesP rs = uncurry3 <$> alts3 rs
 
 instance (Serial m a, Serial m b, Serial m c, Serial m d) => Serial m (a,b,c,d) where
   series = cons4 (,,,)
 instance (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) => CoSerial m (a,b,c,d) where
-  coseries rs = uncurry4 <$> alts4 rs
+  coseriesP rs = uncurry4 <$> alts4 rs
 
 instance Monad m => Serial m Bool where
   series = cons0 True \/ cons0 False
 instance Monad m => CoSerial m Bool where
-  coseries rs =
-    rs >>- \r1 ->
-    rs >>- \r2 ->
+  coseriesP rs =
+    alts0 rs >>- \r1 ->
+    alts0 rs >>- \r2 ->
     return $ \x -> if x then r1 else r2
 
 instance (Serial m a) => Serial m (Maybe a) where
   series = cons0 Nothing \/ cons1 Just
 instance (CoSerial m a) => CoSerial m (Maybe a) where
-  coseries rs =
+  coseriesP rs =
     maybe <$> alts0 rs <~> alts1 rs
 
 instance (Serial m a, Serial m b) => Serial m (Either a b) where
   series = cons1 Left \/ cons1 Right
 instance (CoSerial m a, CoSerial m b) => CoSerial m (Either a b) where
-  coseries rs =
+  coseriesP rs =
     either <$> alts1 rs <~> alts1 rs
 
 instance Serial m a => Serial m [a] where
   series = cons0 [] \/ cons2 (:)
 instance CoSerial m a => CoSerial m [a] where
-  coseries rs =
+  coseriesP rs =
     alts0 rs >>- \y ->
     alts2 rs >>- \f ->
     return $ \xs -> case xs of [] -> y; x:xs' -> f x xs'
+
 
 instance (CoSerial m a, Serial m b) => Serial m (a->b) where
   series = coseries series
 -- Thanks to Ralf Hinze for the definition of coseries
 -- using the nest auxiliary.
 instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->b) where
-  coseries r = do
+  coseriesP r = do
     -- Our functions act as follows: they take a function as an
     -- argument, tabulate it over 'args' (i.e. all values of depth up to
     -- d), and then behave like any of the functions produced by @nest
@@ -576,7 +595,7 @@ instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->
     args <- unwind series
 
     g <- nest (length args) r
-    return $ \f -> g (map f args)
+    return $ \f -> Just $ g (map f args)
 
     where
 
@@ -590,8 +609,8 @@ instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->
 
 -- show the extension of a function (in part, bounded both by
 -- the number and depth of arguments)
-instance (Serial Identity a, Show a, Show b) => Show (a->b) where
-  show f =
+instance (Serial Identity a, Show a, Show b) => Show (a:->b) where
+  show Fun { function = f, functionDepth = depthLimit, functionDefault = def } =
     if maxarheight == 1
     && sumarwidth + length ars * length "->;" < widthLimit then
       "{"++(
@@ -600,15 +619,18 @@ instance (Serial Identity a, Show a, Show b) => Show (a->b) where
     else
       concat $ [a++"->\n"++indent r | (a,r) <- ars]
     where
-    ars = take lengthLimit [ (show x, show (f x))
-                           | x <- list depthLimit series ]
+    ars =
+      filter ((/= show def) . snd)
+      [ (show x, show (f x))
+      | x <- list depthLimit series ]
+      ++ [("_", show def)]
     maxarheight = maximum  [ max (height a) (height r)
                            | (a,r) <- ars ]
     sumarwidth = sum       [ length a + length r
                            | (a,r) <- ars]
     indent = unlines . map ("  "++) . lines
     height = length . lines
-    (widthLimit,lengthLimit,depthLimit) = (80,20,3)::(Int,Int,Depth)
+    widthLimit = 80
 
 -- }}}
 
