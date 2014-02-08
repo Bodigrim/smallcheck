@@ -28,3 +28,11 @@ To get started with SmallCheck:
 [comparison]: https://github.com/feuerbach/smallcheck/wiki/Comparison-with-QuickCheck
 [github]: https://github.com/feuerbach/smallcheck
 [issues]: https://github.com/feuerbach/smallcheck/issues
+
+Maintainers
+-----------
+
+[Roman Cheplyaka](https://github.com/feuerbach) is the primary maintainer.
+
+[Oliver Charles](https://github.com/ocharles) is the backup maintainer. Please
+get in touch with him if the primary maintainer cannot be reached.
