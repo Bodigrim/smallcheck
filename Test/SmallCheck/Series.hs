@@ -582,8 +582,16 @@ instance CoSerial m a => CoSerial m [a] where
     return $ \xs -> case xs of [] -> y; x:xs' -> f x xs'
 
 
-instance (CoSerial m a, Serial m b) => Serial m (a->b) where
-  series = coseries series
+instance (CoSerial m a, Serial m b) => Serial m (a:->b) where
+  series =
+    Fun
+      <$> coseriesP series
+      <*> getDepth
+      <*>
+        (if undefined -- is partial?
+          then Just <$> series
+          else pure Nothing)
+
 -- Thanks to Ralf Hinze for the definition of coseries
 -- using the nest auxiliary.
 instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->b) where
@@ -610,7 +618,7 @@ instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->
 -- show the extension of a function (in part, bounded both by
 -- the number and depth of arguments)
 instance (Serial Identity a, Show a, Show b) => Show (a:->b) where
-  show Fun { function = f, functionDepth = depthLimit, functionDefault = def } =
+  show Fun { function = f, functionDepth = depthLimit, functionDefault = mbDef } =
     if maxarheight == 1
     && sumarwidth + length ars * length "->;" < widthLimit then
       "{"++(
@@ -620,10 +628,15 @@ instance (Serial Identity a, Show a, Show b) => Show (a:->b) where
       concat $ [a++"->\n"++indent r | (a,r) <- ars]
     where
     ars =
-      filter ((/= show def) . snd)
-      [ (show x, show (f x))
-      | x <- list depthLimit series ]
-      ++ [("_", show def)]
+      maybe id (\def -> filter ((/= show def) . snd)) mbDef
+      [ (show x, show fx)
+      | x <- list depthLimit series
+      , Just fx <- pure $ f x
+      ]
+      ++
+      [ ("_", show def)
+      | Just def <- pure mbDef
+      ]
     maxarheight = maximum  [ max (height a) (height r)
                            | (a,r) <- ars ]
     sumarwidth = sum       [ length a + length r
