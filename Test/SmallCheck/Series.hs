@@ -163,7 +163,7 @@ module Test.SmallCheck.Series (
   alts0, alts1, alts2, alts3, alts4, newtypeAlts,
 
   -- * Basic definitions
-  Depth, Series, Serial(..), CoSerial(..),
+  Depth, Series, Serial(..), CoSerial(..), (:->)(..),
 
   -- * Convenient wrappers
   Positive(..), NonNegative(..), NonEmpty(..),
