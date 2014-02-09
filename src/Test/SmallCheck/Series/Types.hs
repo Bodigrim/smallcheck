@@ -10,7 +10,7 @@ import Prelude hiding ((.), id)
 import Control.Category
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Logic
+import Control.Monad.Logic as L
 import Control.Monad.Reader
 import Control.Arrow
 
@@ -19,6 +19,38 @@ import Control.Arrow
 -- lazysmallcheck and QuickCheck, and so on.
 --
 -- I also get to choose the names I like.
+
+-- {{{ FairLogicT
+
+-- | This is a wrapper around LogicT which uses "fair" combinators, e.g. '>>-'
+-- instead of '>>='.
+--
+-- Strictly speaking, this violates the associativity laws.
+
+newtype FairLogicT m a = WrapLogicT { unwrapLogicT :: LogicT m a }
+  deriving (Functor, MonadTrans)
+
+instance Monad m => Applicative (FairLogicT m) where
+  pure = return
+  (<*>) = ap
+
+instance Monad m => Monad (FairLogicT m) where
+  return = WrapLogicT . return
+  a >>= f = WrapLogicT $ unwrapLogicT a L.>>- unwrapLogicT . f
+  fail _ = mzero
+
+instance Monad m => Alternative (FairLogicT m) where
+  (<|>) = mplus
+  empty = mzero
+
+instance Monad m => MonadPlus (FairLogicT m) where
+  WrapLogicT a `mplus` WrapLogicT b = WrapLogicT $ a `interleave` b
+  mzero = WrapLogicT mzero
+
+instance Monad m => MonadLogic (FairLogicT m) where
+  msplit (WrapLogicT a) = WrapLogicT $ (fmap . fmap . fmap $ WrapLogicT) (msplit a)
+
+-- }}}
 
 -- {{{ StaticArrow (similar to Control.Arrow.Transformer.Static)
 
