@@ -25,6 +25,7 @@ Source-repository head
   location: git://github.com/feuerbach/smallcheck.git
 
 Library
+    Hs-source-dirs: src
 
     Build-Depends: base == 4.*, mtl, logict, ghc-prim >= 0.2, pretty
 
