@@ -35,7 +35,7 @@ module Test.SmallCheck.Property (
   ) where
 
 import Test.SmallCheck.Series
-import Test.SmallCheck.SeriesMonad
+import Test.SmallCheck.Series.Types
 import Test.SmallCheck.Property.Result
 import Control.Monad
 import Control.Monad.Logic
