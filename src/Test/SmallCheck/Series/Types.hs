@@ -139,7 +139,7 @@ type Depth = Int
 --
 -- It is also desirable that values of smaller depth come before the values
 -- of greater depth.
-newtype Series m a = Series (ReaderT Depth (LogicT m) a)
+newtype Series m a = Series (ReaderT Depth (FairLogicT m) a)
   deriving
     ( Functor
     , Monad
@@ -156,10 +156,10 @@ instance MonadTrans Series where
   lift a = Series $ lift . lift $ a
 
 runSeries :: Depth -> Series m a -> LogicT m a
-runSeries d (Series a) = runReaderT a d
+runSeries d (Series a) = unwrapLogicT $ runReaderT a d
 
 -- | Query the current depth
-getDepth :: Series m Depth
+getDepth :: Monad m => Series m Depth
 getDepth = Series ask
 
 -- }}}
@@ -169,21 +169,21 @@ getDepth = Series ask
 newtype CoSeries m a b = CoSeries
   (StaticArrow (Reader Depth)
   (PartialArrow
-  (StaticArrow (LogicT m) (->))) a b)
+  (StaticArrow (FairLogicT m) (->))) a b)
   deriving (Arrow)
 
-instance Category (CoSeries m) where
+instance Monad m => Category (CoSeries m) where
   id = CoSeries id
   CoSeries a . CoSeries b = CoSeries $ a . b
 
-instance Functor (CoSeries m a) where
+instance Monad m => Functor (CoSeries m a) where
   fmap f a = a >>> arr f
 
-instance Applicative (CoSeries m a) where
+instance Monad m => Applicative (CoSeries m a) where
   pure = unwrapArrow . pure
   f <*> a = unwrapArrow $ WrapArrow f <*> WrapArrow a
 
-nil :: CoSeries m a b
+nil :: Monad m => CoSeries m a b
 nil = CoSeries $
   WrapStatic $ return $ Partial $ WrapMaybe $ WrapStatic $ pure $ const Nothing
 
@@ -193,7 +193,8 @@ toCoSeries (Series s) = CoSeries . WrapStatic $ reader $ \r ->
   in Total $ WrapStatic $ const <$> ls
 
 fromCoSeries
-  :: CoSeries m a b
+  :: Monad m
+  => CoSeries m a b
   -> Series m (Either (Series m (a -> b)) (Series m (a -> Maybe b)))
 fromCoSeries (CoSeries cs) = do
   d <- getDepth
@@ -211,7 +212,7 @@ withDepth mkCs = CoSeries $ WrapStatic $ do
   let CoSeries cs = mkCs d
   unwrapStatic cs
 
-partial :: CoSeries m a (Maybe b) -> CoSeries m a b
+partial :: Monad m => CoSeries m a (Maybe b) -> CoSeries m a b
 partial (CoSeries cs) = CoSeries . WrapStatic . fmap (>>> absorbMaybe) . unwrapStatic $ cs
   where
     absorbMaybe = Partial $ WrapMaybe id
