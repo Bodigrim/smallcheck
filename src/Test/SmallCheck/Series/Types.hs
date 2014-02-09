@@ -131,3 +131,57 @@ getDepth :: Series m Depth
 getDepth = Series ask
 
 -- }}}
+
+-- {{{ CoSeries
+
+newtype CoSeries m a b = CoSeries
+  (StaticArrow (Reader Depth)
+  (PartialArrow
+  (StaticArrow (LogicT m) (->))) a b)
+  deriving (Arrow)
+
+instance Category (CoSeries m) where
+  id = CoSeries id
+  CoSeries a . CoSeries b = CoSeries $ a . b
+
+instance Functor (CoSeries m a) where
+  fmap f a = a >>> arr f
+
+instance Applicative (CoSeries m a) where
+  pure = unwrapArrow . pure
+  f <*> a = unwrapArrow $ WrapArrow f <*> WrapArrow a
+
+nil :: CoSeries m a b
+nil = CoSeries $
+  WrapStatic $ return $ Partial $ WrapMaybe $ WrapStatic $ pure $ const Nothing
+
+toCoSeries :: Series m a -> CoSeries m () a
+toCoSeries (Series s) = CoSeries . WrapStatic $ reader $ \r ->
+  let ls = runReaderT s r
+  in Total $ WrapStatic $ const <$> ls
+
+fromCoSeries
+  :: CoSeries m a b
+  -> Series m (Either (Series m (a -> b)) (Series m (a -> Maybe b)))
+fromCoSeries (CoSeries cs) = do
+  d <- getDepth
+  let p = runReader (unwrapStatic cs) d
+  return $
+    case p of
+      Total f ->
+        Left $ Series $ lift $ unwrapStatic f
+      Partial (WrapMaybe f) ->
+        Right $ Series $ lift $ unwrapStatic f
+
+withDepth :: (Depth -> CoSeries m a b) -> CoSeries m a b
+withDepth mkCs = CoSeries $ WrapStatic $ do
+  d <- ask
+  let CoSeries cs = mkCs d
+  unwrapStatic cs
+
+partial :: CoSeries m a (Maybe b) -> CoSeries m a b
+partial (CoSeries cs) = CoSeries . WrapStatic . fmap (>>> absorbMaybe) . unwrapStatic $ cs
+  where
+    absorbMaybe = Partial $ WrapMaybe id
+
+-- }}}
