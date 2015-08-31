@@ -191,6 +191,7 @@ import Data.Int
 import Data.List
 import Data.Ratio
 import Data.Maybe
+import Data.Word
 import Test.SmallCheck.Series.Types
 import GHC.Generics
 
@@ -509,6 +510,37 @@ coInts rs =
       | i == 0 -> z
       | otherwise -> Nothing
     }
+
+instance Monad m => Serial m Word where series = positives
+instance Monad m => CoSerial m Word where coseriesP = coPositives
+
+instance Monad m => Serial m Word8 where series = positives
+instance Monad m => CoSerial m Word8 where coseriesP = coPositives
+
+instance Monad m => Serial m Word16 where series = positives
+instance Monad m => CoSerial m Word16 where coseriesP = coPositives
+
+instance Monad m => Serial m Word32 where series = positives
+instance Monad m => CoSerial m Word32 where coseriesP = coPositives
+
+instance Monad m => Serial m Word64 where series = positives
+instance Monad m => CoSerial m Word64 where coseriesP = coPositives
+
+positives :: (Monad m, Integral n, Bounded n) => Series m n
+positives = generate $ \d -> take (d+1) [0..maxBound]
+
+coPositives :: (Monad m, Integral n) => Series m b -> Series m (n -> Maybe b)
+coPositives rs =
+    -- This is a recursive function, because @alts1 rs@ typically calls
+    -- back to 'coseries' (but with lower depth).
+    --
+    -- The recursion stops when depth == 0. Then alts1 produces a constant
+    -- function, and doesn't call back to 'coseries'.
+    alts1 rs >>- \f ->
+    return $
+      \i -> do
+        guard $ i > 0
+        f (N $ i-1)
 
 instance Monad m => Serial m Integer where
   series = (toInteger :: Int -> Integer) <$> series
