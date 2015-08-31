@@ -492,6 +492,7 @@ instance Monad m => CoSerial m Int32 where coseriesP = coInts
 instance Monad m => Serial m Int64 where series = ints
 instance Monad m => CoSerial m Int64 where coseriesP = coInts
 
+-- | Helper function to create 'Int' 'Serial' instances.
 ints :: (Monad m, Integral n, Bounded n) => Series m n
 ints = generate (\d -> if d >= 0 then pure 0 else empty) <|>
     nats `interleave` (fmap negate nats)
@@ -499,6 +500,7 @@ ints = generate (\d -> if d >= 0 then pure 0 else empty) <|>
     nats = generate $ \d -> take (d+1) [1..maxBound]
 
 -- TODO check this
+-- | Helper function to create 'Int' 'CoSerial' instances.
 coInts :: (Monad m, Integral n) => Series m b -> Series m (n -> Maybe b)
 coInts rs =
     alts0 rs >>- \z ->
@@ -526,9 +528,11 @@ instance Monad m => CoSerial m Word32 where coseriesP = coNonNegatives
 instance Monad m => Serial m Word64 where series = nonNegatives
 instance Monad m => CoSerial m Word64 where coseriesP = coNonNegatives
 
+-- | Helper function to create 'Word' 'Serial' instances.
 nonNegatives :: (Monad m, Integral n, Bounded n) => Series m n
 nonNegatives = generate $ \d -> take (d+1) [0..maxBound]
 
+-- | Helper function to create 'Word' 'CoSerial' instances.
 coNonNegatives :: (Monad m, Integral n) => Series m b -> Series m (n -> Maybe b)
 coNonNegatives rs =
     -- This is a recursive function, because @alts1 rs@ typically calls
