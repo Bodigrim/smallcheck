@@ -511,26 +511,26 @@ coInts rs =
       | otherwise -> Nothing
     }
 
-instance Monad m => Serial m Word where series = positives
-instance Monad m => CoSerial m Word where coseriesP = coPositives
+instance Monad m => Serial m Word where series = nonNegatives
+instance Monad m => CoSerial m Word where coseriesP = coNonNegatives
 
-instance Monad m => Serial m Word8 where series = positives
-instance Monad m => CoSerial m Word8 where coseriesP = coPositives
+instance Monad m => Serial m Word8 where series = nonNegatives
+instance Monad m => CoSerial m Word8 where coseriesP = coNonNegatives
 
-instance Monad m => Serial m Word16 where series = positives
-instance Monad m => CoSerial m Word16 where coseriesP = coPositives
+instance Monad m => Serial m Word16 where series = nonNegatives
+instance Monad m => CoSerial m Word16 where coseriesP = coNonNegatives
 
-instance Monad m => Serial m Word32 where series = positives
-instance Monad m => CoSerial m Word32 where coseriesP = coPositives
+instance Monad m => Serial m Word32 where series = nonNegatives
+instance Monad m => CoSerial m Word32 where coseriesP = coNonNegatives
 
-instance Monad m => Serial m Word64 where series = positives
-instance Monad m => CoSerial m Word64 where coseriesP = coPositives
+instance Monad m => Serial m Word64 where series = nonNegatives
+instance Monad m => CoSerial m Word64 where coseriesP = coNonNegatives
 
-positives :: (Monad m, Integral n, Bounded n) => Series m n
-positives = generate $ \d -> take (d+1) [0..maxBound]
+nonNegatives :: (Monad m, Integral n, Bounded n) => Series m n
+nonNegatives = generate $ \d -> take (d+1) [0..maxBound]
 
-coPositives :: (Monad m, Integral n) => Series m b -> Series m (n -> Maybe b)
-coPositives rs =
+coNonNegatives :: (Monad m, Integral n) => Series m b -> Series m (n -> Maybe b)
+coNonNegatives rs =
     -- This is a recursive function, because @alts1 rs@ typically calls
     -- back to 'coseries' (but with lower depth).
     --
