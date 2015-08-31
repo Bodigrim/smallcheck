@@ -480,7 +480,7 @@ instance Monad m => Serial m Int where
     generate (\d -> if d >= 0 then pure 0 else empty) <|>
       nats `interleave` (fmap negate nats)
     where
-      nats = generate $ \d -> [1..d]
+      nats = generate $ \d -> take (d+1) [1..maxBound]
 
 -- TODO check this
 instance Monad m => CoSerial m Int where
