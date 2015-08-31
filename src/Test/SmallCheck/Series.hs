@@ -187,6 +187,7 @@ import Control.Monad.Logic
 import Control.Monad.Reader
 import Control.Applicative
 import Control.Monad.Identity
+import Data.Int
 import Data.List
 import Data.Ratio
 import Data.Maybe
@@ -475,16 +476,30 @@ instance Monad m => Serial m () where
 instance Monad m => CoSerial m () where
   coseriesP rs = const <$> alts0 rs
 
-instance Monad m => Serial m Int where
-  series =
-    generate (\d -> if d >= 0 then pure 0 else empty) <|>
-      nats `interleave` (fmap negate nats)
-    where
-      nats = generate $ \d -> take (d+1) [1..maxBound]
+instance Monad m => Serial m Int where series = ints
+instance Monad m => CoSerial m Int where coseriesP = coInts
+
+instance Monad m => Serial m Int8 where series = ints
+instance Monad m => CoSerial m Int8 where coseriesP = coInts
+
+instance Monad m => Serial m Int16 where series = ints
+instance Monad m => CoSerial m Int16 where coseriesP = coInts
+
+instance Monad m => Serial m Int32 where series = ints
+instance Monad m => CoSerial m Int32 where coseriesP = coInts
+
+instance Monad m => Serial m Int64 where series = ints
+instance Monad m => CoSerial m Int64 where coseriesP = coInts
+
+ints :: (Monad m, Integral n, Bounded n) => Series m n
+ints = generate (\d -> if d >= 0 then pure 0 else empty) <|>
+    nats `interleave` (fmap negate nats)
+  where
+    nats = generate $ \d -> take (d+1) [1..maxBound]
 
 -- TODO check this
-instance Monad m => CoSerial m Int where
-  coseriesP rs =
+coInts :: (Monad m, Integral n) => Series m b -> Series m (n -> Maybe b)
+coInts rs =
     alts0 rs >>- \z ->
     alts1 rs >>- \f ->
     alts1 rs >>- \g ->
