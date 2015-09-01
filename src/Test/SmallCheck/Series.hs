@@ -187,9 +187,11 @@ import Control.Monad.Logic
 import Control.Monad.Reader
 import Control.Applicative
 import Control.Monad.Identity
+import Data.Int
 import Data.List
 import Data.Ratio
 import Data.Maybe
+import Data.Word
 import Test.SmallCheck.Series.Types
 import GHC.Generics
 
@@ -475,16 +477,32 @@ instance Monad m => Serial m () where
 instance Monad m => CoSerial m () where
   coseriesP rs = const <$> alts0 rs
 
-instance Monad m => Serial m Int where
-  series =
-    generate (\d -> if d >= 0 then pure 0 else empty) <|>
-      nats `interleave` (fmap negate nats)
-    where
-      nats = generate $ \d -> [1..d]
+instance Monad m => Serial m Int where series = ints
+instance Monad m => CoSerial m Int where coseriesP = coInts
+
+instance Monad m => Serial m Int8 where series = ints
+instance Monad m => CoSerial m Int8 where coseriesP = coInts
+
+instance Monad m => Serial m Int16 where series = ints
+instance Monad m => CoSerial m Int16 where coseriesP = coInts
+
+instance Monad m => Serial m Int32 where series = ints
+instance Monad m => CoSerial m Int32 where coseriesP = coInts
+
+instance Monad m => Serial m Int64 where series = ints
+instance Monad m => CoSerial m Int64 where coseriesP = coInts
+
+-- | Helper function to create 'Int' 'Serial' instances.
+ints :: (Monad m, Integral n, Bounded n) => Series m n
+ints = generate (\d -> if d >= 0 then pure 0 else empty) <|>
+    nats `interleave` (fmap negate nats)
+  where
+    nats = generate $ \d -> take d [1..maxBound]
 
 -- TODO check this
-instance Monad m => CoSerial m Int where
-  coseriesP rs =
+-- | Helper function to create 'Int' 'CoSerial' instances.
+coInts :: (Monad m, Integral n) => Series m b -> Series m (n -> Maybe b)
+coInts rs =
     alts0 rs >>- \z ->
     alts1 rs >>- \f ->
     alts1 rs >>- \g ->
@@ -494,6 +512,39 @@ instance Monad m => CoSerial m Int where
       | i == 0 -> z
       | otherwise -> Nothing
     }
+
+instance Monad m => Serial m Word where series = nonNegatives
+instance Monad m => CoSerial m Word where coseriesP = coNonNegatives
+
+instance Monad m => Serial m Word8 where series = nonNegatives
+instance Monad m => CoSerial m Word8 where coseriesP = coNonNegatives
+
+instance Monad m => Serial m Word16 where series = nonNegatives
+instance Monad m => CoSerial m Word16 where coseriesP = coNonNegatives
+
+instance Monad m => Serial m Word32 where series = nonNegatives
+instance Monad m => CoSerial m Word32 where coseriesP = coNonNegatives
+
+instance Monad m => Serial m Word64 where series = nonNegatives
+instance Monad m => CoSerial m Word64 where coseriesP = coNonNegatives
+
+-- | Helper function to create 'Word' 'Serial' instances.
+nonNegatives :: (Monad m, Integral n, Bounded n) => Series m n
+nonNegatives = generate $ \d -> take (d+1) [0..maxBound]
+
+-- | Helper function to create 'Word' 'CoSerial' instances.
+coNonNegatives :: (Monad m, Integral n) => Series m b -> Series m (n -> Maybe b)
+coNonNegatives rs =
+    -- This is a recursive function, because @alts1 rs@ typically calls
+    -- back to 'coseries' (but with lower depth).
+    --
+    -- The recursion stops when depth == 0. Then alts1 produces a constant
+    -- function, and doesn't call back to 'coseries'.
+    alts1 rs >>- \f ->
+    return $
+      \i -> do
+        guard $ i > 0
+        f (N $ i-1)
 
 instance Monad m => Serial m Integer where
   series = (toInteger :: Int -> Integer) <$> series
@@ -635,7 +686,7 @@ instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->
 instance (Serial Identity a, Show a, Show b) => Show (a:->b) where
   show Fun { function = f, functionDepth = depthLimit, functionDefault = mbDef } =
     if maxarheight == 1
-    && sumarwidth + length ars * length "->;" < widthLimit then
+    && sumarwidth + length ars * length ("->;"::String) < widthLimit then
       "{"++(
       concat $ intersperse ";" $ [a++"->"++r | (a,r) <- ars]
       )++"}"
