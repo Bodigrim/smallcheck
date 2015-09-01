@@ -686,7 +686,7 @@ instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->
 instance (Serial Identity a, Show a, Show b) => Show (a:->b) where
   show Fun { function = f, functionDepth = depthLimit, functionDefault = mbDef } =
     if maxarheight == 1
-    && sumarwidth + length ars * length "->;" < widthLimit then
+    && sumarwidth + length ars * length ("->;"::String) < widthLimit then
       "{"++(
       concat $ intersperse ";" $ [a++"->"++r | (a,r) <- ars]
       )++"}"
