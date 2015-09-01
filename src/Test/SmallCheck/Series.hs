@@ -497,7 +497,7 @@ ints :: (Monad m, Integral n, Bounded n) => Series m n
 ints = generate (\d -> if d >= 0 then pure 0 else empty) <|>
     nats `interleave` (fmap negate nats)
   where
-    nats = generate $ \d -> take (d+1) [1..maxBound]
+    nats = generate $ \d -> take d [1..maxBound]
 
 -- TODO check this
 -- | Helper function to create 'Int' 'CoSerial' instances.
