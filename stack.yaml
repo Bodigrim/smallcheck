@@ -1,0 +1,7 @@
+flags: {}
+packages:
+- '.'
+- test/
+- test-framework-smallcheck/
+extra-deps: []
+resolver: lts-3.4
