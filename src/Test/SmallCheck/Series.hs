@@ -188,7 +188,7 @@ import Control.Monad.Reader
 import Control.Applicative
 import Control.Monad.Identity
 import Data.List
-import Data.Ratio
+import GHC.Real
 import Data.Maybe
 import Test.SmallCheck.Series.Types
 import GHC.Generics
@@ -540,7 +540,7 @@ instance Monad m => CoSerial m Double where
 instance (Integral i, Serial m i) => Serial m (Ratio i) where
   series = pairToRatio <$> series
     where
-      pairToRatio (n, Positive d) = n % d
+      pairToRatio (n, Positive d) = n :% d
 instance (Integral i, CoSerial m i) => CoSerial m (Ratio i) where
   coseriesP rs = (. ratioToPair) <$> alts1 rs
     where
