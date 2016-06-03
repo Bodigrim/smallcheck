@@ -166,7 +166,7 @@ module Test.SmallCheck.Series (
   Depth, Series, Serial(..), CoSerial(..), (:->)(..),
 
   -- * Convenient wrappers
-  Positive(..), NonNegative(..), NonEmpty(..),
+  Positive(..), NonNegative(..), NonEmpty(..), IntegerEdgeCase(..),
 
   -- * Other useful definitions
   (\/), (><), (<~>), (>>-),
@@ -697,4 +697,19 @@ instance (Serial m a) => Serial m (NonEmpty a) where
 instance Show a => Show (NonEmpty a) where
   showsPrec n (NonEmpty x) = showsPrec n x
 
+-- | 'IntegerEdgeCase' generates 'Integer's around @('minBound' :: 'Int')@ and
+-- @('maxBound' :: 'Int')@ in order to use all 'Integer' constructors.
+newtype IntegerEdgeCase = IntegerEdgeCase { getIntegerEdgeCase :: Integer }
+  deriving (Eq, Ord, Num, Integral, Real, Enum)
+
+instance Monad m => Serial m IntegerEdgeCase where
+  series =
+    let intSized = (toInteger :: Int -> Integer) <$> series
+        minInt = fromIntegral (minBound :: Int)
+        maxInt = fromIntegral (maxBound :: Int)
+    in IntegerEdgeCase <$>
+        ((maxInt +) <$> intSized) \/ ((minInt +) <$> intSized)
+
+instance Show IntegerEdgeCase where
+  showsPrec n (IntegerEdgeCase x) = showsPrec n x
 -- }}}
