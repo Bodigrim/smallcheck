@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.1.2
+-------------
+
+* Export the `test` function
+* Add a `listSeries` function
+
 Version 1.1.1
 -------------
 
