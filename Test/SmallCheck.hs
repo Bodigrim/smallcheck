@@ -92,7 +92,7 @@ module Test.SmallCheck (
   smallCheck,
 
   -- * Main types and classes
-  Testable,
+  Testable(..),
   Property,
   Reason
 
