@@ -30,6 +30,7 @@ Library
 
     Exposed-modules:
         Test.SmallCheck
+        Test.SmallCheck.Exhaustive
         Test.SmallCheck.Drivers
         Test.SmallCheck.Series
     Other-modules:
