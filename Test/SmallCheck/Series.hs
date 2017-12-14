@@ -189,6 +189,8 @@ import Control.Applicative
 import Control.Monad.Identity
 import Data.List
 import Data.Ratio
+import Data.Word (Word)
+import Numeric.Natural (Natural)
 import Test.SmallCheck.SeriesMonad
 import GHC.Generics
 
@@ -484,6 +486,16 @@ instance Monad m => Serial m Integer where
   series = (toInteger :: Int -> Integer) <$> series
 instance Monad m => CoSerial m Integer where
   coseries rs = (. (fromInteger :: Integer->Int)) <$> coseries rs
+
+instance Monad m => Serial m Natural where
+  series = (fromIntegral :: N Int -> Natural) <$> series
+instance Monad m => CoSerial m Natural where
+  coseries rs = (. (fromIntegral :: Natural->Int)) <$> coseries rs
+
+instance Monad m => Serial m Word where
+  series = (fromIntegral :: N Int -> Word) <$> series
+instance Monad m => CoSerial m Word where
+  coseries rs = (. (fromIntegral :: Word->Int)) <$> coseries rs
 
 -- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
 -- to be generated. Generated functions of type @N a -> b@ do not distinguish
