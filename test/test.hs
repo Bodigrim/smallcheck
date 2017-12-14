@@ -12,6 +12,8 @@ import Control.Monad.Identity
 import Data.Proxy
 import Data.List
 import qualified Data.Set as Set
+import Data.Word
+import Numeric.Natural
 
 ------------------------------
 -- Auxiliary definitions
@@ -60,6 +62,12 @@ instance SizeTest Int where
 instance SizeTest Integer where
   size _ d = max 0 $ 2*d+1
 
+instance SizeTest Word where
+  size _ d = max 0 $ 2*d+1
+
+instance SizeTest Natural where
+  size _ d = max 0 $ 2*d+1
+
 instance SizeTest a => SizeTest (Maybe a) where
   size _ d = if d > 0 then size (Proxy :: Proxy a) (d-1) + 1 else 0
 
@@ -78,6 +86,8 @@ types =
   , TestableType "Bool"       (Proxy :: Proxy Bool)
   , TestableType "Int"        (Proxy :: Proxy Int)
   , TestableType "Integer"    (Proxy :: Proxy Integer)
+  , TestableType "Word"       (Proxy :: Proxy Word)
+  , TestableType "Natural"    (Proxy :: Proxy Natural)
   , TestableType "Maybe Int"  (Proxy :: Proxy (Maybe Int))
   , TestableType "[Int]"      (Proxy :: Proxy [Int])
   ]
