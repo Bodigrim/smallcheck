@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.1.3
+-------------
+
+* Add `Serial` and `CoSerial` instances for `Word` and `Natural`
+
 Version 1.1.2
 -------------
 
