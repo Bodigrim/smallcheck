@@ -24,8 +24,8 @@ executable smallcheck-test
     smallcheck >= 1,
     mtl,
     logict,
+    nats,
     tasty >= 0.4,
     tasty-hunit >= 0.4.1,
     tasty-smallcheck
   default-language:    Haskell2010
-  ghc-options:         -fhpc

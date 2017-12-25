@@ -63,10 +63,10 @@ instance SizeTest Integer where
   size _ d = max 0 $ 2*d+1
 
 instance SizeTest Word where
-  size _ d = max 0 $ 2*d+1
+  size _ d = max 0 $ d+1
 
 instance SizeTest Natural where
-  size _ d = max 0 $ 2*d+1
+  size _ d = max 0 $ d+1
 
 instance SizeTest a => SizeTest (Maybe a) where
   size _ d = if d > 0 then size (Proxy :: Proxy a) (d-1) + 1 else 0
@@ -109,8 +109,7 @@ propertyTests =
 
 simplePropertyTests =
   [ testCase "Forall/no" $ check (\x -> (x^2 :: Integer) >= 2)
-      @?= Just (CounterExample ["0"] PropertyFalse)
-
+      @?= Just (CounterExample ["0"] (PropertyFalse Nothing))
   , testCase "Forall/yes" $ check (\x -> (x^2 :: Integer) >= 0)
       @?= Nothing
 
@@ -124,7 +123,7 @@ simplePropertyTests =
       @?= Just NotExist
 
   , testCase "ExistsUnique/isn't unique" $ check (existsUnique $ \x -> (x^2 :: Integer) > 0)
-      @?= Just (AtLeastTwo ["1"] PropertyTrue ["-1"] PropertyTrue)
+      @?= Just (AtLeastTwo ["1"] (PropertyTrue Nothing) ["-1"] (PropertyTrue Nothing))
 
   , testCase "ExistsUnique/yes" $ check (existsUnique $ \x -> (x^2 :: Integer) < 0)
       @?= Just NotExist
@@ -132,7 +131,7 @@ simplePropertyTests =
 
 combinedPropertyTests =
   [ testCase "Forall+Forall/no" $ check (\x y -> x /= (y+2 :: Integer))
-      @?= Just (CounterExample ["0","-2"] PropertyFalse)
+      @?= Just (CounterExample ["0","-2"] (PropertyFalse Nothing))
 
   , testCase "Forall+Exists/no" $ check (\x -> x > 0 ==> exists $ \y -> x == (y^2 :: Integer))
       @?= Just (CounterExample ["2"] NotExist)
@@ -156,7 +155,7 @@ combinedPropertyTests =
       @?= Just NotExist
 
   , testCase "ExistsUnique (two vars)/isn't unique" $ check (existsUnique $ \x y -> abs x == (abs y :: Integer))
-      @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["1","1"] PropertyTrue)
+      @?= Just (AtLeastTwo ["0","0"] (PropertyTrue Nothing) ["1","1"] (PropertyTrue Nothing))
 
   , testCase "ExistsUnique+ExistsUnique/yes" $
       check (existsUnique $ \x -> existsUnique $ \y -> abs x == (abs y :: Integer))
@@ -165,7 +164,7 @@ combinedPropertyTests =
 
 freshContexts =
   [ testCase "==>" $ check (existsUnique $ \x -> (\y -> x * y >= 0) ==> (\y -> x * y == (0 :: Integer)))
-      @?= Just (AtLeastTwo ["0"] PropertyTrue ["1"] (Vacuously (CounterExample ["-1"] PropertyFalse)))
+      @?= Just (AtLeastTwo ["0"] (PropertyTrue Nothing) ["1"] (Vacuously (CounterExample ["-1"] (PropertyFalse Nothing))))
   , testCase "test" $ check (exists $ \x -> test $ \y -> x == (y :: Bool))
       @?= Nothing
   , testCase "monadic" $ check (exists $ \x -> monadic . return $ \y -> x == (y :: Bool))
@@ -176,7 +175,7 @@ overTests =
   [ testCase "over+Forall/yes" $ check (over odds odd)
       @?= Nothing
   , testCase "over+Forall/no" $ check (over odds (<3))
-      @?= Just (CounterExample ["3"] PropertyFalse)
+      @?= Just (CounterExample ["3"] (PropertyFalse Nothing))
   , testCase "over+Exists/yes" $ check (exists $ over odds (>3))
       @?= Nothing
   , testCase "over+Exists/no" $ check (exists $ over odds even)
@@ -184,7 +183,7 @@ overTests =
   , testCase "over+Exists/no" $ check (exists $ over odds even)
       @?= Just NotExist
   , testCase "ExistsUnique+ExistsUnique/isn't unique" $ check (existsUnique $ over series $ \x -> over series $ \y -> abs x == (abs y :: Integer))
-      @?= Just (AtLeastTwo ["0","0"] PropertyTrue ["1","1"] PropertyTrue)
+      @?= Just (AtLeastTwo ["0","0"] (PropertyTrue Nothing) ["1","1"] (PropertyTrue Nothing))
   ]
   where
   odds :: Monad m => Series m Integer
