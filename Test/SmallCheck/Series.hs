@@ -187,9 +187,10 @@ import Control.Monad.Logic
 import Control.Monad.Reader
 import Control.Applicative
 import Control.Monad.Identity
+import Data.Int (Int, Int8, Int16, Int32, Int64)
 import Data.List
 import Data.Ratio
-import Data.Word (Word)
+import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Numeric.Natural (Natural)
 import Test.SmallCheck.SeriesMonad
 import GHC.Generics
@@ -464,46 +465,38 @@ instance Monad m => Serial m () where
 instance Monad m => CoSerial m () where
   coseries rs = constM rs
 
-instance Monad m => Serial m Int where
-  series =
-    generate (\d -> if d >= 0 then pure 0 else empty) <|>
-      nats `interleave` (fmap negate nats)
-    where
-      nats = generate $ \d -> [1..d]
-
-instance Monad m => CoSerial m Int where
-  coseries rs =
-    alts0 rs >>- \z ->
-    alts1 rs >>- \f ->
-    alts1 rs >>- \g ->
-    return $ \i -> case () of { _
-      | i > 0 -> f (N (i - 1))
-      | i < 0 -> g (N (abs i - 1))
-      | otherwise -> z
-    }
-
-instance Monad m => Serial m Integer where
-  series = (toInteger :: Int -> Integer) <$> series
-instance Monad m => CoSerial m Integer where
-  coseries rs = (. (fromInteger :: Integer->Int)) <$> coseries rs
-
-instance Monad m => Serial m Natural where
-  series = (fromIntegral :: N Int -> Natural) <$> series
-instance Monad m => CoSerial m Natural where
-  coseries rs = (. (fromIntegral :: Natural->Int)) <$> coseries rs
-
-instance Monad m => Serial m Word where
-  series = (fromIntegral :: N Int -> Word) <$> series
-instance Monad m => CoSerial m Word where
-  coseries rs = (. (fromIntegral :: Word->Int)) <$> coseries rs
+instance Monad m => Serial m Integer where series = unM <$> series
+instance Monad m => CoSerial m Integer where coseries = fmap (. M) . coseries
+instance Monad m => Serial m Natural where series = unN <$> series
+instance Monad m => CoSerial m Natural where coseries = fmap (. N) . coseries
+instance Monad m => Serial m Int where series = unM <$> series
+instance Monad m => CoSerial m Int where coseries = fmap (. M) . coseries
+instance Monad m => Serial m Word where series = unN <$> series
+instance Monad m => CoSerial m Word where coseries = fmap (. N) . coseries
+instance Monad m => Serial m Int8 where series = unM <$> series
+instance Monad m => CoSerial m Int8 where coseries = fmap (. M) . coseries
+instance Monad m => Serial m Word8 where series = unN <$> series
+instance Monad m => CoSerial m Word8 where coseries = fmap (. N) . coseries
+instance Monad m => Serial m Int16 where series = unM <$> series
+instance Monad m => CoSerial m Int16 where coseries = fmap (. M) . coseries
+instance Monad m => Serial m Word16 where series = unN <$> series
+instance Monad m => CoSerial m Word16 where coseries = fmap (. N) . coseries
+instance Monad m => Serial m Int32 where series = unM <$> series
+instance Monad m => CoSerial m Int32 where coseries = fmap (. M) . coseries
+instance Monad m => Serial m Word32 where series = unN <$> series
+instance Monad m => CoSerial m Word32 where coseries = fmap (. N) . coseries
+instance Monad m => Serial m Int64 where series = unM <$> series
+instance Monad m => CoSerial m Int64 where coseries = fmap (. M) . coseries
+instance Monad m => Serial m Word64 where series = unN <$> series
+instance Monad m => CoSerial m Word64 where coseries = fmap (. N) . coseries
 
 -- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
 -- to be generated. Generated functions of type @N a -> b@ do not distinguish
 -- different negative values of @a@.
-newtype N a = N a deriving (Eq, Ord, Real, Enum, Num, Integral)
+newtype N a = N { unN :: a } deriving (Eq, Ord, Real, Enum, Num, Integral)
 
-instance (Integral a, Serial m a) => Serial m (N a) where
-  series = generate $ \d -> map (N . fromIntegral) [0..d]
+instance (Num a, Enum a, Serial m a) => Serial m (N a) where
+  series = generate $ \d -> take (d+1) [0..]
 
 instance (Integral a, Monad m) => CoSerial m (N a) where
   coseries rs =
@@ -518,6 +511,24 @@ instance (Integral a, Monad m) => CoSerial m (N a) where
       if i > 0
         then f (N $ i-1)
         else z
+
+-- | 'M' is a helper type to generate values of a signed type of increasing magnitude.
+newtype M a = M { unM :: a } deriving (Eq, Ord, Real, Enum, Num, Integral)
+
+instance (Num a, Enum a, Monad m) => Serial m (M a) where
+  series = others `interleave` positives
+    where positives = generate $ \d -> take d [1..]
+          others = generate $ \d -> take (d+1) [0,-1..]
+
+instance (Ord a, Num a, Monad m) => CoSerial m (M a) where
+  coseries rs =
+    alts0 rs >>- \z ->
+    alts1 rs >>- \f ->
+    alts1 rs >>- \g ->
+    pure $ \ i -> case compare i 0 of
+        GT -> f (M (i - 1))
+        LT -> g (M (abs i - 1))
+        EQ -> z
 
 instance Monad m => Serial m Float where
   series =
