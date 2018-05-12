@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.1.4
+-------------
+
+* Add instances for fixed-width Int and Word types (Int8, Word8 etc.)
+
 Version 1.1.3.1
 ---------------
 
