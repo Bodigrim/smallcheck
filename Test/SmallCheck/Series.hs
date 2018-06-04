@@ -165,6 +165,10 @@ module Test.SmallCheck.Series (
   -- * Basic definitions
   Depth, Series, Serial(..), CoSerial(..),
 
+  -- * Generic implementations
+  genericSeries,
+  genericCoseries,
+
   -- * Convenient wrappers
   Positive(..), NonNegative(..), NonEmpty(..),
 
@@ -205,7 +209,12 @@ class Monad m => Serial m a where
   series   :: Series m a
 
   default series :: (Generic a, GSerial m (Rep a)) => Series m a
-  series = to <$> gSeries
+  series = genericSeries
+
+genericSeries
+  :: (Monad m, Generic a, GSerial m (Rep a))
+  => Series m a
+genericSeries = to <$> gSeries
 
 class Monad m => CoSerial m a where
   -- | A proper 'coseries' implementation should pass the depth unchanged to
@@ -214,8 +223,12 @@ class Monad m => CoSerial m a where
   coseries :: Series m b -> Series m (a->b)
 
   default coseries :: (Generic a, GCoSerial m (Rep a)) => Series m b -> Series m (a->b)
-  coseries rs = (. from) <$> gCoseries rs
+  coseries = genericCoseries
 
+genericCoseries
+  :: (Monad m, Generic a, GCoSerial m (Rep a))
+  => Series m b -> Series m (a->b)
+genericCoseries rs = (. from) <$> gCoseries rs
 -- }}}
 
 ------------------------------
