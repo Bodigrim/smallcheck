@@ -24,7 +24,7 @@
 --------------------------------------------------------------------
 
 {-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
-             GeneralizedNewtypeDeriving, FlexibleContexts #-}
+             GeneralizedNewtypeDeriving, FlexibleContexts, ScopedTypeVariables #-}
 -- The following is needed for generic instances
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators,
              TypeSynonymInstances, FlexibleInstances, OverlappingInstances #-}
@@ -174,6 +174,7 @@ module Test.SmallCheck.Series (
   decDepth,
   getDepth,
   generate,
+  limit,
   listSeries,
   list,
   listM,
@@ -228,6 +229,18 @@ generate :: (Depth -> [a]) -> Series m a
 generate f = do
   d <- getDepth
   msum $ map return $ f d
+
+-- | Limit a 'Series' to its first @n@ elements
+limit :: forall m a . Monad m => Int -> Series m a -> Series m a
+limit n0 (Series s) = Series $ go n0 s
+  where
+    go :: MonadLogic ml => Int -> ml b -> ml b
+    go 0 _ = mzero
+    go n mb1 = do
+      cons :: Maybe (b, ml b) <- msplit mb1
+      case cons of
+        Nothing -> mzero
+        Just (b, mb2) -> return b `mplus` go (n-1) mb2
 
 suchThat :: Series m a -> (a -> Bool) -> Series m a
 suchThat s p = s >>= \x -> if p x then pure x else empty

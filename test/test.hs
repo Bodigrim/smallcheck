@@ -211,6 +211,13 @@ changeDepthTests =
 main = defaultMain $ testGroup "Tests" $
   [ testGroup "Series tests" [sizeTests, distinctTests]
   , testGroup "Property tests" propertyTests
+  , testCase "limit" $ do
+      let
+        n = 134
+        fullSeries, truncatedSeries :: [[Int]]
+        fullSeries = listSeries 10
+        truncatedSeries = list 10 (limit n series)
+      truncatedSeries @?= take n fullSeries
   ]
 
 sizeTests = testGroup "Size tests" $ map (testp prop_size) types
