@@ -1,6 +1,15 @@
 Changes
 =======
 
+Version 1.1.5
+-------------
+
+* Add `limit :: Monad m => Int -> Series m a -> Series m a`
+* Add `genericSeries` and `genericCoseries`, so that you can use the generic
+  implementations more flexibly. Previously, the generic implementation was
+  only avaialable as the default method for `series`/`coseries` but not as
+  standalone functions.
+
 Version 1.1.4
 -------------
 
