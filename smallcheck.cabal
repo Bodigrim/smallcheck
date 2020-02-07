@@ -4,9 +4,9 @@ Cabal-Version: >= 1.6
 License:       BSD3
 License-File:  LICENSE
 Author:        Colin Runciman, Roman Cheplyaka
-Maintainer:    Roman Cheplyaka <roma@ro-che.info>
-Homepage:      https://github.com/feuerbach/smallcheck
-Bug-reports:   https://github.com/feuerbach/smallcheck/issues
+Maintainer:    M Farkas-Dyck <strake888@gmail.com>
+Homepage:      https://github.com/strake/smallcheck.hs
+Bug-reports:   https://github.com/strake/smallcheck.hs/issues
 
 Stability:     Beta
 Category:      Testing
@@ -22,7 +22,7 @@ Extra-source-files: README.md, CREDITS.md, CHANGELOG.md
 
 Source-repository head
   type:     git
-  location: git://github.com/feuerbach/smallcheck.git
+  location: git://github.com/strake/smallcheck.git
 
 Library
 
