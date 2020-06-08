@@ -1,2 +1,4 @@
-resolver: lts-8.11
-packages: [".", "test"]
+resolver: nightly-2020-05-03
+packages:
+- .
+- test-suite
