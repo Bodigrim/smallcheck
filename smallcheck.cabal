@@ -1,41 +1,53 @@
-Name:          smallcheck
-Version:       1.1.5
-Cabal-Version: >= 1.6
-License:       BSD3
-License-File:  LICENSE
-Author:        Colin Runciman, Roman Cheplyaka
-Maintainer:    M Farkas-Dyck <strake888@gmail.com>
-Homepage:      https://github.com/strake/smallcheck.hs
-Bug-reports:   https://github.com/strake/smallcheck.hs/issues
+name:               smallcheck
+version:            1.1.5
+license:            BSD3
+license-file:       LICENSE
+maintainer:         M Farkas-Dyck <strake888@gmail.com>
+author:             Colin Runciman, Roman Cheplyaka
+stability:          Beta
+cabal-version:      >=1.10
+tested-with:
+  ghc ==8.10.1 ghc ==8.8.3 ghc ==8.6.5 ghc ==8.4.4 ghc ==8.2.2
+  ghc ==8.0.2 ghc ==7.10.3 ghc ==7.8.4 ghc ==7.6.3 ghc ==7.4.2
 
-Stability:     Beta
-Category:      Testing
-Synopsis:      A property-based testing library
-Description:   SmallCheck is a testing library that allows to verify properties
-               for all test cases up to some depth. The test cases are generated
-               automatically by SmallCheck.
-Build-Type:    Simple
+homepage:           https://github.com/strake/smallcheck.hs
+bug-reports:        https://github.com/strake/smallcheck.hs/issues
+synopsis:           A property-based testing library
+description:
+  SmallCheck is a testing library that allows to verify properties
+  for all test cases up to some depth. The test cases are generated
+  automatically by SmallCheck.
 
-Extra-source-files: README.md, CREDITS.md, CHANGELOG.md
+category:           Testing
+build-type:         Simple
+extra-source-files:
+  README.md
+  CREDITS.md
+  CHANGELOG.md
 
-tested-with: GHC==8.10.1, GHC==8.8.3, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2, GHC==8.0.2, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
-
-Source-repository head
+source-repository head
   type:     git
   location: git://github.com/strake/smallcheck.git
 
-Library
+library
+  default-language: Haskell2010
 
-    Build-Depends: base >= 4.5 && < 5, mtl, logict, ghc-prim >= 0.2, pretty
+  exposed-modules:
+    Test.SmallCheck
+    Test.SmallCheck.Drivers
+    Test.SmallCheck.Series
 
-    if impl(ghc < 7.10)
-      build-depends: nats
+  other-modules:
+    Test.SmallCheck.Property
+    Test.SmallCheck.SeriesMonad
+    Test.SmallCheck.Property.Result
 
-    Exposed-modules:
-        Test.SmallCheck
-        Test.SmallCheck.Drivers
-        Test.SmallCheck.Series
-    Other-modules:
-        Test.SmallCheck.Property
-        Test.SmallCheck.SeriesMonad
-        Test.SmallCheck.Property.Result
+  build-depends:
+    base >=4.5 && <5,
+    mtl,
+    logict,
+    ghc-prim >=0.2,
+    pretty
+
+  if impl(ghc <7.10)
+    build-depends: nats
