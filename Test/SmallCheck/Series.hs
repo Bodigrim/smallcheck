@@ -27,7 +27,7 @@
              GeneralizedNewtypeDeriving, FlexibleContexts, ScopedTypeVariables #-}
 -- The following is needed for generic instances
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators,
-             TypeSynonymInstances, FlexibleInstances, OverlappingInstances #-}
+             TypeSynonymInstances, FlexibleInstances #-}
 {-# LANGUAGE Trustworthy #-}
 
 module Test.SmallCheck.Series (
