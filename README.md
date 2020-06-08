@@ -14,25 +14,17 @@ To get started with SmallCheck:
 
 * Read the [documentation][haddock]
 * If you have experience with QuickCheck, [read the comparison of QuickCheck and SmallCheck][comparison]
-* Install it and give it a try!  
+* Install it and give it a try!
   `cabal update; cabal install smallcheck`
 * Read the [paper][paper] or [other materials][oldpage] from the original
   authors of SmallCheck (note that that information might be somewhat outdated)
 * If you see something that can be improved, please [submit an issue][issues]
 * Check out [the source code][github] at GitHub
 
-[haddock]: http://hackage.haskell.org/packages/archive/smallcheck/latest/doc/html/Test-SmallCheck.html
+[haddock]: http://hackage.haskell.org/package/smallcheck/docs/Test-SmallCheck.html
 [hackage]: http://hackage.haskell.org/package/smallcheck
 [paper]: http://www.cs.york.ac.uk/fp/smallcheck/smallcheck.pdf
 [oldpage]: http://www.cs.york.ac.uk/fp/smallcheck/
-[comparison]: https://github.com/feuerbach/smallcheck/wiki/Comparison-with-QuickCheck
-[github]: https://github.com/feuerbach/smallcheck
-[issues]: https://github.com/feuerbach/smallcheck/issues
-
-Maintainers
------------
-
-[Roman Cheplyaka](https://github.com/feuerbach) is the primary maintainer.
-
-[Oliver Charles](https://github.com/ocharles) is the backup maintainer. Please
-get in touch with him if the primary maintainer cannot be reached.
+[comparison]: https://github.com/Bodigrim/smallcheck/wiki/Comparison-with-QuickCheck
+[github]: https://github.com/Bodigrim/smallcheck
+[issues]: https://github.com/Bodigrim/smallcheck/issues

@@ -12,7 +12,7 @@
 --
 -- For pointers to other sources of information about SmallCheck, please refer
 -- to the README at
--- <https://github.com/feuerbach/smallcheck/blob/master/README.md>
+-- <https://github.com/Bodigrim/smallcheck/blob/master/README.md>
 --------------------------------------------------------------------
 {-# LANGUAGE Safe #-}
 module Test.SmallCheck (

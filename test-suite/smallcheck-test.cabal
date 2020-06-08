@@ -2,7 +2,7 @@ name:          smallcheck-test
 version:       0.1
 license:       MIT
 license-file:  LICENSE
-maintainer:    Roman Cheplyaka <roma@ro-che.info>
+maintainer:    Andrew Lelechenko <andrew.lelechenko@gmail.com>
 author:        Roman Cheplyaka
 build-type:    Simple
 cabal-version: >=1.10
