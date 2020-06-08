@@ -4,7 +4,6 @@ license:            BSD3
 license-file:       LICENSE
 maintainer:         M Farkas-Dyck <strake888@gmail.com>
 author:             Colin Runciman, Roman Cheplyaka
-stability:          Beta
 cabal-version:      >=1.10
 tested-with:
   ghc ==8.10.1 ghc ==8.8.3 ghc ==8.6.5 ghc ==8.4.4 ghc ==8.2.2
