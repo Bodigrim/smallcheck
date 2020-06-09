@@ -748,6 +748,10 @@ newtype Positive a = Positive { getPositive :: a }
 instance Real a => Real (Positive a) where
   toRational (Positive x) = toRational x
 
+instance (Num a, Bounded a) => Bounded (Positive a) where
+  minBound = Positive 1
+  maxBound = Positive (maxBound :: a)
+
 instance Enum a => Enum (Positive a) where
   toEnum x = Positive (toEnum x)
   fromEnum (Positive x) = fromEnum x
@@ -778,6 +782,10 @@ newtype NonNegative a = NonNegative { getNonNegative :: a }
 
 instance Real a => Real (NonNegative a) where
   toRational (NonNegative x) = toRational x
+
+instance (Num a, Bounded a) => Bounded (NonNegative a) where
+  minBound = NonNegative 0
+  maxBound = NonNegative (maxBound :: a)
 
 instance Enum a => Enum (NonNegative a) where
   toEnum x = NonNegative (toEnum x)
