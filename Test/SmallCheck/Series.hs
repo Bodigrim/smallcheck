@@ -201,6 +201,7 @@ import Control.Monad (liftM, guard, mzero, mplus, msum)
 import Control.Monad.Logic (MonadLogic, (>>-), interleave, msplit, observeAllT)
 import Control.Monad.Reader (ask, local)
 import Control.Applicative (empty, pure, (<$>))
+import Data.Functor.Compose (Compose(..))
 import Control.Monad.Identity (Identity(..))
 import Data.Int (Int, Int8, Int16, Int32, Int64)
 import Data.List (intercalate)
@@ -726,6 +727,11 @@ instance (Serial Identity a, Show a, Show b) => Show (a -> b) where
     indent = unlines . map ("  "++) . lines
     height = length . lines
     (widthLimit,lengthLimit,depthLimit) = (80,20,3)::(Int,Int,Depth)
+
+instance (Monad m, Serial m (f (g a))) => Serial m (Compose f g a) where
+  series = Compose <$> series
+instance (Monad m, CoSerial m (f (g a))) => CoSerial m (Compose f g a) where
+  coseries = fmap (. getCompose) . coseries
 
 -- }}}
 
