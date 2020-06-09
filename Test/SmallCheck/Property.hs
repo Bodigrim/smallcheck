@@ -9,11 +9,13 @@
 --
 -- Properties and tools to construct them.
 --------------------------------------------------------------------
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TypeFamilies,
-             ScopedTypeVariables, DeriveDataTypeable #-}
 
--- CPP is for Typeable1 vs Typeable
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 -- Are we using new, polykinded and derivable Typeable yet?
 #define NEWTYPEABLE MIN_VERSION_base(4,7,0)
@@ -24,6 +26,7 @@
 -- Trustworthy is needed because of the hand-written Typeable instance
 {-# LANGUAGE Trustworthy #-}
 #endif
+
 module Test.SmallCheck.Property (
   -- * Constructors
   forAll, exists, existsUnique, over, (==>), monadic, changeDepth, changeDepth1,
@@ -37,6 +40,7 @@ module Test.SmallCheck.Property (
 import Test.SmallCheck.Series
 import Test.SmallCheck.SeriesMonad
 import Test.SmallCheck.Property.Result
+import Control.Arrow
 import Control.Monad
 import Control.Monad.Logic
 import Control.Monad.Reader
@@ -354,7 +358,7 @@ changeDepth modifyDepth a = Property (changeDepthPS <$> unProperty (test a))
       PropertySeries
         (localDepth modifyDepth ss)
         (localDepth modifyDepth sf)
-        ((\(prop, args) -> (changeDepth modifyDepth prop, args)) <$>
+        (first (changeDepth modifyDepth) <$>
           localDepth modifyDepth sc)
 
 -- | Quantify the function's argument over its 'series', but adjust the

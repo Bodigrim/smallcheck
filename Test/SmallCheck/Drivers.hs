@@ -8,8 +8,10 @@
 -- You should only need this module if you wish to create your own way to
 -- run SmallCheck tests
 --------------------------------------------------------------------
+
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe             #-}
+
 module Test.SmallCheck.Drivers (
   smallCheck, smallCheckM, smallCheckWithHook,
   test,
@@ -31,11 +33,11 @@ smallCheck d a = do
   let testsRun = good + bad
   case mbEx of
     Nothing -> do
-      printf "Completed %d tests without failure.\n" $ testsRun
+      printf "Completed %d tests without failure.\n" testsRun
       when (bad > 0) $
-        printf "But %d did not meet ==> condition.\n" $ bad
+        printf "But %d did not meet ==> condition.\n" bad
     Just x -> do
-      printf "Failed test no. %d.\n" $ testsRun
+      printf "Failed test no. %d.\n" testsRun
       putStrLn $ ppFailure x
 
 runTestWithStats :: Testable IO a => Depth -> a -> IO ((Integer, Integer), Maybe PropertyFailure)
@@ -69,7 +71,7 @@ modifyIORef' ref f = do
 --
 -- * You need to analyse the results rather than just print them
 smallCheckM :: Testable m a => Depth -> a -> m (Maybe PropertyFailure)
-smallCheckM d a = smallCheckWithHook d (const $ return ()) a
+smallCheckM d = smallCheckWithHook d (const $ return ())
 
 -- | Like `smallCheckM`, but allows to specify a monadic hook that gets
 -- executed after each test is run.

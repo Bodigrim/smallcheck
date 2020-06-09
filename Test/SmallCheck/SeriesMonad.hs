@@ -57,7 +57,7 @@ instance Alternative (Series m) where
 
 -- This instance is written manually. Using the GND for it is not safe.
 instance Monad m => MonadLogic (Series m) where
-  msplit (Series a) = Series $ fmap (fmap $ second Series) $ msplit a
+  msplit (Series a) = Series (fmap (second Series) <$> msplit a)
 
 instance MonadTrans Series where
   lift a = Series $ lift . lift $ a

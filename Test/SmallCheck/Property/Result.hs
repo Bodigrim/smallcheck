@@ -1,5 +1,6 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, DefaultSignatures #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE Safe              #-}
+
 module Test.SmallCheck.Property.Result
   ( PropertySuccess(..)
   , PropertyFailure(..)
@@ -40,13 +41,13 @@ instance Pretty PropertyFailure where
     text "arguments satisfying the property:" $$
       formatExample args1 s1 $$ formatExample args2 s2
     where
-    formatExample args s = nest ind $ text "for" <+> prettyArgs args </> (pretty s)
+    formatExample args s = nest ind $ text "for" <+> prettyArgs args </> pretty s
   pretty (CounterExample args f) =
     text "there" <+>
     text (plural args "exists" "exist") <+>
     prettyArgs args <+>
     text "such that"
-    </> (pretty f)
+    </> pretty f
   pretty (PropertyFalse Nothing)  = text "condition is false"
   pretty (PropertyFalse (Just s)) = text s
 

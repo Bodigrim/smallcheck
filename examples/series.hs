@@ -1,4 +1,7 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 import Test.SmallCheck
 import Test.SmallCheck.Series
 
@@ -16,14 +19,12 @@ instance CoSerial m a => CoSerial m (Tree a) where
   coseries rs =
     alts0 rs >>- \z ->
     alts3 rs >>- \f ->
-    return $ \t ->
-      case t of
-        Null -> z
-        Fork t1 x t2 -> f t1 x t2
-  
+    return $ \case
+      Null -> z
+      Fork t1 x t2 -> f t1 x t2
+
 instance CoSerial m a => CoSerial m (Light a) where
   coseries rs =
     newtypeAlts rs >>- \f ->
-    return $ \l ->
-      case l of
-        Light x -> f x
+    return $ \case
+      Light x -> f x

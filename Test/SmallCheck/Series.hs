@@ -23,12 +23,15 @@
 -- the instances by hand.
 --------------------------------------------------------------------
 
-{-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
-             FlexibleContexts, ScopedTypeVariables #-}
--- The following is needed for generic instances
-{-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators,
-             TypeSynonymInstances, FlexibleInstances #-}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE DefaultSignatures     #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE Safe                  #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeOperators         #-}
 
 module Test.SmallCheck.Series (
   -- {{{
@@ -697,13 +700,13 @@ instance (Serial m a, CoSerial m a, Serial m b, CoSerial m b) => CoSerial m (a->
 
 -- show the extension of a function (in part, bounded both by
 -- the number and depth of arguments)
-instance (Serial Identity a, Show a, Show b) => Show (a->b) where
+instance (Serial Identity a, Show a, Show b) => Show (a -> b) where
   show f =
     if maxarheight == 1
     && sumarwidth + length ars * length "->;" < widthLimit then
-      "{"++(
-      concat $ intersperse ";" $ [a++"->"++r | (a,r) <- ars]
-      )++"}"
+      "{"++
+      intercalate ";" [a++"->"++r | (a,r) <- ars]
+      ++"}"
     else
       concat $ [a++"->\n"++indent r | (a,r) <- ars]
     where

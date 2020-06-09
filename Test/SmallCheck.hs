@@ -14,7 +14,9 @@
 -- to the README at
 -- <https://github.com/Bodigrim/smallcheck/blob/master/README.md>
 --------------------------------------------------------------------
+
 {-# LANGUAGE Safe #-}
+
 module Test.SmallCheck (
   -- * Constructing tests
 

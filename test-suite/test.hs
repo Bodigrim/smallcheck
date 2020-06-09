@@ -1,5 +1,8 @@
-{-# LANGUAGE BangPatterns, ScopedTypeVariables, FlexibleContexts,
-             ExistentialQuantification, RankNTypes #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+
 import Test.Tasty
 import Test.Tasty.SmallCheck (testProperty)
 import Test.Tasty.HUnit
@@ -43,7 +46,7 @@ prop_distinct
   => Proxy a -> Property m
 prop_distinct proxy = forAll $
   \d ->
-    let s = list d $ (series :: Series Identity a)
+    let s = list d (series :: Series Identity a)
     in length s == Set.size (Set.fromList s)
 
 testp :: (forall a m . (SizeTest a, Ord a, Monad m) => Proxy a -> Property m) -> TestableType -> TestTree
@@ -208,7 +211,7 @@ changeDepthTests =
 -- Actual testing
 ------------------------------
 
-main = defaultMain $ testGroup "Tests" $
+main = defaultMain $ testGroup "Tests"
   [ testGroup "Series tests" [sizeTests, distinctTests]
   , testGroup "Property tests" propertyTests
   , testCase "limit" $ do
