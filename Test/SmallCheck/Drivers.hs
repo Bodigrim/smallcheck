@@ -22,7 +22,7 @@ module Test.SmallCheck.Drivers (
 import Control.Monad (when)
 import Test.SmallCheck.Property
 import Test.SmallCheck.Property.Result
-import Text.Printf
+import Text.Printf (printf)
 import Data.IORef (readIORef, writeIORef, IORef, newIORef) -- NB: explicit import list to avoid name clash with modifyIORef'
 
 -- | A simple driver that runs the test in the 'IO' monad and prints the

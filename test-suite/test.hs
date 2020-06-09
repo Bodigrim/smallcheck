@@ -3,20 +3,19 @@
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 
-import Test.Tasty
+import Test.Tasty (TestTree, testGroup, defaultMain)
 import Test.Tasty.SmallCheck (testProperty)
-import Test.Tasty.HUnit
+import Test.Tasty.HUnit (testCase, (@?=))
 import Test.SmallCheck
 import Test.SmallCheck.Series
 import Test.SmallCheck.Drivers
-import Control.Monad.Logic
-import Data.Maybe
-import Control.Monad.Identity
-import Data.Proxy
-import Data.List
+import Control.Monad (guard)
+import Control.Monad.Identity (Identity(..))
+import Data.Proxy (Proxy(..))
+import Data.List (genericLength)
 import qualified Data.Set as Set
-import Data.Word
-import Numeric.Natural
+import Data.Word (Word)
+import Numeric.Natural (Natural)
 
 ------------------------------
 -- Auxiliary definitions

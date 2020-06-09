@@ -22,11 +22,14 @@ test-suite smallcheck-test
   build-depends:
     base <5,
     containers,
-    tagged,
     smallcheck >=1,
     mtl,
-    logict,
-    nats,
     tasty >=0.4,
     tasty-hunit >=0.4.1,
     tasty-smallcheck
+
+  if impl(ghc <7.10)
+    build-depends: nats
+
+  if impl(ghc <7.8)
+    build-depends: tagged

@@ -2,11 +2,11 @@
 
 module Test.SmallCheck.SeriesMonad where
 
-import Control.Applicative
-import Control.Monad
-import Control.Monad.Logic
-import Control.Monad.Reader
-import Control.Arrow
+import Control.Applicative (Applicative(..), Alternative(..), (<$>))
+import Control.Monad (MonadPlus(..))
+import Control.Monad.Logic (MonadLogic(..), LogicT)
+import Control.Monad.Reader (MonadTrans(..), ReaderT, runReaderT)
+import Control.Arrow (second)
 
 -- | Maximum depth of generated test values.
 --

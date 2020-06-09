@@ -40,12 +40,16 @@ module Test.SmallCheck.Property (
 import Test.SmallCheck.Series
 import Test.SmallCheck.SeriesMonad
 import Test.SmallCheck.Property.Result
-import Control.Arrow
-import Control.Monad
-import Control.Monad.Logic
-import Control.Monad.Reader
-import Control.Applicative
-import Data.Typeable
+import Control.Arrow (first)
+import Control.Monad (liftM, mzero)
+import Control.Monad.Logic (MonadLogic, runLogicT, ifte, once, msplit, lnot)
+import Control.Monad.Reader (Reader, runReader, lift, ask, local, reader)
+import Control.Applicative (pure, (<$>), (<$))
+import Data.Typeable (Typeable(..))
+
+#if !NEWTYPEABLE
+import Data.Typeable (Typeable1, mkTyConApp, mkTyCon3, typeOf)
+#endif
 
 ------------------------------
 -- Property-related types

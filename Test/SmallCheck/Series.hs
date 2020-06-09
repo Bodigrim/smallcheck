@@ -191,17 +191,18 @@ module Test.SmallCheck.Series (
   -- }}}
   ) where
 
-import Control.Monad.Logic
-import Control.Monad.Reader
-import Control.Applicative
-import Control.Monad.Identity
+import Control.Monad (liftM, guard, mzero, mplus, msum)
+import Control.Monad.Logic (MonadLogic, (>>-), interleave, msplit, observeAllT)
+import Control.Monad.Reader (ask, local)
+import Control.Applicative (empty, pure, (<$>))
+import Control.Monad.Identity (Identity(..))
 import Data.Int (Int, Int8, Int16, Int32, Int64)
-import Data.List
-import Data.Ratio
+import Data.List (intercalate)
+import Data.Ratio (Ratio, numerator, denominator, (%))
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Numeric.Natural (Natural)
 import Test.SmallCheck.SeriesMonad
-import GHC.Generics
+import GHC.Generics (Generic, (:+:)(..), (:*:)(..), C1, K1(..), M1(..), U1(..), Rep, to, from)
 
 ------------------------------
 -- Main types and classes

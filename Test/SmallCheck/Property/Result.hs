@@ -9,7 +9,7 @@ module Test.SmallCheck.Property.Result
   , Argument
   ) where
 
-import Text.PrettyPrint
+import Text.PrettyPrint (Doc, empty, hsep, nest, render, text, (<+>), ($+$), ($$))
 
 type Argument = String
 
