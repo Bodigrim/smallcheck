@@ -24,11 +24,11 @@
 --------------------------------------------------------------------
 
 {-# LANGUAGE CPP, RankNTypes, MultiParamTypeClasses, FlexibleInstances,
-             GeneralizedNewtypeDeriving, FlexibleContexts, ScopedTypeVariables #-}
+             FlexibleContexts, ScopedTypeVariables #-}
 -- The following is needed for generic instances
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators,
              TypeSynonymInstances, FlexibleInstances #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 module Test.SmallCheck.Series (
   -- {{{
@@ -519,7 +519,28 @@ instance Monad m => CoSerial m Word64 where coseries = fmap (. N) . coseries
 -- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
 -- to be generated. Generated functions of type @N a -> b@ do not distinguish
 -- different negative values of @a@.
-newtype N a = N { unN :: a } deriving (Eq, Ord, Real, Enum, Num, Integral)
+newtype N a = N { unN :: a } deriving (Eq, Ord)
+
+instance Real a => Real (N a) where
+  toRational (N x) = toRational x
+
+instance Enum a => Enum (N a) where
+  toEnum x = N (toEnum x)
+  fromEnum (N x) = fromEnum x
+
+instance Num a => Num (N a) where
+  N x + N y = N (x + y)
+  N x * N y = N (x * y)
+  negate (N x) = N (negate x)
+  abs (N x) = N (abs x)
+  signum (N x) = N (signum x)
+  fromInteger x = N (fromInteger x)
+
+instance Integral a => Integral (N a) where
+  quotRem (N x) (N y) = (N q, N r)
+    where
+      (q, r) = x `quotRem` y
+  toInteger (N x) = toInteger x
 
 instance (Num a, Enum a, Serial m a) => Serial m (N a) where
   series = generate $ \d -> take (d+1) [0..]
@@ -539,7 +560,28 @@ instance (Integral a, Monad m) => CoSerial m (N a) where
         else z
 
 -- | 'M' is a helper type to generate values of a signed type of increasing magnitude.
-newtype M a = M { unM :: a } deriving (Eq, Ord, Real, Enum, Num, Integral)
+newtype M a = M { unM :: a } deriving (Eq, Ord)
+
+instance Real a => Real (M a) where
+  toRational (M x) = toRational x
+
+instance Enum a => Enum (M a) where
+  toEnum x = M (toEnum x)
+  fromEnum (M x) = fromEnum x
+
+instance Num a => Num (M a) where
+  M x + M y = M (x + y)
+  M x * M y = M (x * y)
+  negate (M x) = M (negate x)
+  abs (M x) = M (abs x)
+  signum (M x) = M (signum x)
+  fromInteger x = M (fromInteger x)
+
+instance Integral a => Integral (M a) where
+  quotRem (M x) (M y) = (M q, M r)
+    where
+      (q, r) = x `quotRem` y
+  toInteger (M x) = toInteger x
 
 instance (Num a, Enum a, Monad m) => Serial m (M a) where
   series = others `interleave` positives
@@ -685,7 +727,28 @@ instance (Serial Identity a, Show a, Show b) => Show (a->b) where
 --------------------------------------------------------------------------
 -- | @Positive x@: guarantees that @x \> 0@.
 newtype Positive a = Positive { getPositive :: a }
- deriving (Eq, Ord, Num, Integral, Real, Enum)
+ deriving (Eq, Ord)
+
+instance Real a => Real (Positive a) where
+  toRational (Positive x) = toRational x
+
+instance Enum a => Enum (Positive a) where
+  toEnum x = Positive (toEnum x)
+  fromEnum (Positive x) = fromEnum x
+
+instance Num a => Num (Positive a) where
+  Positive x + Positive y = Positive (x + y)
+  Positive x * Positive y = Positive (x * y)
+  negate (Positive x) = Positive (negate x)
+  abs (Positive x) = Positive (abs x)
+  signum (Positive x) = Positive (signum x)
+  fromInteger x = Positive (fromInteger x)
+
+instance Integral a => Integral (Positive a) where
+  quotRem (Positive x) (Positive y) = (Positive q, Positive r)
+    where
+      (q, r) = x `quotRem` y
+  toInteger (Positive x) = toInteger x
 
 instance (Num a, Ord a, Serial m a) => Serial m (Positive a) where
   series = Positive <$> series `suchThat` (> 0)
@@ -695,7 +758,28 @@ instance Show a => Show (Positive a) where
 
 -- | @NonNegative x@: guarantees that @x \>= 0@.
 newtype NonNegative a = NonNegative { getNonNegative :: a }
- deriving (Eq, Ord, Num, Integral, Real, Enum)
+ deriving (Eq, Ord)
+
+instance Real a => Real (NonNegative a) where
+  toRational (NonNegative x) = toRational x
+
+instance Enum a => Enum (NonNegative a) where
+  toEnum x = NonNegative (toEnum x)
+  fromEnum (NonNegative x) = fromEnum x
+
+instance Num a => Num (NonNegative a) where
+  NonNegative x + NonNegative y = NonNegative (x + y)
+  NonNegative x * NonNegative y = NonNegative (x * y)
+  negate (NonNegative x) = NonNegative (negate x)
+  abs (NonNegative x) = NonNegative (abs x)
+  signum (NonNegative x) = NonNegative (signum x)
+  fromInteger x = NonNegative (fromInteger x)
+
+instance Integral a => Integral (NonNegative a) where
+  quotRem (NonNegative x) (NonNegative y) = (NonNegative q, NonNegative r)
+    where
+      (q, r) = x `quotRem` y
+  toInteger (NonNegative x) = toInteger x
 
 instance (Num a, Ord a, Serial m a) => Serial m (NonNegative a) where
   series = NonNegative <$> series `suchThat` (>= 0)

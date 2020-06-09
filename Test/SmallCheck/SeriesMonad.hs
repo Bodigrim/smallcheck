@@ -1,5 +1,5 @@
-{-# LANGUAGE Trustworthy #-} -- GeneralizedNewtypeDeriving
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE Safe #-}
+
 module Test.SmallCheck.SeriesMonad where
 
 import Control.Applicative
@@ -33,15 +33,29 @@ type Depth = Int
 -- It is also desirable that values of smaller depth come before the values
 -- of greater depth.
 newtype Series m a = Series (ReaderT Depth (LogicT m) a)
-  deriving
-    ( Functor
-    , Monad
-    , Applicative
-    , MonadPlus
-    , Alternative
-    )
 
--- This instance is written manually. Using the GND for it is not safe. 
+instance Functor (Series m) where
+  fmap f (Series x) = Series (fmap f x)
+
+instance Monad (Series m) where
+  Series x >>= f = Series (x >>= unSeries . f)
+    where
+      unSeries (Series y) = y
+  return = pure
+
+instance Applicative (Series m) where
+  pure = Series . pure
+  Series x <*> Series y = Series (x <*> y)
+
+instance MonadPlus (Series m) where
+  mzero = empty
+  mplus = (<|>)
+
+instance Alternative (Series m) where
+  empty = Series empty
+  Series x <|> Series y = Series (x <|> y)
+
+-- This instance is written manually. Using the GND for it is not safe.
 instance Monad m => MonadLogic (Series m) where
   msplit (Series a) = Series $ fmap (fmap $ second Series) $ msplit a
 
