@@ -582,9 +582,11 @@ instance (Integral i, CoSerial m i) => CoSerial m (Ratio i) where
       ratioToPair r = (numerator r, denominator r)
 
 instance Monad m => Serial m Char where
-  series = generate $ \d -> take (d+1) ['\0'..]
+  series = generate $ \d -> take (d+1) ['a'..'z']
 instance Monad m => CoSerial m Char where
-  coseries = fmap (\ f -> f . N . fromEnum) . coseries
+  coseries rs =
+    coseries rs >>- \f ->
+    return $ \c -> f (N (fromEnum c - fromEnum 'a'))
 
 instance (Serial m a, Serial m b) => Serial m (a,b) where
   series = cons2 (,)
