@@ -88,7 +88,7 @@ module Test.SmallCheck.Series (
   -- >instance Serial m a => Serial m (Light a) where
   -- >  series = newtypeCons Light
   --
-  -- For data types with more than 4 fields define @consN@ as
+  -- For data types with more than 6 fields define @consN@ as
   --
   -- >consN f = decDepth $
   -- >  f <$> series
@@ -115,7 +115,7 @@ module Test.SmallCheck.Series (
   --
   -- If @d <= 0@, no values are produced.
 
-  cons0, cons1, cons2, cons3, cons4, newtypeCons,
+  cons0, cons1, cons2, cons3, cons4, cons5, cons6, newtypeCons,
   -- * Function Generators
 
   -- | To generate functions of an application-specific argument type,
@@ -142,7 +142,7 @@ module Test.SmallCheck.Series (
   -- >      case l of
   -- >        Light x -> f x
   --
-  -- For data types with more than 4 fields define @altsN@ as
+  -- For data types with more than 6 fields define @altsN@ as
   --
   -- >altsN rs = do
   -- >  rs <- fixDepth rs
@@ -169,7 +169,7 @@ module Test.SmallCheck.Series (
   -- types) and return values produced by @s@. The depth to which the
   -- values are enumerated does not depend on the depth of inspection.
 
-  alts0, alts1, alts2, alts3, alts4, newtypeAlts,
+  alts0, alts1, alts2, alts3, alts4, alts5, alts6, newtypeAlts,
 
   -- * Basic definitions
   Depth, Series, Serial(..), CoSerial(..),
@@ -317,6 +317,12 @@ uncurry3 f (x,y,z) = f x y z
 uncurry4 :: (a->b->c->d->e) -> ((a,b,c,d)->e)
 uncurry4 f (w,x,y,z) = f w x y z
 
+uncurry5 :: (a->b->c->d->e->f) -> ((a,b,c,d,e)->f)
+uncurry5 f (v,w,x,y,z) = f v w x y z
+
+uncurry6 :: (a->b->c->d->e->f->g) -> ((a,b,c,d,e,f)->g)
+uncurry6 f (u,v,w,x,y,z) = f u v w x y z
+
 -- | Query the current depth
 getDepth :: Series m Depth
 getDepth = Series ask
@@ -396,6 +402,25 @@ cons4 f = decDepth $
     <~> series
     <~> series
 
+cons5 :: (Serial m a, Serial m b, Serial m c, Serial m d, Serial m e) =>
+         (a->b->c->d->e->f) -> Series m f
+cons5 f = decDepth $
+  f <$> series
+    <~> series
+    <~> series
+    <~> series
+    <~> series
+
+cons6 :: (Serial m a, Serial m b, Serial m c, Serial m d, Serial m e, Serial m f) =>
+         (a->b->c->d->e->f->g) -> Series m g
+cons6 f = decDepth $
+  f <$> series
+    <~> series
+    <~> series
+    <~> series
+    <~> series
+    <~> series
+
 alts0 :: Series m a -> Series m a
 alts0 s = s
 
@@ -428,6 +453,22 @@ alts4 rs = do
   decDepthChecked
     (constM $ constM $ constM $ constM rs)
     (coseries $ coseries $ coseries $ coseries rs)
+
+alts5 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d, CoSerial m e) =>
+            Series m f -> Series m (a->b->c->d->e->f)
+alts5 rs = do
+  rs <- fixDepth rs
+  decDepthChecked
+    (constM $ constM $ constM $ constM $ constM rs)
+    (coseries $ coseries $ coseries $ coseries $ coseries rs)
+
+alts6 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d, CoSerial m e, CoSerial m f) =>
+            Series m g -> Series m (a->b->c->d->e->f->g)
+alts6 rs = do
+  rs <- fixDepth rs
+  decDepthChecked
+    (constM $ constM $ constM $ constM $ constM $ constM rs)
+    (coseries $ coseries $ coseries $ coseries $ coseries $ coseries rs)
 
 -- | Same as 'alts1', but preserves the depth.
 newtypeAlts :: CoSerial m a => Series m b -> Series m (a->b)
@@ -655,6 +696,16 @@ instance (Serial m a, Serial m b, Serial m c, Serial m d) => Serial m (a,b,c,d) 
   series = cons4 (,,,)
 instance (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) => CoSerial m (a,b,c,d) where
   coseries rs = uncurry4 <$> alts4 rs
+
+instance (Serial m a, Serial m b, Serial m c, Serial m d, Serial m e) => Serial m (a,b,c,d,e) where
+  series = cons5 (,,,,)
+instance (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d, CoSerial m e) => CoSerial m (a,b,c,d,e) where
+  coseries rs = uncurry5 <$> alts5 rs
+
+instance (Serial m a, Serial m b, Serial m c, Serial m d, Serial m e, Serial m f) => Serial m (a,b,c,d,e,f) where
+  series = cons6 (,,,,,)
+instance (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d, CoSerial m e, CoSerial m f) => CoSerial m (a,b,c,d,e,f) where
+  coseries rs = uncurry6 <$> alts6 rs
 
 instance Monad m => Serial m Bool where
   series = cons0 True \/ cons0 False
