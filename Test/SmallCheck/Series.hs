@@ -181,7 +181,7 @@ module Test.SmallCheck.Series (
   genericCoseries,
 
   -- * Convenient wrappers
-  Positive(..), NonNegative(..), NonEmpty(..),
+  Positive(..), NonNegative(..), NonZero(..), NonEmpty(..),
 
   -- * Other useful definitions
   (\/), (><), (<~>), (>>-),
@@ -876,6 +876,41 @@ instance (Num a, Ord a, Serial m a) => Serial m (NonNegative a) where
 
 instance Show a => Show (NonNegative a) where
   showsPrec n (NonNegative x) = showsPrec n x
+
+-- | @NonZero x@: guarantees that @x /= 0@.
+newtype NonZero a = NonZero { getNonZero :: a }
+ deriving (Eq, Ord)
+
+instance Real a => Real (NonZero a) where
+  toRational (NonZero x) = toRational x
+
+instance (Eq a, Num a, Bounded a) => Bounded (NonZero a) where
+  minBound = let x = minBound in NonZero (if x == 0 then  1 else x)
+  maxBound = let x = maxBound in NonZero (if x == 0 then -1 else x)
+
+instance Enum a => Enum (NonZero a) where
+  toEnum x = NonZero (toEnum x)
+  fromEnum (NonZero x) = fromEnum x
+
+instance Num a => Num (NonZero a) where
+  NonZero x + NonZero y = NonZero (x + y)
+  NonZero x * NonZero y = NonZero (x * y)
+  negate (NonZero x) = NonZero (negate x)
+  abs (NonZero x) = NonZero (abs x)
+  signum (NonZero x) = NonZero (signum x)
+  fromInteger x = NonZero (fromInteger x)
+
+instance Integral a => Integral (NonZero a) where
+  quotRem (NonZero x) (NonZero y) = (NonZero q, NonZero r)
+    where
+      (q, r) = x `quotRem` y
+  toInteger (NonZero x) = toInteger x
+
+instance (Num a, Ord a, Serial m a) => Serial m (NonZero a) where
+  series = NonZero <$> series `suchThat` (/= 0)
+
+instance Show a => Show (NonZero a) where
+  showsPrec n (NonZero x) = showsPrec n x
 
 -- | @NonEmpty xs@: guarantees that @xs@ is not null
 newtype NonEmpty a = NonEmpty { getNonEmpty :: [a] }
