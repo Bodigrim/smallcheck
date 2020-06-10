@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.1.6
+-------------
+
+* Mark modules as `Safe`, not just `Trustworthy`.
+
 Version 1.1.5
 -------------
 
