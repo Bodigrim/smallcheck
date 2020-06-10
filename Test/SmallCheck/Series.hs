@@ -207,6 +207,7 @@ import Data.Functor.Compose (Compose(..))
 import Control.Monad.Identity (Identity(..))
 import Data.Int (Int, Int8, Int16, Int32, Int64)
 import Data.List (intercalate)
+import qualified Data.List.NonEmpty as NE
 import Data.Ratio (Ratio, numerator, denominator, (%))
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Foreign.C.Types (CFloat(..), CDouble(..), CChar(..), CSChar(..), CUChar(..), CShort(..), CUShort(..), CInt(..), CUInt(..), CLong(..), CULong(..), CPtrdiff(..), CSize(..), CWchar(..), CSigAtomic(..), CLLong(..), CULLong(..), CIntPtr(..), CUIntPtr(..), CIntMax(..), CUIntMax(..), CClock(..), CTime(..), CUSeconds(..), CSUSeconds(..))
@@ -740,6 +741,14 @@ instance CoSerial m a => CoSerial m [a] where
     alts0 rs >>- \y ->
     alts2 rs >>- \f ->
     return $ \xs -> case xs of [] -> y; x:xs' -> f x xs'
+
+instance Serial m a => Serial m (NE.NonEmpty a) where
+  series = cons2 (NE.:|)
+
+instance CoSerial m a => CoSerial m (NE.NonEmpty a) where
+  coseries rs =
+    alts2 rs >>- \f ->
+    return $ \(x NE.:| xs') -> f x xs'
 
 instance (CoSerial m a, Serial m b) => Serial m (a->b) where
   series = coseries series
