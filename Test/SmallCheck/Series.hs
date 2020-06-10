@@ -39,6 +39,8 @@
 {-# LANGUAGE Trustworthy           #-}
 #endif
 
+#define HASCBOOL MIN_VERSION_base(4,10,0)
+
 module Test.SmallCheck.Series (
   -- {{{
   -- * Generic instances
@@ -207,6 +209,10 @@ import Data.Int (Int, Int8, Int16, Int32, Int64)
 import Data.List (intercalate)
 import Data.Ratio (Ratio, numerator, denominator, (%))
 import Data.Word (Word, Word8, Word16, Word32, Word64)
+import Foreign.C.Types (CFloat(..), CDouble(..), CChar(..), CSChar(..), CUChar(..), CShort(..), CUShort(..), CInt(..), CUInt(..), CLong(..), CULong(..), CPtrdiff(..), CSize(..), CWchar(..), CSigAtomic(..), CLLong(..), CULLong(..), CIntPtr(..), CUIntPtr(..), CIntMax(..), CUIntMax(..), CClock(..), CTime(..), CUSeconds(..), CSUSeconds(..))
+#if HASCBOOL
+import Foreign.C.Types (CBool(..))
+#endif
 import Numeric.Natural (Natural)
 import Test.SmallCheck.SeriesMonad
 import GHC.Generics (Generic, (:+:)(..), (:*:)(..), C1, K1(..), M1(..), U1(..), Rep, to, from)
@@ -870,5 +876,144 @@ instance (Serial m a) => Serial m (NonEmpty a) where
 
 instance Show a => Show (NonEmpty a) where
   showsPrec n (NonEmpty x) = showsPrec n x
+
+-- }}}
+
+------------------------------
+-- Foreign.C.Types
+------------------------------
+-- {{{
+
+instance Monad m => Serial m CFloat where
+  series = newtypeCons CFloat
+instance Monad m => CoSerial m CFloat where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CFloat x -> f x
+
+instance Monad m => Serial m CDouble where
+  series = newtypeCons CDouble
+instance Monad m => CoSerial m CDouble where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CDouble x -> f x
+
+#if HASCBOOL
+instance Monad m => Serial m CBool where
+  series = newtypeCons CBool
+instance Monad m => CoSerial m CBool where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CBool x -> f x
+#endif
+
+instance Monad m => Serial m CChar where
+  series = newtypeCons CChar
+instance Monad m => CoSerial m CChar where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CChar x -> f x
+
+instance Monad m => Serial m CSChar where
+  series = newtypeCons CSChar
+instance Monad m => CoSerial m CSChar where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSChar x -> f x
+
+instance Monad m => Serial m CUChar where
+  series = newtypeCons CUChar
+instance Monad m => CoSerial m CUChar where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUChar x -> f x
+
+instance Monad m => Serial m CShort where
+  series = newtypeCons CShort
+instance Monad m => CoSerial m CShort where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CShort x -> f x
+
+instance Monad m => Serial m CUShort where
+  series = newtypeCons CUShort
+instance Monad m => CoSerial m CUShort where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUShort x -> f x
+
+instance Monad m => Serial m CInt where
+  series = newtypeCons CInt
+instance Monad m => CoSerial m CInt where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CInt x -> f x
+
+instance Monad m => Serial m CUInt where
+  series = newtypeCons CUInt
+instance Monad m => CoSerial m CUInt where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUInt x -> f x
+
+instance Monad m => Serial m CLong where
+  series = newtypeCons CLong
+instance Monad m => CoSerial m CLong where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CLong x -> f x
+
+instance Monad m => Serial m CULong where
+  series = newtypeCons CULong
+instance Monad m => CoSerial m CULong where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CULong x -> f x
+
+instance Monad m => Serial m CPtrdiff where
+  series = newtypeCons CPtrdiff
+instance Monad m => CoSerial m CPtrdiff where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CPtrdiff x -> f x
+
+instance Monad m => Serial m CSize where
+  series = newtypeCons CSize
+instance Monad m => CoSerial m CSize where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSize x -> f x
+
+instance Monad m => Serial m CWchar where
+  series = newtypeCons CWchar
+instance Monad m => CoSerial m CWchar where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CWchar x -> f x
+
+instance Monad m => Serial m CSigAtomic where
+  series = newtypeCons CSigAtomic
+instance Monad m => CoSerial m CSigAtomic where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSigAtomic x -> f x
+
+instance Monad m => Serial m CLLong where
+  series = newtypeCons CLLong
+instance Monad m => CoSerial m CLLong where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CLLong x -> f x
+
+instance Monad m => Serial m CULLong where
+  series = newtypeCons CULLong
+instance Monad m => CoSerial m CULLong where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CULLong x -> f x
+
+instance Monad m => Serial m CIntPtr where
+  series = newtypeCons CIntPtr
+instance Monad m => CoSerial m CIntPtr where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CIntPtr x -> f x
+
+instance Monad m => Serial m CUIntPtr where
+  series = newtypeCons CUIntPtr
+instance Monad m => CoSerial m CUIntPtr where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUIntPtr x -> f x
+
+instance Monad m => Serial m CIntMax where
+  series = newtypeCons CIntMax
+instance Monad m => CoSerial m CIntMax where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CIntMax x -> f x
+
+instance Monad m => Serial m CUIntMax where
+  series = newtypeCons CUIntMax
+instance Monad m => CoSerial m CUIntMax where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUIntMax x -> f x
+
+instance Monad m => Serial m CClock where
+  series = newtypeCons CClock
+instance Monad m => CoSerial m CClock where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CClock x -> f x
+
+instance Monad m => Serial m CTime where
+  series = newtypeCons CTime
+instance Monad m => CoSerial m CTime where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CTime x -> f x
+
+instance Monad m => Serial m CUSeconds where
+  series = newtypeCons CUSeconds
+instance Monad m => CoSerial m CUSeconds where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUSeconds x -> f x
+
+instance Monad m => Serial m CSUSeconds where
+  series = newtypeCons CSUSeconds
+instance Monad m => CoSerial m CSUSeconds where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSUSeconds x -> f x
 
 -- }}}
