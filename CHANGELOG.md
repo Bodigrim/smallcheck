@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.1.7
+-------------
+
+* Fix overlapping instances of `GSerial`.
+
 Version 1.1.6
 -------------
 
