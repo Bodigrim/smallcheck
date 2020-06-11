@@ -45,8 +45,10 @@ library
     base >=4.5 && <5,
     mtl,
     logict,
-    ghc-prim >=0.2,
     pretty
 
   if impl(ghc <7.10)
     build-depends: nats
+
+  if impl(ghc <7.6)
+    build-depends: ghc-prim >=0.2

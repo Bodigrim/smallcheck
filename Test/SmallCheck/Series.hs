@@ -29,9 +29,15 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeOperators         #-}
+
+#if MIN_VERSION_base(4,8,0)
+{-# LANGUAGE Safe                  #-}
+#else
+{-# LANGUAGE OverlappingInstances  #-}
+{-# LANGUAGE Trustworthy           #-}
+#endif
 
 module Test.SmallCheck.Series (
   -- {{{
@@ -438,7 +444,7 @@ class GSerial m f where
 class GCoSerial m f where
   gCoseries :: Series m b -> Series m (f a -> b)
 
-instance GSerial m f => GSerial m (M1 i c f) where
+instance {-# OVERLAPPABLE #-} GSerial m f => GSerial m (M1 i c f) where
   gSeries = M1 <$> gSeries
   {-# INLINE gSeries #-}
 instance GCoSerial m f => GCoSerial m (M1 i c f) where
@@ -481,7 +487,7 @@ instance (Monad m, GCoSerial m a, GCoSerial m b) => GCoSerial m (a :+: b) where
       R1 y -> g y
   {-# INLINE gCoseries #-}
 
-instance GSerial m f => GSerial m (C1 c f) where
+instance {-# OVERLAPPING #-} GSerial m f => GSerial m (C1 c f) where
   gSeries = M1 <$> decDepth gSeries
   {-# INLINE gSeries #-}
 -- }}}

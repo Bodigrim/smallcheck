@@ -1,5 +1,8 @@
+{-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 
@@ -15,6 +18,7 @@ import Data.Proxy (Proxy(..))
 import Data.List (genericLength)
 import qualified Data.Set as Set
 import Data.Word (Word)
+import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 
 ------------------------------
@@ -28,6 +32,10 @@ data TestableType = forall a . (Ord a, SizeTest a) => TestableType String (Proxy
 
 count :: Depth -> Series Identity a -> Integer
 count d a = genericLength $ list d a
+
+-- Just checking that deriving via Generic works
+data MyData = MyData Int deriving (Generic)
+instance Monad m => Serial m MyData
 
 ------------------------------
 -- Kinds of tests
