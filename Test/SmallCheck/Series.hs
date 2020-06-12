@@ -206,6 +206,7 @@ import Control.Monad (liftM, guard, mzero, mplus, msum)
 import Control.Monad.Logic (MonadLogic, (>>-), interleave, msplit, observeAllT)
 import Control.Monad.Reader (ask, local)
 import Control.Applicative (empty, pure, (<$>))
+import Data.Complex (Complex(..))
 import Data.Foldable (Foldable)
 import Data.Functor.Compose (Compose(..))
 import Data.Void (Void, absurd)
@@ -762,6 +763,14 @@ instance CoSerial m a => CoSerial m (NE.NonEmpty a) where
   coseries rs =
     alts2 rs >>- \f ->
     return $ \(x NE.:| xs') -> f x xs'
+
+instance Serial m a => Serial m (Complex a) where
+  series = cons2 (:+)
+
+instance CoSerial m a => CoSerial m (Complex a) where
+  coseries rs =
+    alts2 rs >>- \f ->
+    return $ \(x :+ xs') -> f x xs'
 
 instance Monad m => Serial m Void where
   series = mzero
