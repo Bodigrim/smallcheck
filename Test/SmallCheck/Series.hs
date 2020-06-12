@@ -25,6 +25,9 @@
 
 {-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DefaultSignatures     #-}
+{-# LANGUAGE DeriveFoldable        #-}
+{-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE DeriveTraversable     #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -203,12 +206,14 @@ import Control.Monad (liftM, guard, mzero, mplus, msum)
 import Control.Monad.Logic (MonadLogic, (>>-), interleave, msplit, observeAllT)
 import Control.Monad.Reader (ask, local)
 import Control.Applicative (empty, pure, (<$>))
+import Data.Foldable (Foldable)
 import Data.Functor.Compose (Compose(..))
 import Control.Monad.Identity (Identity(..))
 import Data.Int (Int, Int8, Int16, Int32, Int64)
 import Data.List (intercalate)
 import qualified Data.List.NonEmpty as NE
 import Data.Ratio (Ratio, numerator, denominator, (%))
+import Data.Traversable (Traversable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Foreign.C.Types (CFloat(..), CDouble(..), CChar(..), CSChar(..), CUChar(..), CShort(..), CUShort(..), CInt(..), CUInt(..), CLong(..), CULong(..), CPtrdiff(..), CSize(..), CWchar(..), CSigAtomic(..), CLLong(..), CULLong(..), CIntPtr(..), CUIntPtr(..), CIntMax(..), CUIntMax(..), CClock(..), CTime(..), CUSeconds(..), CSUSeconds(..))
 #if HASCBOOL
@@ -809,7 +814,7 @@ instance (Monad m, CoSerial m (f (g a))) => CoSerial m (Compose f g a) where
 --------------------------------------------------------------------------
 -- | @Positive x@: guarantees that @x \> 0@.
 newtype Positive a = Positive { getPositive :: a }
- deriving (Eq, Ord)
+ deriving (Eq, Ord, Functor, Foldable, Traversable)
 
 instance Real a => Real (Positive a) where
   toRational (Positive x) = toRational x
@@ -844,7 +849,7 @@ instance Show a => Show (Positive a) where
 
 -- | @NonNegative x@: guarantees that @x \>= 0@.
 newtype NonNegative a = NonNegative { getNonNegative :: a }
- deriving (Eq, Ord)
+ deriving (Eq, Ord, Functor, Foldable, Traversable)
 
 instance Real a => Real (NonNegative a) where
   toRational (NonNegative x) = toRational x
@@ -879,7 +884,7 @@ instance Show a => Show (NonNegative a) where
 
 -- | @NonZero x@: guarantees that @x /= 0@.
 newtype NonZero a = NonZero { getNonZero :: a }
- deriving (Eq, Ord)
+ deriving (Eq, Ord, Functor, Foldable, Traversable)
 
 instance Real a => Real (NonZero a) where
   toRational (NonZero x) = toRational x
