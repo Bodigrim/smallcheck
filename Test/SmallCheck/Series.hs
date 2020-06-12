@@ -208,6 +208,7 @@ import Control.Monad.Reader (ask, local)
 import Control.Applicative (empty, pure, (<$>))
 import Data.Foldable (Foldable)
 import Data.Functor.Compose (Compose(..))
+import Data.Void (Void, absurd)
 import Control.Monad.Identity (Identity(..))
 import Data.Int (Int, Int8, Int16, Int32, Int64)
 import Data.List (intercalate)
@@ -221,7 +222,7 @@ import Foreign.C.Types (CBool(..))
 #endif
 import Numeric.Natural (Natural)
 import Test.SmallCheck.SeriesMonad
-import GHC.Generics (Generic, (:+:)(..), (:*:)(..), C1, K1(..), M1(..), U1(..), Rep, to, from)
+import GHC.Generics (Generic, (:+:)(..), (:*:)(..), C1, K1(..), M1(..), U1(..), V1(..), Rep, to, from)
 
 ------------------------------
 -- Main types and classes
@@ -519,6 +520,13 @@ instance GCoSerial m U1 where
   gCoseries rs = constM rs
   {-# INLINE gCoseries #-}
 
+instance GSerial m V1 where
+  gSeries = mzero
+  {-# INLINE gSeries #-}
+instance GCoSerial m V1 where
+  gCoseries = const $ return (\a -> a `seq` let x = x in x)
+  {-# INLINE gCoseries #-}
+
 instance (Monad m, GSerial m a, GSerial m b) => GSerial m (a :*: b) where
   gSeries = (:*:) <$> gSeries <~> gSeries
   {-# INLINE gSeries #-}
@@ -754,6 +762,12 @@ instance CoSerial m a => CoSerial m (NE.NonEmpty a) where
   coseries rs =
     alts2 rs >>- \f ->
     return $ \(x NE.:| xs') -> f x xs'
+
+instance Monad m => Serial m Void where
+  series = mzero
+
+instance Monad m => CoSerial m Void where
+  coseries = const $ return absurd
 
 instance (CoSerial m a, Serial m b) => Serial m (a->b) where
   series = coseries series

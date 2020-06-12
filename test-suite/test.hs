@@ -37,6 +37,9 @@ count d a = genericLength $ list d a
 data MyData = MyData Int deriving (Generic)
 instance Monad m => Serial m MyData
 
+data MyVoid deriving (Generic)
+instance Monad m => Serial m MyVoid
+
 ------------------------------
 -- Kinds of tests
 ------------------------------
