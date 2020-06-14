@@ -1,6 +1,21 @@
 Changes
 =======
 
+Version 1.2.0
+-------------
+
+* Add `Serial` and `CoSerial` instances for
+  `(,,,,)`, `(,,,,,)`,
+  `Compose`,
+  `Foreign.C.Types`,
+  `Data.List.NonEmpty`,
+  `Void`,
+  `Complex`.
+* Add `Bounded`, `Functor`, `Foldable` and `Traversable` instances
+  for `Positive` and `NonNegative` wrappers.
+* Add `NonZero` wrapper for non-zero integers.
+* Add `cons5`, `cons6`, `alts5`, `alts6`.
+
 Version 1.1.7
 -------------
 
