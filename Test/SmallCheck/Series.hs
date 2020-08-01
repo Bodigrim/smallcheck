@@ -736,6 +736,18 @@ instance Monad m => CoSerial m Bool where
     rs >>- \r2 ->
     return $ \x -> if x then r1 else r2
 
+instance Monad m => Serial m Ordering where
+  series = cons0 LT \/ cons0 EQ \/ cons0 GT
+instance Monad m => CoSerial m Ordering where
+  coseries rs =
+    rs >>- \r1 ->
+    rs >>- \r2 ->
+    rs >>- \r3 ->
+    pure $ \x -> case x of
+        LT -> r1
+        EQ -> r2
+        GT -> r3
+
 instance (Serial m a) => Serial m (Maybe a) where
   series = cons0 Nothing \/ cons1 Just
 instance (CoSerial m a) => CoSerial m (Maybe a) where
