@@ -1,6 +1,11 @@
 Changes
 =======
 
+Unreleased
+-------------
+
+* Add `Serial` and `CoSerial` instances for `Ordering`.
+
 Version 1.2.0
 -------------
 
