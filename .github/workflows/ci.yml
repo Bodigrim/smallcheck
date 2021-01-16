@@ -1,0 +1,81 @@
+name: ci
+on:
+  - push
+  - pull_request
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-old:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest]
+        ghc: ['7.0.4', '7.2.2', '7.4.2', '7.6.3', '7.8.4']
+    steps:
+    - uses: actions/checkout@v2
+    - name: Update cabal package database
+      run: cabal update
+    - uses: actions/cache@v2
+      name: Cache cabal stuff
+      with:
+        path: |
+          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+          dist-newstyle
+        key: ${{ runner.os }}-${{ matrix.ghc }}
+    - name: Install GHC
+      run: |
+        sudo add-apt-repository ppa:hvr/ghc -y
+        sudo apt-get update
+        sudo apt-get install ghc-${{ matrix.ghc }}
+    - name: Build
+      run: |
+        cabal sdist -z -o .
+        cabal get smallcheck-*.tar.gz
+        cd smallcheck-*/
+        cabal build -w /opt/ghc/bin/ghc-${{ matrix.ghc }} all
+    - name: Test
+      if: ${{ matrix.ghc >= '7.4' }}
+      run: |
+        cabal test -w /opt/ghc/bin/ghc-${{ matrix.ghc }} --test-show-details=direct all
+    - name: Haddock
+      run: cabal haddock -w /opt/ghc/bin/ghc-${{ matrix.ghc }}
+
+  build:
+    needs: build-old
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest]
+        ghc: ['7.10', '8.0', '8.2', '8.4', '8.6', '8.8', '8.10']
+    steps:
+    - uses: actions/checkout@v2
+    - uses: haskell/actions/setup@v1
+      id: setup-haskell-cabal
+      with:
+        ghc-version: ${{ matrix.ghc }}
+    - name: Update cabal package database
+      run: cabal update
+    - uses: actions/cache@v2
+      name: Cache cabal stuff
+      with:
+        path: |
+          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+          dist-newstyle
+        key: ${{ runner.os }}-${{ matrix.ghc }}
+    - name: Build
+      run: |
+        cabal sdist -z -o .
+        cabal get smallcheck-*.tar.gz
+        cd smallcheck-*/
+        cabal build all
+    - name: Test
+      if: ${{ matrix.ghc >= '7.4' }}
+      run: |
+        cabal test --test-show-details=direct all
+    - name: Haddock
+      run: cabal haddock
