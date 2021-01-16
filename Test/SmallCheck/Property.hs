@@ -24,7 +24,9 @@
 {-# LANGUAGE Safe #-}
 #else
 -- Trustworthy is needed because of the hand-written Typeable instance
+#if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Trustworthy #-}
+#endif
 #endif
 
 module Test.SmallCheck.Property (
@@ -48,7 +50,12 @@ import Control.Applicative (pure, (<$>), (<$))
 import Data.Typeable (Typeable(..))
 
 #if !NEWTYPEABLE
-import Data.Typeable (Typeable1, mkTyConApp, mkTyCon3, typeOf)
+import Data.Typeable (Typeable1, mkTyConApp, typeOf)
+#if MIN_VERSION_base(4,4,0)
+import Data.Typeable (mkTyCon3)
+#else
+import Data.Typeable (mkTyCon)
+#endif
 #endif
 
 ------------------------------
@@ -92,7 +99,11 @@ instance Typeable1 m => Typeable (Property m)
   where
     typeOf _ =
       mkTyConApp
+#if MIN_VERSION_base(4,4,0)
         (mkTyCon3 "smallcheck" "Test.SmallCheck.Property" "Property")
+#else
+        (mkTyCon "smallcheck Test.SmallCheck.Property Property")
+#endif
         [typeOf (undefined :: m ())]
 #endif
 

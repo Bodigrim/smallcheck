@@ -15,7 +15,10 @@
 -- <https://github.com/Bodigrim/smallcheck/blob/master/README.md>
 --------------------------------------------------------------------
 
+{-# LANGUAGE CPP #-}
+#if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
+#endif
 
 module Test.SmallCheck (
   -- * Constructing tests

@@ -24,7 +24,9 @@
 --------------------------------------------------------------------
 
 {-# LANGUAGE CPP                   #-}
+#if __GLASGOW_HASKELL__ >= 702
 {-# LANGUAGE DefaultSignatures     #-}
+#endif
 {-# LANGUAGE DeriveFoldable        #-}
 {-# LANGUAGE DeriveFunctor         #-}
 {-# LANGUAGE DeriveTraversable     #-}
@@ -39,7 +41,9 @@
 {-# LANGUAGE Safe                  #-}
 #else
 {-# LANGUAGE OverlappingInstances  #-}
+#if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Trustworthy           #-}
+#endif
 #endif
 
 #define HASCBOOL MIN_VERSION_base(4,10,0)
@@ -179,9 +183,11 @@ module Test.SmallCheck.Series (
   -- * Basic definitions
   Depth, Series, Serial(..), CoSerial(..),
 
+#if __GLASGOW_HASKELL__ >= 702
   -- * Generic implementations
   genericSeries,
   genericCoseries,
+#endif
 
   -- * Convenient wrappers
   Positive(..), NonNegative(..), NonZero(..), NonEmpty(..),
@@ -205,7 +211,7 @@ module Test.SmallCheck.Series (
 import Control.Monad (liftM, guard, mzero, mplus, msum)
 import Control.Monad.Logic (MonadLogic, (>>-), interleave, msplit, observeAllT)
 import Control.Monad.Reader (ask, local)
-import Control.Applicative (empty, pure, (<$>))
+import Control.Applicative (empty, pure, (<$>), (<|>))
 import Data.Complex (Complex(..))
 import Data.Foldable (Foldable)
 import Data.Functor.Compose (Compose(..))
@@ -217,13 +223,18 @@ import qualified Data.List.NonEmpty as NE
 import Data.Ratio (Ratio, numerator, denominator, (%))
 import Data.Traversable (Traversable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
-import Foreign.C.Types (CFloat(..), CDouble(..), CChar(..), CSChar(..), CUChar(..), CShort(..), CUShort(..), CInt(..), CUInt(..), CLong(..), CULong(..), CPtrdiff(..), CSize(..), CWchar(..), CSigAtomic(..), CLLong(..), CULLong(..), CIntPtr(..), CUIntPtr(..), CIntMax(..), CUIntMax(..), CClock(..), CTime(..), CUSeconds(..), CSUSeconds(..))
+import Foreign.C.Types (CFloat(..), CDouble(..), CChar(..), CSChar(..), CUChar(..), CShort(..), CUShort(..), CInt(..), CUInt(..), CLong(..), CULong(..), CPtrdiff(..), CSize(..), CWchar(..), CSigAtomic(..), CLLong(..), CULLong(..), CIntPtr(..), CUIntPtr(..), CIntMax(..), CUIntMax(..), CClock(..), CTime(..))
+#if __GLASGOW_HASKELL__ >= 702
+import Foreign.C.Types (CUSeconds(..), CSUSeconds(..))
+#endif
 #if HASCBOOL
 import Foreign.C.Types (CBool(..))
 #endif
 import Numeric.Natural (Natural)
 import Test.SmallCheck.SeriesMonad
+#if __GLASGOW_HASKELL__ >= 702
 import GHC.Generics (Generic, (:+:)(..), (:*:)(..), C1, K1(..), M1(..), U1(..), V1(..), Rep, to, from)
+#endif
 
 ------------------------------
 -- Main types and classes
@@ -233,13 +244,17 @@ import GHC.Generics (Generic, (:+:)(..), (:*:)(..), C1, K1(..), M1(..), U1(..), 
 class Monad m => Serial m a where
   series   :: Series m a
 
+#if __GLASGOW_HASKELL__ >= 704
   default series :: (Generic a, GSerial m (Rep a)) => Series m a
   series = genericSeries
+#endif
 
+#if __GLASGOW_HASKELL__ >= 702
 genericSeries
   :: (Monad m, Generic a, GSerial m (Rep a))
   => Series m a
 genericSeries = to <$> gSeries
+#endif
 
 class Monad m => CoSerial m a where
   -- | A proper 'coseries' implementation should pass the depth unchanged to
@@ -247,13 +262,18 @@ class Monad m => CoSerial m a where
   -- functions non-uniform in their arguments.
   coseries :: Series m b -> Series m (a->b)
 
+#if __GLASGOW_HASKELL__ >= 704
   default coseries :: (Generic a, GCoSerial m (Rep a)) => Series m b -> Series m (a->b)
   coseries = genericCoseries
+#endif
 
+#if __GLASGOW_HASKELL__ >= 702
 genericCoseries
   :: (Monad m, Generic a, GCoSerial m (Rep a))
   => Series m b -> Series m (a->b)
 genericCoseries rs = (. from) <$> gCoseries rs
+#endif
+
 -- }}}
 
 ------------------------------
@@ -272,13 +292,12 @@ generate f = do
 limit :: forall m a . Monad m => Int -> Series m a -> Series m a
 limit n0 (Series s) = Series $ go n0 s
   where
-    go :: MonadLogic ml => Int -> ml b -> ml b
-    go 0 _ = mzero
+    go 0 _ = empty
     go n mb1 = do
       cons :: Maybe (b, ml b) <- msplit mb1
       case cons of
-        Nothing -> mzero
-        Just (b, mb2) -> return b `mplus` go (n-1) mb2
+        Nothing -> empty
+        Just (b, mb2) -> return b <|> go (n-1) mb2
 
 suchThat :: Series m a -> (a -> Bool) -> Series m a
 suchThat s p = s >>= \x -> if p x then pure x else empty
@@ -307,7 +326,6 @@ list :: Depth -> Series Identity a -> [a]
 list d s = runIdentity $ observeAllT $ runSeries d s
 
 -- | Monadic version of 'list'
-listM :: Monad m => Depth -> Series m a -> m [a]
 listM d s = observeAllT $ runSeries d s
 
 -- | Sum (union) of series
@@ -500,6 +518,7 @@ class GSerial m f where
 class GCoSerial m f where
   gCoseries :: Series m b -> Series m (f a -> b)
 
+#if __GLASGOW_HASKELL__ >= 702
 instance {-# OVERLAPPABLE #-} GSerial m f => GSerial m (M1 i c f) where
   gSeries = M1 <$> gSeries
   {-# INLINE gSeries #-}
@@ -553,6 +572,8 @@ instance (Monad m, GCoSerial m a, GCoSerial m b) => GCoSerial m (a :+: b) where
 instance {-# OVERLAPPING #-} GSerial m f => GSerial m (C1 c f) where
   gSeries = M1 <$> decDepth gSeries
   {-# INLINE gSeries #-}
+#endif
+
 -- }}}
 
 ------------------------------
@@ -592,7 +613,7 @@ instance Monad m => CoSerial m Word64 where coseries = fmap (. N) . coseries
 -- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
 -- to be generated. Generated functions of type @N a -> b@ do not distinguish
 -- different negative values of @a@.
-newtype N a = N { unN :: a } deriving (Eq, Ord)
+newtype N a = N { unN :: a } deriving (Eq, Ord, Show)
 
 instance Real a => Real (N a) where
   toRational (N x) = toRational x
@@ -633,7 +654,7 @@ instance (Integral a, Monad m) => CoSerial m (N a) where
         else z
 
 -- | 'M' is a helper type to generate values of a signed type of increasing magnitude.
-newtype M a = M { unM :: a } deriving (Eq, Ord)
+newtype M a = M { unM :: a } deriving (Eq, Ord, Show)
 
 instance Real a => Real (M a) where
   toRational (M x) = toRational x
@@ -776,10 +797,18 @@ instance CoSerial m a => CoSerial m (NE.NonEmpty a) where
     alts2 rs >>- \f ->
     return $ \(x NE.:| xs') -> f x xs'
 
+#if MIN_VERSION_base(4,4,0)
 instance Serial m a => Serial m (Complex a) where
+#else
+instance (RealFloat a, Serial m a) => Serial m (Complex a) where
+#endif
   series = cons2 (:+)
 
+#if MIN_VERSION_base(4,4,0)
 instance CoSerial m a => CoSerial m (Complex a) where
+#else
+instance (RealFloat a, CoSerial m a) => CoSerial m (Complex a) where
+#endif
   coseries rs =
     alts2 rs >>- \f ->
     return $ \(x :+ xs') -> f x xs'
@@ -968,6 +997,7 @@ instance Show a => Show (NonEmpty a) where
 ------------------------------
 -- {{{
 
+#if MIN_VERSION_base(4,5,0)
 instance Monad m => Serial m CFloat where
   series = newtypeCons CFloat
 instance Monad m => CoSerial m CFloat where
@@ -1099,5 +1129,6 @@ instance Monad m => Serial m CSUSeconds where
   series = newtypeCons CSUSeconds
 instance Monad m => CoSerial m CSUSeconds where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSUSeconds x -> f x
+#endif
 
 -- }}}

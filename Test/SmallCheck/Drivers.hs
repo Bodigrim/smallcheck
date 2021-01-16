@@ -9,8 +9,11 @@
 -- run SmallCheck tests
 --------------------------------------------------------------------
 
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE Safe             #-}
+#if __GLASGOW_HASKELL__ >= 704
+{-# LANGUAGE Safe #-}
+#endif
 
 module Test.SmallCheck.Drivers (
   smallCheck, smallCheckM, smallCheckWithHook,

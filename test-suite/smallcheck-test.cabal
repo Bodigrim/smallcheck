@@ -29,7 +29,10 @@ test-suite smallcheck-test
     tasty-smallcheck
 
   if impl(ghc <7.10)
-    build-depends: nats
+    build-depends:
+      nats,
+      -- tasty-smallcheck-0.8.2 does not support GHC 7.8
+      tasty-smallcheck < 0.8.2
 
   if impl(ghc <7.8)
     build-depends: tagged
