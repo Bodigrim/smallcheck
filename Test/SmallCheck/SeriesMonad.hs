@@ -22,15 +22,15 @@ type Depth = Int
 -- | 'Series' is a `MonadLogic` action that enumerates values of a certain
 -- type, up to some depth.
 --
--- The depth bound is tracked in the 'SC' monad and can be extracted using
--- 'getDepth' and changed using 'localDepth'.
+-- The depth bound is tracked in the 'Series' monad and can be extracted using
+-- 'Test.SmallCheck.Series.getDepth' and changed using 'Test.SmallCheck.Series.localDepth'.
 --
 -- To manipulate series at the lowest level you can use its 'Monad',
 -- 'MonadPlus' and 'MonadLogic' instances. This module provides some
 -- higher-level combinators which simplify creating series.
 --
 -- A proper 'Series' should be monotonic with respect to the depth — i.e.
--- @localDepth (+1) s@ should emit all the values that @s@ emits (and
+-- 'Test.SmallCheck.Series.localDepth' @(+1)@ @s@ should emit all the values that @s@ emits (and
 -- possibly some more).
 --
 -- It is also desirable that values of smaller depth come before the values

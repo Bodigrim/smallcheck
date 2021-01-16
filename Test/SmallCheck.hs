@@ -34,11 +34,11 @@ module Test.SmallCheck (
   -- context for function arguments. Depending on the quantification
   -- context, the test @\\x y -> p x y@ may be equivalent to:
   --
-  -- * ∀ x, y. p x y ('forAll')
+  -- * \( \forall x, y\colon p\, x \, y \) ('forAll'),
   --
-  -- * ∃ x, y: p x y ('exists')
+  -- * \( \exists x, y\colon p\, x \, y \) ('exists'),
   --
-  -- * ∃! x, y: p x y ('existsUnique')
+  -- * \( \exists! x, y\colon p\, x \, y \) ('existsUnique').
   --
   -- The quantification context affects all the variables immediately
   -- following the quantification operator, also extending past 'over',
@@ -51,21 +51,29 @@ module Test.SmallCheck (
   -- ** Examples
 
   -- |
-  -- * @\\x y -> p x y@ means ∀ x, y. p x y
+  -- * @\\x y -> p x y@ means
+  --   \( \forall x, y\colon p\, x \, y \).
   --
-  -- * @'exists' $ \\x y -> p x y@ means ∃ x, y: p x y
+  -- * @'exists' $ \\x y -> p x y@ means
+  --   \( \exists x, y\colon p\, x \, y \).
   --
-  -- * @'exists' $ \\x -> 'forAll' $ \\y -> p x y@ means ∃ x: ∀ y. p x y
+  -- * @'exists' $ \\x -> 'forAll' $ \\y -> p x y@ means
+  --   \( \exists x\colon \forall y\colon p \, x \, y  \).
   --
-  -- * @'existsUnique' $ \\x y -> p x y@ means ∃! (x, y): p x y
+  -- * @'existsUnique' $ \\x y -> p x y@ means
+  --   \( \exists! x, y\colon p\, x \, y \).
   --
-  -- * @'existsUnique' $ \\x -> 'over' s $ \\y -> p x y@ means ∃! (x, y): y ∈ s && p x y
+  -- * @'existsUnique' $ \\x -> 'over' s $ \\y -> p x y@ means
+  --   \( \exists! x, y \colon y \in s \wedge p \, x \, y \).
   --
-  -- * @'existsUnique' $ \\x -> 'monadic' $ \\y -> p x y@ means ∃! x: ∀ y. [p x y]
+  -- * @'existsUnique' $ \\x -> 'monadic' $ \\y -> p x y@ means
+  --   \( \exists! x \colon \forall y \colon [p \, x \, y] \).
   --
-  -- * @'existsUnique' $ \\x -> 'existsUnique' $ \\y -> p x y@ means ∃! x: ∃! y: p x y
+  -- * @'existsUnique' $ \\x -> 'existsUnique' $ \\y -> p x y@ means
+  --   \( \exists! x \colon \exists! y \colon p \, x \, y \).
   --
-  -- * @'exists' $ \\x -> (\\y -> p y) '==>' (\\z -> q z)@ means ∃ x: (∀ y. p y) => (∀ z. p z)
+  -- * @'exists' $ \\x -> (\\y -> p y) '==>' (\\z -> q z)@ means
+  --   \( \exists x \colon (\forall y\colon p\, y) \implies (\forall z\colon q\, z)  \).
 
   forAll,
   exists,

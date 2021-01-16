@@ -63,7 +63,7 @@ import Data.Typeable (mkTyCon)
 ------------------------------
 --{{{
 
--- | The type of properties over the monad @m@
+-- | The type of properties over the monad @m@.
 newtype Property m = Property { unProperty :: Reader (Env m) (PropertySeries m) }
 #if NEWTYPEABLE
   deriving Typeable
@@ -152,7 +152,7 @@ over
   => Series m a -> (a -> b) -> Property m
 over = testFunction
 
--- | Execute a monadic test
+-- | Execute a monadic test.
 monadic :: Testable m a => m a -> Property m
 monadic a =
   Property $ reader $ \env ->
@@ -172,7 +172,7 @@ monadic a =
 
 -- | Class of tests that can be run in a monad. For pure tests, it is
 -- recommended to keep their types polymorphic in @m@ rather than
--- specialising it to 'Identity'.
+-- specialising it to 'Data.Functor.Identity'.
 class Monad m => Testable m a where
   test :: a -> Property m
 
@@ -297,23 +297,27 @@ quantify q (Property a) =
 freshContext :: Testable m a => a -> Property m
 freshContext = forAll
 
--- | Set the universal quantification context
+-- | Set the universal quantification context.
 forAll :: Testable m a => a -> Property m
 forAll = quantify Forall . test
 
--- | Set the existential quantification context
+-- | Set the existential quantification context.
 exists :: Testable m a => a -> Property m
 exists = quantify Exists . test
 
 -- | Set the uniqueness quantification context.
 --
--- Bear in mind that ∃! (x, y): p x y is not the same as ∃! x: ∃! y: p x y.
+-- Bear in mind that \( \exists! x, y\colon p\, x \, y \)
+-- is not the same as \( \exists! x \colon \exists! y \colon p \, x \, y \).
 --
--- For example, ∃! x: ∃! y: |x| = |y| is true (it holds only when x=0), but ∃! (x,y): |x| = |y| is false (there are many such pairs).
+-- For example, \( \exists! x \colon \exists! y \colon |x| = |y| \)
+-- is true (it holds only when \(x=y=0\)),
+-- but \( \exists! x, y \colon |x| = |y| \) is false
+-- (there are many such pairs).
 --
 -- As is customary in mathematics,
 -- @'existsUnique' $ \\x y -> p x y@ is equivalent to
--- @'existsUnique' $ \\(x,y) -> p x y@ and not to
+-- @'existsUnique' $ \\(x, y) -> p x y@ and not to
 -- @'existsUnique' $ \\x -> 'existsUnique' $ \\y -> p x y@
 -- (the latter, of course, may be explicitly written when desired).
 --
