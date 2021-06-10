@@ -60,3 +60,6 @@ library
   if impl(ghc <7.6)
     build-depends:
       ghc-prim >=0.2
+
+  if impl(ghc >= 8.0)
+    ghc-options:    -Wcompat
