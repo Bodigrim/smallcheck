@@ -44,7 +44,7 @@ library
   build-depends:
     base >=4.3 && <5,
     mtl,
-    logict,
+    logict >= 0.5,
     pretty
 
   if impl(ghc <8.0)
