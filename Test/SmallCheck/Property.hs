@@ -16,6 +16,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
 
 -- Are we using new, polykinded and derivable Typeable yet?
 #define NEWTYPEABLE MIN_VERSION_base(4,7,0)
