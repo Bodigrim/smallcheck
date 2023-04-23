@@ -30,6 +30,8 @@ import Data.IORef (readIORef, writeIORef, IORef, newIORef) -- NB: explicit impor
 
 -- | A simple driver that runs the test in the 'IO' monad and prints the
 -- results.
+--
+-- @since 1.0
 smallCheck :: Testable IO a => Depth -> a -> IO ()
 smallCheck d a = do
   ((good, bad), mbEx) <- runTestWithStats d a
@@ -73,6 +75,8 @@ modifyIORef' ref f = do
 -- * You need to run a test in a monad different from 'IO'
 --
 -- * You need to analyse the results rather than just print them
+--
+-- @since 1.0
 smallCheckM :: Testable m a => Depth -> a -> m (Maybe PropertyFailure)
 smallCheckM d = smallCheckWithHook d (const $ return ())
 
@@ -81,5 +85,7 @@ smallCheckM d = smallCheckWithHook d (const $ return ())
 --
 -- Useful for applications that want to report progress information to the
 -- user.
+--
+-- @since 1.0
 smallCheckWithHook :: Testable m a => Depth -> (TestQuality -> m ()) -> a -> m (Maybe PropertyFailure)
 smallCheckWithHook d hook a = runProperty d hook $ test a

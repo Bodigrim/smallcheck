@@ -14,23 +14,28 @@ module Test.SmallCheck.Property.Result
 
 import Text.PrettyPrint (Doc, empty, hsep, nest, render, text, (<+>), ($+$), ($$))
 
+-- | @since 1.0
 type Argument = String
 
 -- | An explanation for the test outcome.
+--
+-- @since 1.1
 type Reason = String
 
+-- | @since 1.0
 data PropertySuccess
   = Exist [Argument] PropertySuccess
   | ExistUnique [Argument] PropertySuccess
-  | PropertyTrue (Maybe Reason)
+  | PropertyTrue (Maybe Reason) -- ^ @since 1.1
   | Vacuously PropertyFailure
   deriving (Eq, Show)
 
+-- | @since 1.0
 data PropertyFailure
   = NotExist
   | AtLeastTwo [Argument] PropertySuccess [Argument] PropertySuccess
   | CounterExample [Argument] PropertyFailure
-  | PropertyFalse (Maybe Reason)
+  | PropertyFalse (Maybe Reason) -- ^ @since 1.1
   deriving (Eq, Show)
 
 class Pretty a where
@@ -85,5 +90,6 @@ plural lst sing pl =
     _:_:_ -> pl
     _ -> sing
 
+-- | @since 1.0
 ppFailure :: PropertyFailure -> String
 ppFailure = render . pretty

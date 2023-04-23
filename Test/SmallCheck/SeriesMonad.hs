@@ -17,6 +17,8 @@ import Control.Arrow (second)
 --
 -- For functional values, it is both the depth of nested case analysis
 -- and the depth of results.
+--
+-- @since 0.6
 type Depth = Int
 
 -- | 'Series' is a `MonadLogic` action that enumerates values of a certain
@@ -35,6 +37,8 @@ type Depth = Int
 --
 -- It is also desirable that values of smaller depth come before the values
 -- of greater depth.
+--
+-- @since 1.0
 newtype Series m a = Series (ReaderT Depth (LogicT m) a)
 
 instance Functor (Series m) where

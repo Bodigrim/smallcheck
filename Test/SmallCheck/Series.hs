@@ -241,6 +241,7 @@ import GHC.Generics (Generic, (:+:)(..), (:*:)(..), C1, K1(..), M1(..), U1(..), 
 ------------------------------
 --{{{
 
+-- | @since 1.0
 class Monad m => Serial m a where
   series   :: Series m a
 
@@ -250,12 +251,14 @@ class Monad m => Serial m a where
 #endif
 
 #if __GLASGOW_HASKELL__ >= 702
+-- | @since 1.1.5
 genericSeries
   :: (Monad m, Generic a, GSerial m (Rep a))
   => Series m a
 genericSeries = to <$> gSeries
 #endif
 
+-- | @since 1.0
 class Monad m => CoSerial m a where
   -- | A proper 'coseries' implementation should pass the depth unchanged to
   -- its first argument. Doing otherwise will make enumeration of curried
@@ -268,6 +271,7 @@ class Monad m => CoSerial m a where
 #endif
 
 #if __GLASGOW_HASKELL__ >= 702
+-- | @since 1.1.5
 genericCoseries
   :: (Monad m, Generic a, GCoSerial m (Rep a))
   => Series m b -> Series m (a->b)
@@ -283,12 +287,16 @@ genericCoseries rs = (. from) <$> gCoseries rs
 
 -- | A simple series specified by a function from depth to the list of
 -- values up to that depth.
+--
+-- @since 1.0
 generate :: (Depth -> [a]) -> Series m a
 generate f = do
   d <- getDepth
   msum $ map return $ f d
 
 -- | Limit a 'Series' to its first @n@ elements.
+--
+--  @since 1.1.5
 limit :: forall m a . Monad m => Int -> Series m a -> Series m a
 limit n0 (Series s) = Series $ go n0 s
   where
@@ -307,6 +315,8 @@ suchThat s p = s >>= \x -> if p x then pure x else empty
 -- For example, list all integers up to depth 1:
 --
 -- * @listSeries 1 :: [Int]   -- returns [0,1,-1]@
+--
+-- @since 1.1.2
 listSeries :: Serial Identity a => Depth -> [a]
 listSeries d = list d series
 
@@ -322,23 +332,33 @@ listSeries d = list d series
 -- * @'list' 2 'series' :: [['Bool']]               -- returns [[],['True'],['False']]@
 --
 -- The first two are equivalent. The second has a more explicit type binding.
+--
+-- @since 1.0
 list :: Depth -> Series Identity a -> [a]
 list d s = runIdentity $ observeAllT $ runSeries d s
 
 -- | Monadic version of 'list'.
+--
+-- @since 1.1
 listM d s = observeAllT $ runSeries d s
 
 -- | Sum (union) of series.
+--
+-- @since 1.0
 infixr 7 \/
 (\/) :: Monad m => Series m a -> Series m a -> Series m a
 (\/) = interleave
 
 -- | Product of series
+--
+-- @since 1.0
 infixr 8 ><
 (><) :: Monad m => Series m a -> Series m b -> Series m (a,b)
 a >< b = (,) <$> a <~> b
 
 -- | Fair version of 'Control.Applicative.ap' and '<*>'.
+--
+-- @since 1.0
 infixl 4 <~>
 (<~>) :: Monad m => Series m (a -> b) -> Series m a -> Series m b
 a <~> b = a >>- (<$> b)
@@ -356,16 +376,22 @@ uncurry6 :: (a->b->c->d->e->f->g) -> ((a,b,c,d,e,f)->g)
 uncurry6 f (u,v,w,x,y,z) = f u v w x y z
 
 -- | Query the current depth.
+--
+-- @since 1.0
 getDepth :: Series m Depth
 getDepth = Series ask
 
 -- | Run a series with a modified depth.
+--
+-- @since 1.0
 localDepth :: (Depth -> Depth) -> Series m a -> Series m a
 localDepth f (Series a) = Series $ local f a
 
 -- | Run a 'Series' with the depth decreased by 1.
 --
 -- If the current depth is less or equal to 0, the result is 'empty'.
+--
+-- @since 1.0
 decDepth :: Series m a -> Series m a
 decDepth a = do
   checkDepth
@@ -377,16 +403,22 @@ checkDepth = do
   guard $ d > 0
 
 -- | @'constM' = 'liftM' 'const'@
+--
+-- @since 1.1.1
 constM :: Monad m => m b -> m (a -> b)
 constM = liftM const
 
 -- | Fix the depth of a series at the current level. The resulting series
 -- will no longer depend on the \"ambient\" depth.
+--
+-- @since 1.1.1
 fixDepth :: Series m a -> Series m (Series m a)
 fixDepth s = getDepth >>= \d -> return $ localDepth (const d) s
 
 -- | If the current depth is 0, evaluate the first argument. Otherwise,
 -- evaluate the second argument with decremented depth.
+--
+-- @since 1.1.1
 decDepthChecked :: Series m a -> Series m a -> Series m a
 decDepthChecked b r = do
   d <- getDepth
@@ -406,19 +438,25 @@ unwind a =
 ------------------------------
 -- {{{
 
+-- | @since 1.0
 cons0 :: a -> Series m a
 cons0 x = decDepth $ pure x
 
+-- | @since 1.0
 cons1 :: Serial m a => (a->b) -> Series m b
 cons1 f = decDepth $ f <$> series
 
 -- | Same as 'cons1', but preserves the depth.
+--
+-- @since 1.0
 newtypeCons :: Serial m a => (a->b) -> Series m b
 newtypeCons f = f <$> series
 
+-- | @since 1.0
 cons2 :: (Serial m a, Serial m b) => (a->b->c) -> Series m c
 cons2 f = decDepth $ f <$> series <~> series
 
+-- | @since 1.0
 cons3 :: (Serial m a, Serial m b, Serial m c) =>
          (a->b->c->d) -> Series m d
 cons3 f = decDepth $
@@ -426,6 +464,7 @@ cons3 f = decDepth $
     <~> series
     <~> series
 
+-- | @since 1.0
 cons4 :: (Serial m a, Serial m b, Serial m c, Serial m d) =>
          (a->b->c->d->e) -> Series m e
 cons4 f = decDepth $
@@ -434,6 +473,7 @@ cons4 f = decDepth $
     <~> series
     <~> series
 
+-- | @since 1.2.0
 cons5 :: (Serial m a, Serial m b, Serial m c, Serial m d, Serial m e) =>
          (a->b->c->d->e->f) -> Series m f
 cons5 f = decDepth $
@@ -443,6 +483,7 @@ cons5 f = decDepth $
     <~> series
     <~> series
 
+-- | @since 1.2.0
 cons6 :: (Serial m a, Serial m b, Serial m c, Serial m d, Serial m e, Serial m f) =>
          (a->b->c->d->e->f->g) -> Series m g
 cons6 f = decDepth $
@@ -453,14 +494,17 @@ cons6 f = decDepth $
     <~> series
     <~> series
 
+-- | @since 1.0
 alts0 :: Series m a -> Series m a
 alts0 s = s
 
+-- | @since 1.0
 alts1 :: CoSerial m a => Series m b -> Series m (a->b)
 alts1 rs = do
   rs <- fixDepth rs
   decDepthChecked (constM rs) (coseries rs)
 
+-- | @since 1.0
 alts2
   :: (CoSerial m a, CoSerial m b)
   => Series m c -> Series m (a->b->c)
@@ -470,6 +514,7 @@ alts2 rs = do
     (constM $ constM rs)
     (coseries $ coseries rs)
 
+-- | @since 1.0
 alts3 ::  (CoSerial m a, CoSerial m b, CoSerial m c) =>
             Series m d -> Series m (a->b->c->d)
 alts3 rs = do
@@ -478,6 +523,7 @@ alts3 rs = do
     (constM $ constM $ constM rs)
     (coseries $ coseries $ coseries rs)
 
+-- | @since 1.0
 alts4 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) =>
             Series m e -> Series m (a->b->c->d->e)
 alts4 rs = do
@@ -486,6 +532,7 @@ alts4 rs = do
     (constM $ constM $ constM $ constM rs)
     (coseries $ coseries $ coseries $ coseries rs)
 
+-- | @since 1.2.0
 alts5 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d, CoSerial m e) =>
             Series m f -> Series m (a->b->c->d->e->f)
 alts5 rs = do
@@ -494,6 +541,7 @@ alts5 rs = do
     (constM $ constM $ constM $ constM $ constM rs)
     (coseries $ coseries $ coseries $ coseries $ coseries rs)
 
+-- | @since 1.2.0
 alts6 ::  (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d, CoSerial m e, CoSerial m f) =>
             Series m g -> Series m (a->b->c->d->e->f->g)
 alts6 rs = do
@@ -503,6 +551,8 @@ alts6 rs = do
     (coseries $ coseries $ coseries $ coseries $ coseries $ coseries rs)
 
 -- | Same as 'alts1', but preserves the depth.
+--
+-- @since 1.0
 newtypeAlts :: CoSerial m a => Series m b -> Series m (a->b)
 newtypeAlts = coseries
 
@@ -587,27 +637,58 @@ instance Monad m => CoSerial m () where
 
 instance Monad m => Serial m Integer where series = unM <$> series
 instance Monad m => CoSerial m Integer where coseries = fmap (. M) . coseries
+
+-- | @since 1.1.3
 instance Monad m => Serial m Natural where series = unN <$> series
+-- | @since 1.1.3
 instance Monad m => CoSerial m Natural where coseries = fmap (. N) . coseries
+
 instance Monad m => Serial m Int where series = unM <$> series
 instance Monad m => CoSerial m Int where coseries = fmap (. M) . coseries
+
+-- | @since 1.1.3
 instance Monad m => Serial m Word where series = unN <$> series
+-- | @since 1.1.3
 instance Monad m => CoSerial m Word where coseries = fmap (. N) . coseries
+
+-- | @since 1.1.4
 instance Monad m => Serial m Int8 where series = unM <$> series
+-- | @since 1.1.4
 instance Monad m => CoSerial m Int8 where coseries = fmap (. M) . coseries
+
+-- | @since 1.1.4
 instance Monad m => Serial m Word8 where series = unN <$> series
+-- | @since 1.1.4
 instance Monad m => CoSerial m Word8 where coseries = fmap (. N) . coseries
+
+-- | @since 1.1.4
 instance Monad m => Serial m Int16 where series = unM <$> series
+-- | @since 1.1.4
 instance Monad m => CoSerial m Int16 where coseries = fmap (. M) . coseries
+
+-- | @since 1.1.4
 instance Monad m => Serial m Word16 where series = unN <$> series
+-- | @since 1.1.4
 instance Monad m => CoSerial m Word16 where coseries = fmap (. N) . coseries
+
+-- | @since 1.1.4
 instance Monad m => Serial m Int32 where series = unM <$> series
+-- | @since 1.1.4
 instance Monad m => CoSerial m Int32 where coseries = fmap (. M) . coseries
+
+-- | @since 1.1.4
 instance Monad m => Serial m Word32 where series = unN <$> series
+-- | @since 1.1.4
 instance Monad m => CoSerial m Word32 where coseries = fmap (. N) . coseries
+
+-- | @since 1.1.4
 instance Monad m => Serial m Int64 where series = unM <$> series
+-- | @since 1.1.4
 instance Monad m => CoSerial m Int64 where coseries = fmap (. M) . coseries
+
+-- | @since 1.1.4
 instance Monad m => Serial m Word64 where series = unN <$> series
+-- | @since 1.1.4
 instance Monad m => CoSerial m Word64 where coseries = fmap (. N) . coseries
 
 -- | 'N' is a wrapper for 'Integral' types that causes only non-negative values
@@ -708,10 +789,12 @@ instance Monad m => CoSerial m Double where
   coseries rs =
     (. (realToFrac :: Double -> Float)) <$> coseries rs
 
+-- | @since 1.1
 instance (Integral i, Serial m i) => Serial m (Ratio i) where
   series = pairToRatio <$> series
     where
       pairToRatio (n, Positive d) = n % d
+-- | @since 1.1
 instance (Integral i, CoSerial m i) => CoSerial m (Ratio i) where
   coseries rs = (. ratioToPair) <$> coseries rs
     where
@@ -739,13 +822,17 @@ instance (Serial m a, Serial m b, Serial m c, Serial m d) => Serial m (a,b,c,d) 
 instance (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d) => CoSerial m (a,b,c,d) where
   coseries rs = uncurry4 <$> alts4 rs
 
+-- | @since 1.2.0
 instance (Serial m a, Serial m b, Serial m c, Serial m d, Serial m e) => Serial m (a,b,c,d,e) where
   series = cons5 (,,,,)
+-- | @since 1.2.0
 instance (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d, CoSerial m e) => CoSerial m (a,b,c,d,e) where
   coseries rs = uncurry5 <$> alts5 rs
 
+-- | @since 1.2.0
 instance (Serial m a, Serial m b, Serial m c, Serial m d, Serial m e, Serial m f) => Serial m (a,b,c,d,e,f) where
   series = cons6 (,,,,,)
+-- | @since 1.2.0
 instance (CoSerial m a, CoSerial m b, CoSerial m c, CoSerial m d, CoSerial m e, CoSerial m f) => CoSerial m (a,b,c,d,e,f) where
   coseries rs = uncurry6 <$> alts6 rs
 
@@ -757,8 +844,10 @@ instance Monad m => CoSerial m Bool where
     rs >>- \r2 ->
     return $ \x -> if x then r1 else r2
 
+-- | @since 1.2.1
 instance Monad m => Serial m Ordering where
   series = cons0 LT \/ cons0 EQ \/ cons0 GT
+-- | @since 1.2.1
 instance Monad m => CoSerial m Ordering where
   coseries rs =
     rs >>- \r1 ->
@@ -789,33 +878,41 @@ instance CoSerial m a => CoSerial m [a] where
     alts2 rs >>- \f ->
     return $ \xs -> case xs of [] -> y; x:xs' -> f x xs'
 
+-- | @since 1.2.0
 instance Serial m a => Serial m (NE.NonEmpty a) where
   series = cons2 (NE.:|)
 
+-- | @since 1.2.0
 instance CoSerial m a => CoSerial m (NE.NonEmpty a) where
   coseries rs =
     alts2 rs >>- \f ->
     return $ \(x NE.:| xs') -> f x xs'
 
 #if MIN_VERSION_base(4,4,0)
+-- | @since 1.2.0
 instance Serial m a => Serial m (Complex a) where
 #else
+-- | @since 1.2.0
 instance (RealFloat a, Serial m a) => Serial m (Complex a) where
 #endif
   series = cons2 (:+)
 
 #if MIN_VERSION_base(4,4,0)
+-- | @since 1.2.0
 instance CoSerial m a => CoSerial m (Complex a) where
 #else
+-- | @since 1.2.0
 instance (RealFloat a, CoSerial m a) => CoSerial m (Complex a) where
 #endif
   coseries rs =
     alts2 rs >>- \f ->
     return $ \(x :+ xs') -> f x xs'
 
+-- | @since 1.2.0
 instance Monad m => Serial m Void where
   series = mzero
 
+-- | @since 1.2.0
 instance Monad m => CoSerial m Void where
   coseries = const $ return absurd
 
@@ -863,8 +960,10 @@ instance (Serial Identity a, Show a, Show b) => Show (a -> b) where
     height = length . lines
     (widthLimit,lengthLimit,depthLimit) = (80,20,3)::(Int,Int,Depth)
 
+-- | @since 1.2.0
 instance (Monad m, Serial m (f (g a))) => Serial m (Compose f g a) where
   series = Compose <$> series
+-- | @since 1.2.0
 instance (Monad m, CoSerial m (f (g a))) => CoSerial m (Compose f g a) where
   coseries = fmap (. getCompose) . coseries
 
@@ -877,12 +976,21 @@ instance (Monad m, CoSerial m (f (g a))) => CoSerial m (Compose f g a) where
 
 --------------------------------------------------------------------------
 -- | 'Positive' @x@ guarantees that \( x > 0 \).
+--
+-- @since 1.0
 newtype Positive a = Positive { getPositive :: a }
- deriving (Eq, Ord, Functor, Foldable, Traversable)
+  deriving
+  ( Eq
+  , Ord
+  , Functor     -- ^ @since 1.2.0
+  , Foldable    -- ^ @since 1.2.0
+  , Traversable -- ^ @since 1.2.0
+  )
 
 instance Real a => Real (Positive a) where
   toRational (Positive x) = toRational x
 
+-- | @since 1.2.0
 instance (Num a, Bounded a) => Bounded (Positive a) where
   minBound = Positive 1
   maxBound = Positive (maxBound :: a)
@@ -912,12 +1020,21 @@ instance Show a => Show (Positive a) where
   showsPrec n (Positive x) = showsPrec n x
 
 -- | 'NonNegative' @x@ guarantees that \( x \ge 0 \).
+--
+-- @since 1.0
 newtype NonNegative a = NonNegative { getNonNegative :: a }
- deriving (Eq, Ord, Functor, Foldable, Traversable)
+  deriving
+  ( Eq
+  , Ord
+  , Functor     -- ^ @since 1.2.0
+  , Foldable    -- ^ @since 1.2.0
+  , Traversable -- ^ @since 1.2.0
+  )
 
 instance Real a => Real (NonNegative a) where
   toRational (NonNegative x) = toRational x
 
+-- | @since 1.2.0
 instance (Num a, Bounded a) => Bounded (NonNegative a) where
   minBound = NonNegative 0
   maxBound = NonNegative (maxBound :: a)
@@ -947,6 +1064,8 @@ instance Show a => Show (NonNegative a) where
   showsPrec n (NonNegative x) = showsPrec n x
 
 -- | 'NonZero' @x@ guarantees that \( x \ne 0 \).
+--
+-- @since 1.2.0
 newtype NonZero a = NonZero { getNonZero :: a }
  deriving (Eq, Ord, Functor, Foldable, Traversable)
 
@@ -982,6 +1101,8 @@ instance Show a => Show (NonZero a) where
   showsPrec n (NonZero x) = showsPrec n x
 
 -- | 'NonEmpty' @xs@ guarantees that @xs@ is not null.
+--
+-- @since 1.1
 newtype NonEmpty a = NonEmpty { getNonEmpty :: [a] }
 
 instance (Serial m a) => Serial m (NonEmpty a) where
@@ -998,135 +1119,187 @@ instance Show a => Show (NonEmpty a) where
 -- {{{
 
 #if MIN_VERSION_base(4,5,0)
+-- | @since 1.2.0
 instance Monad m => Serial m CFloat where
   series = newtypeCons CFloat
+-- | @since 1.2.0
 instance Monad m => CoSerial m CFloat where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CFloat x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CDouble where
   series = newtypeCons CDouble
+-- | @since 1.2.0
 instance Monad m => CoSerial m CDouble where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CDouble x -> f x
 
 #if HASCBOOL
+-- | @since 1.2.0
 instance Monad m => Serial m CBool where
   series = newtypeCons CBool
+-- | @since 1.2.0
 instance Monad m => CoSerial m CBool where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CBool x -> f x
 #endif
 
+-- | @since 1.2.0
 instance Monad m => Serial m CChar where
   series = newtypeCons CChar
+-- | @since 1.2.0
 instance Monad m => CoSerial m CChar where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CChar x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CSChar where
   series = newtypeCons CSChar
+-- | @since 1.2.0
 instance Monad m => CoSerial m CSChar where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSChar x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CUChar where
   series = newtypeCons CUChar
+-- | @since 1.2.0
 instance Monad m => CoSerial m CUChar where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUChar x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CShort where
   series = newtypeCons CShort
+-- | @since 1.2.0
 instance Monad m => CoSerial m CShort where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CShort x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CUShort where
   series = newtypeCons CUShort
+-- | @since 1.2.0
 instance Monad m => CoSerial m CUShort where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUShort x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CInt where
   series = newtypeCons CInt
+-- | @since 1.2.0
 instance Monad m => CoSerial m CInt where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CInt x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CUInt where
   series = newtypeCons CUInt
+-- | @since 1.2.0
 instance Monad m => CoSerial m CUInt where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUInt x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CLong where
   series = newtypeCons CLong
+-- | @since 1.2.0
 instance Monad m => CoSerial m CLong where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CLong x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CULong where
   series = newtypeCons CULong
+-- | @since 1.2.0
 instance Monad m => CoSerial m CULong where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CULong x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CPtrdiff where
   series = newtypeCons CPtrdiff
+-- | @since 1.2.0
 instance Monad m => CoSerial m CPtrdiff where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CPtrdiff x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CSize where
   series = newtypeCons CSize
+-- | @since 1.2.0
 instance Monad m => CoSerial m CSize where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSize x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CWchar where
   series = newtypeCons CWchar
+-- | @since 1.2.0
 instance Monad m => CoSerial m CWchar where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CWchar x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CSigAtomic where
   series = newtypeCons CSigAtomic
+-- | @since 1.2.0
 instance Monad m => CoSerial m CSigAtomic where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSigAtomic x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CLLong where
   series = newtypeCons CLLong
+-- | @since 1.2.0
 instance Monad m => CoSerial m CLLong where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CLLong x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CULLong where
   series = newtypeCons CULLong
+-- | @since 1.2.0
 instance Monad m => CoSerial m CULLong where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CULLong x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CIntPtr where
   series = newtypeCons CIntPtr
+-- | @since 1.2.0
 instance Monad m => CoSerial m CIntPtr where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CIntPtr x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CUIntPtr where
   series = newtypeCons CUIntPtr
+-- | @since 1.2.0
 instance Monad m => CoSerial m CUIntPtr where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUIntPtr x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CIntMax where
   series = newtypeCons CIntMax
+-- | @since 1.2.0
 instance Monad m => CoSerial m CIntMax where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CIntMax x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CUIntMax where
   series = newtypeCons CUIntMax
+-- | @since 1.2.0
 instance Monad m => CoSerial m CUIntMax where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUIntMax x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CClock where
   series = newtypeCons CClock
+-- | @since 1.2.0
 instance Monad m => CoSerial m CClock where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CClock x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CTime where
   series = newtypeCons CTime
+-- | @since 1.2.0
 instance Monad m => CoSerial m CTime where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CTime x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CUSeconds where
   series = newtypeCons CUSeconds
+-- | @since 1.2.0
 instance Monad m => CoSerial m CUSeconds where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CUSeconds x -> f x
 
+-- | @since 1.2.0
 instance Monad m => Serial m CSUSeconds where
   series = newtypeCons CSUSeconds
+-- | @since 1.2.0
 instance Monad m => CoSerial m CSUSeconds where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSUSeconds x -> f x
 #endif

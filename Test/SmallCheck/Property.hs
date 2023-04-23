@@ -65,6 +65,8 @@ import Data.Typeable (mkTyCon)
 --{{{
 
 -- | The type of properties over the monad @m@.
+--
+-- @since 1.0
 newtype Property m = Property { unProperty :: Reader (Env m) (PropertySeries m) }
 #if NEWTYPEABLE
   deriving Typeable
@@ -88,6 +90,7 @@ data Quantification
   | Exists
   | ExistsUnique
 
+-- | @since 1.0
 data TestQuality
   = GoodTest
   | BadTest
@@ -148,12 +151,16 @@ makeAtomic (Property prop) =
 -- variable following the operator and not subsequent variables.
 --
 -- 'over' does not affect the quantification context.
+--
+-- @since 1.0
 over
   :: (Show a, Testable m b)
   => Series m a -> (a -> b) -> Property m
 over = testFunction
 
 -- | Execute a monadic test.
+--
+-- @since 1.0
 monadic :: Testable m a => m a -> Property m
 monadic a =
   Property $ reader $ \env ->
@@ -174,7 +181,10 @@ monadic a =
 -- | Class of tests that can be run in a monad. For pure tests, it is
 -- recommended to keep their types polymorphic in @m@ rather than
 -- specialising it to 'Data.Functor.Identity'.
+--
+-- @since 1.0
 class Monad m => Testable m a where
+  -- | @since 1.0
   test :: a -> Property m
 
 instance Monad m => Testable m Bool where
@@ -190,6 +200,8 @@ instance Monad m => Testable m Bool where
 --
 -- 'Left' and 'Right' correspond to test failure and success
 -- respectively.
+--
+-- @since 1.1
 instance Monad m => Testable m (Either Reason Reason) where
   test r = Property $ reader $ \env ->
     let
@@ -299,10 +311,14 @@ freshContext :: Testable m a => a -> Property m
 freshContext = forAll
 
 -- | Set the universal quantification context.
+--
+-- @since 1.0
 forAll :: Testable m a => a -> Property m
 forAll = quantify Forall . test
 
 -- | Set the existential quantification context.
+--
+-- @since 1.0
 exists :: Testable m a => a -> Property m
 exists = quantify Exists . test
 
@@ -324,6 +340,8 @@ exists = quantify Exists . test
 --
 -- That is, all the variables affected by the same uniqueness context are
 -- quantified simultaneously as a tuple.
+--
+-- @since 1.0
 existsUnique :: Testable m a => a -> Property m
 existsUnique = quantify ExistsUnique . test
 
@@ -333,6 +351,8 @@ existsUnique = quantify ExistsUnique . test
 --
 -- Note that '==>' resets the quantification context for its operands to
 -- the default (universal).
+--
+-- @since 1.0
 infixr 0 ==>
 (==>) :: (Testable m c, Testable m a) => c -> a -> Property m
 cond ==> prop = Property $ do
@@ -371,6 +391,8 @@ cond ==> prop = Property $ do
 
 -- | Run property with a modified depth. Affects all quantified variables
 -- in the property.
+--
+-- @since 1.0
 changeDepth :: Testable m a => (Depth -> Depth) -> a -> Property m
 changeDepth modifyDepth a = Property (changeDepthPS <$> unProperty (test a))
   where
@@ -383,6 +405,8 @@ changeDepth modifyDepth a = Property (changeDepthPS <$> unProperty (test a))
 
 -- | Quantify the function's argument over its 'series', but adjust the
 -- depth. This doesn't affect any subsequent variables.
+--
+-- @since 1.0
 changeDepth1 :: (Show a, Serial m a, Testable m b) => (Depth -> Depth) -> (a -> b) -> Property m
 changeDepth1 modifyDepth = over $ localDepth modifyDepth series
 
