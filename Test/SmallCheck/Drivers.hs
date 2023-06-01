@@ -11,6 +11,7 @@
 
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 #if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
 #endif
@@ -22,11 +23,16 @@ module Test.SmallCheck.Drivers (
   PropertyFailure(..), PropertySuccess(..), Argument, Reason, TestQuality(..)
   ) where
 
-import Control.Monad (when)
+import Control.Monad (when, return)
+import Data.Function (($), (.), const)
+import Data.IORef (readIORef, writeIORef, IORef, newIORef) -- NB: explicit import list to avoid name clash with modifyIORef'
+import Data.Maybe (Maybe(Nothing, Just))
+import Data.Ord ((>))
+import Prelude (Integer, (+), seq)
+import System.IO (IO, putStrLn)
 import Test.SmallCheck.Property
 import Test.SmallCheck.Property.Result
 import Text.Printf (printf)
-import Data.IORef (readIORef, writeIORef, IORef, newIORef) -- NB: explicit import list to avoid name clash with modifyIORef'
 
 -- | A simple driver that runs the test in the 'IO' monad and prints the
 -- results.

@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 #if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
 #endif
@@ -12,7 +13,15 @@ module Test.SmallCheck.Property.Result
   , Argument
   ) where
 
+import Data.Bool (Bool (False, True))
+import Data.Eq (Eq)
+import Data.Function (($), (.))
+import Data.Int (Int)
+import Data.List (map)
+import Data.Maybe (Maybe (Nothing, Just))
+import Prelude (String)
 import Text.PrettyPrint (Doc, empty, hsep, nest, render, text, (<+>), ($+$), ($$))
+import Text.Show (Show)
 
 -- | @since 1.0
 type Argument = String

@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 #if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
 #endif
@@ -6,10 +7,13 @@
 module Test.SmallCheck.SeriesMonad where
 
 import Control.Applicative (Applicative(..), Alternative(..), (<$>))
-import Control.Monad (MonadPlus(..))
+import Control.Arrow (second)
+import Control.Monad (Monad, (>>=), return, MonadPlus(..))
 import Control.Monad.Logic (MonadLogic(..), LogicT)
 import Control.Monad.Reader (MonadTrans(..), ReaderT, runReaderT)
-import Control.Arrow (second)
+import Data.Function ((.), ($))
+import Data.Functor (Functor, fmap)
+import Data.Int (Int)
 
 -- | Maximum depth of generated test values.
 --

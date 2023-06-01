@@ -14,6 +14,7 @@
 {-# LANGUAGE DeriveDataTypeable    #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
@@ -40,18 +41,29 @@ module Test.SmallCheck.Property (
   PropertySuccess(..), PropertyFailure(..), runProperty, TestQuality(..), Argument, Reason, Depth, Testable(..),
   ) where
 
-import Test.SmallCheck.Series
-import Test.SmallCheck.SeriesMonad
-import Test.SmallCheck.Property.Result
+import Control.Applicative (pure, (<$>), (<$))
 import Control.Arrow (first)
-import Control.Monad (liftM, mzero)
+import Control.Monad (Monad, liftM, mzero, return, (=<<), (>>=))
 import Control.Monad.Logic (MonadLogic, runLogicT, ifte, once, msplit, lnot)
 import Control.Monad.Reader (Reader, runReader, lift, ask, local, reader)
-import Control.Applicative (pure, (<$>), (<$))
+import Data.Bool (Bool, otherwise)
+import Data.Either (Either, either)
+import Data.Eq (Eq)
+import Data.Function (($), flip, (.), const, id)
+import Data.Functor (fmap)
+import Data.Int (Int)
+import Data.Maybe (Maybe (Nothing, Just))
+import Data.Ord (Ord, (<=))
 import Data.Typeable (Typeable(..))
+import Prelude (Enum, (-))
+import Test.SmallCheck.Property.Result
+import Test.SmallCheck.Series
+import Test.SmallCheck.SeriesMonad
+import Text.Show (Show, show)
 
 #if !NEWTYPEABLE
 import Data.Typeable (Typeable1, mkTyConApp, typeOf)
+import Prelude (undefined)
 #if MIN_VERSION_base(4,4,0)
 import Data.Typeable (mkTyCon3)
 #else
