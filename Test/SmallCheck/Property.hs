@@ -54,12 +54,16 @@ import Data.Functor (fmap)
 import Data.Int (Int)
 import Data.Maybe (Maybe (Nothing, Just))
 import Data.Ord (Ord, (<=))
-import Data.Typeable (Typeable(..))
+import Data.Typeable (Typeable)
 import Prelude (Enum, (-))
 import Test.SmallCheck.Property.Result
 import Test.SmallCheck.Series
 import Test.SmallCheck.SeriesMonad
 import Text.Show (Show, show)
+
+#if MIN_VERSION_base(4,17,0)
+import Data.Type.Equality (type (~))
+#endif
 
 #if !NEWTYPEABLE
 import Data.Typeable (Typeable1, mkTyConApp, typeOf)

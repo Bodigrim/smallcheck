@@ -13,8 +13,8 @@ import Test.SmallCheck
 import Test.SmallCheck.Series
 import Test.SmallCheck.Drivers
 import Control.Monad (guard)
-import Control.Monad.Identity (Identity(..))
-import Data.Proxy (Proxy(..))
+import Control.Monad.Identity (Identity(Identity), runIdentity)
+import Data.Proxy (Proxy(Proxy))
 import Data.List (genericLength)
 import qualified Data.Set as Set
 import Data.Word (Word)

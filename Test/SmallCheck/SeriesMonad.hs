@@ -6,11 +6,11 @@
 
 module Test.SmallCheck.SeriesMonad where
 
-import Control.Applicative (Applicative(..), Alternative(..), (<$>))
+import Control.Applicative (Applicative, Alternative, (<$>), pure, (<*>), empty, (<|>))
 import Control.Arrow (second)
-import Control.Monad (Monad, (>>=), return, MonadPlus(..))
-import Control.Monad.Logic (MonadLogic(..), LogicT)
-import Control.Monad.Reader (MonadTrans(..), ReaderT, runReaderT)
+import Control.Monad (Monad, (>>=), return, MonadPlus, mzero, mplus)
+import Control.Monad.Logic (MonadLogic, LogicT, msplit)
+import Control.Monad.Reader (MonadTrans, ReaderT, runReaderT, lift)
 import Data.Function ((.), ($))
 import Data.Functor (Functor, fmap)
 import Data.Int (Int)

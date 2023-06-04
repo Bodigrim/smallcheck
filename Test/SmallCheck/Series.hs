@@ -211,18 +211,18 @@ module Test.SmallCheck.Series (
 
 import Control.Applicative (empty, pure, (<$>), (<|>))
 import Control.Monad (Monad, liftM, guard, mzero, mplus, msum, return, (>>), (>>=))
-import Control.Monad.Identity (Identity(..))
+import Control.Monad.Identity (Identity(Identity), runIdentity)
 import Control.Monad.Logic (MonadLogic, (>>-), interleave, msplit, observeAllT)
 import Control.Monad.Reader (ask, local)
 import Data.Bool (Bool (True, False), (&&), (||))
 import Data.Char (Char)
-import Data.Complex (Complex(..))
+import Data.Complex (Complex((:+)))
 import Data.Either (Either (Left, Right), either)
 import Data.Eq (Eq, (==), (/=))
 import Data.Foldable (Foldable)
 import Data.Function (($), (.), const)
 import Data.Functor (Functor, fmap)
-import Data.Functor.Compose (Compose(..))
+import Data.Functor.Compose (Compose(Compose), getCompose)
 import Data.Int (Int, Int8, Int16, Int32, Int64)
 import Data.List (intercalate, take, map, length, (++), maximum, sum, unlines, lines, concat)
 import qualified Data.List.NonEmpty as NE
@@ -233,20 +233,22 @@ import Data.Traversable (Traversable)
 import Data.Tuple (uncurry)
 import Data.Void (Void, absurd)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
-import Foreign.C.Types (CFloat(..), CDouble(..), CChar(..), CSChar(..), CUChar(..), CShort(..), CUShort(..), CInt(..), CUInt(..), CLong(..), CULong(..), CPtrdiff(..), CSize(..), CWchar(..), CSigAtomic(..), CLLong(..), CULLong(..), CIntPtr(..), CUIntPtr(..), CIntMax(..), CUIntMax(..), CClock(..), CTime(..))
 import Numeric.Natural (Natural)
 import Prelude (Integer, Real, toRational, Enum, toEnum, fromEnum, Num, (+), (*), Integral, quotRem, toInteger, negate, abs, signum, fromInteger, Bounded, minBound, maxBound, Float, Double, (-), odd, encodeFloat, decodeFloat, realToFrac, seq, subtract)
 import Test.SmallCheck.SeriesMonad
 import Text.Show (Show, showsPrec, show)
 
+#if MIN_VERSION_base(4,5,0)
+import Foreign.C.Types (CFloat(CFloat), CDouble(CDouble), CChar(CChar), CSChar(CSChar), CUChar(CUChar), CShort(CShort), CUShort(CUShort), CInt(CInt), CUInt(CUInt), CLong(CLong), CULong(CULong), CPtrdiff(CPtrdiff), CSize(CSize), CWchar(CWchar), CSigAtomic(CSigAtomic), CLLong(CLLong), CULLong(CULLong), CIntPtr(CIntPtr), CUIntPtr(CUIntPtr), CIntMax(CIntMax), CUIntMax(CUIntMax), CClock(CClock), CTime(CTime), CUSeconds(CUSeconds), CSUSeconds(CSUSeconds))
+#endif
+
 #if __GLASGOW_HASKELL__ >= 702
-import Foreign.C.Types (CUSeconds(..), CSUSeconds(..))
-import GHC.Generics (Generic, (:+:)(..), (:*:)(..), C1, K1(..), M1(..), U1(..), V1(..), Rep, to, from)
+import GHC.Generics (Generic, (:+:)(L1, R1), (:*:)((:*:)), C1, K1(K1), unK1, M1(M1), unM1, U1(U1), V1, Rep, to, from)
 #else
 import Prelude (RealFloat)
 #endif
 #if HASCBOOL
-import Foreign.C.Types (CBool(..))
+import Foreign.C.Types (CBool(CBool))
 #endif
 
 ------------------------------
