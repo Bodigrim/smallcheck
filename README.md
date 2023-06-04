@@ -14,21 +14,9 @@ Usefulness of such an approach to testing is based on the following observation:
 > If a program fails to meet its specification in some cases, it almost always
 > fails in some simple case.
 
-To get started with SmallCheck:
+In many ways SmallCheck is very similar to QuickCheck. It uses the idea of type-based generators for test data, and the way testable properties are expressed is closely based on the QuickCheck approach. Like QuickCheck, SmallCheck tests whether properties hold for finite completely defined values at specific types, and reports counter-examples.
 
-* Read the [documentation][haddock]
-* If you have experience with QuickCheck, [read the comparison of QuickCheck and SmallCheck][comparison]
-* Install it and give it a try!
-  `cabal update; cabal install smallcheck`
-* Read the [paper][paper] or [other materials][oldpage] from the original
-  authors of SmallCheck (note that that information might be somewhat outdated)
-* If you see something that can be improved, please [submit an issue][issues]
-* Check out [the source code][github] at GitHub
+The big difference is that instead of using a sample of randomly generated values, SmallCheck tests properties for all the finitely many values up to some depth, progressively increasing the depth used. For data values, depth means depth of construction. For functional values, it is a measure combining the depth to which arguments may be evaluated and the depth of possible results.
 
-[haddock]: http://hackage.haskell.org/package/smallcheck/docs/Test-SmallCheck.html
-[hackage]: http://hackage.haskell.org/package/smallcheck
-[paper]: http://www.cs.york.ac.uk/fp/smallcheck/smallcheck.pdf
-[oldpage]: http://www.cs.york.ac.uk/fp/smallcheck/
-[comparison]: https://github.com/Bodigrim/smallcheck/wiki/Comparison-with-QuickCheck
-[github]: https://github.com/Bodigrim/smallcheck
-[issues]: https://github.com/Bodigrim/smallcheck/issues
+The package is based on the [paper](http://www.cs.york.ac.uk/fp/smallcheck/smallcheck.pdf)
+by Colin Runciman, Matthew Naylor and Fredrik Lindblad.
