@@ -212,9 +212,9 @@ instance Monad m => Testable m Bool where
       failure = PropertyFalse Nothing <$ lnot success
     in atomicProperty success failure
 
--- | Works like the 'Bool' instance, but includes an explanation of the result.
+-- | Works like the 'Data.Bool.Bool' instance, but includes an explanation of the result.
 --
--- 'Left' and 'Right' correspond to test failure and success
+-- 'Data.Either.Left' and 'Data.Either.Right' correspond to test failure and success
 -- respectively.
 --
 -- @since 1.1

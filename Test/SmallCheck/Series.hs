@@ -371,7 +371,7 @@ infixr 8 ><
 (><) :: Monad m => Series m a -> Series m b -> Series m (a,b)
 a >< b = (,) <$> a <~> b
 
--- | Fair version of 'Control.Applicative.ap' and '<*>'.
+-- | Fair version of 'Control.Applicative.ap' and 'Control.Applicative.<*>'.
 --
 -- @since 1.0
 infixl 4 <~>

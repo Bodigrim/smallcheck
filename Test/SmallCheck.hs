@@ -25,7 +25,7 @@ module Test.SmallCheck (
   -- * Constructing tests
 
   -- | The simplest kind of test is a function (possibly of many
-  -- arguments) returning 'Bool'. The function arguments are interpreted
+  -- arguments) returning 'Data.Bool.Bool'. The function arguments are interpreted
   -- as being universally, existentially or uniquely quantified, depending
   -- on the quantification context.
   --
