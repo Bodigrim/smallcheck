@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.2.1.1
+-------------
+
+* Annotate everything with `@since` pragmas.
+
 Version 1.2.1
 -------------
 
