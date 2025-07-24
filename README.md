@@ -20,3 +20,5 @@ The big difference is that instead of using a sample of randomly generated value
 
 The package is based on the [paper](http://www.cs.york.ac.uk/fp/smallcheck/smallcheck.pdf)
 by Colin Runciman, Matthew Naylor and Fredrik Lindblad.
+
+See the [blog post](https://ro-che.info/articles/2018-05-25-quickcheck-vs-smallcheck) by Roman Cheplyaka for the detailed comparison to QuickCheck.
