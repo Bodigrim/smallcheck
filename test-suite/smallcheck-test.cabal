@@ -12,9 +12,8 @@ description:   Tests for smallcheck needs to be a separate library
                because of a circular dependency.
 
 tested-with:
-  ghc ==9.6.1 ghc ==9.4.5
-  ghc ==9.2.7 ghc ==9.0.2 ghc ==8.10.7 ghc ==8.8.4 ghc ==8.6.5 ghc ==8.4.4 ghc ==8.2.2
-  ghc ==8.0.2 ghc ==7.10.3 ghc ==7.8.4 ghc ==7.6.3 ghc ==7.4.2
+  ghc ==9.12.2 ghc ==9.10.2 ghc ==9.8.4 ghc ==9.6.7 ghc ==9.4.8
+  ghc ==9.2.8 ghc ==9.0.2 ghc ==8.10.7 ghc ==8.8.4 ghc ==8.6.5 ghc ==8.4.4 ghc ==8.2.2
 
 test-suite smallcheck-test
   type:             exitcode-stdio-1.0
@@ -28,15 +27,3 @@ test-suite smallcheck-test
     tasty >=0.4,
     tasty-hunit >=0.4.1,
     tasty-smallcheck
-
-  if impl(ghc <7.10)
-    build-depends:
-      nats,
-      -- tasty-smallcheck-0.8.2 does not support GHC 7.8
-      tasty-smallcheck < 0.8.2
-
-  if impl(ghc <7.8)
-    build-depends: tagged
-
-  if impl(ghc <7.6)
-    build-depends: ghc-prim

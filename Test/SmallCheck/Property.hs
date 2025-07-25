@@ -19,17 +19,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
--- Are we using new, polykinded and derivable Typeable yet?
-#define NEWTYPEABLE MIN_VERSION_base(4,7,0)
-
-#if NEWTYPEABLE
 {-# LANGUAGE Safe #-}
-#else
--- Trustworthy is needed because of the hand-written Typeable instance
-#if __GLASGOW_HASKELL__ >= 704
-{-# LANGUAGE Trustworthy #-}
-#endif
-#endif
 
 module Test.SmallCheck.Property (
   -- * Constructors
@@ -65,16 +55,6 @@ import Text.Show (Show, show)
 import Data.Type.Equality (type (~))
 #endif
 
-#if !NEWTYPEABLE
-import Data.Typeable (Typeable1, mkTyConApp, typeOf)
-import Prelude (undefined)
-#if MIN_VERSION_base(4,4,0)
-import Data.Typeable (mkTyCon3)
-#else
-import Data.Typeable (mkTyCon)
-#endif
-#endif
-
 ------------------------------
 -- Property-related types
 ------------------------------
@@ -84,9 +64,7 @@ import Data.Typeable (mkTyCon)
 --
 -- @since 1.0
 newtype Property m = Property { unProperty :: Reader (Env m) (PropertySeries m) }
-#if NEWTYPEABLE
   deriving Typeable
-#endif
 
 data PropertySeries m =
   PropertySeries
@@ -111,21 +89,6 @@ data TestQuality
   = GoodTest
   | BadTest
   deriving (Eq, Ord, Enum, Show)
-
-#if !NEWTYPEABLE
--- Typeable here is not polykinded yet, and also GHC doesn't know how to
--- derive this.
-instance Typeable1 m => Typeable (Property m)
-  where
-    typeOf _ =
-      mkTyConApp
-#if MIN_VERSION_base(4,4,0)
-        (mkTyCon3 "smallcheck" "Test.SmallCheck.Property" "Property")
-#else
-        (mkTyCon "smallcheck Test.SmallCheck.Property Property")
-#endif
-        [typeOf (undefined :: m ())]
-#endif
 
 -- }}}
 

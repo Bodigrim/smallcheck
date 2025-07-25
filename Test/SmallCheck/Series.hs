@@ -24,9 +24,7 @@
 --------------------------------------------------------------------
 
 {-# LANGUAGE CPP                   #-}
-#if __GLASGOW_HASKELL__ >= 702
 {-# LANGUAGE DefaultSignatures     #-}
-#endif
 {-# LANGUAGE DeriveFoldable        #-}
 {-# LANGUAGE DeriveFunctor         #-}
 {-# LANGUAGE DeriveTraversable     #-}
@@ -35,19 +33,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeOperators         #-}
-
-#if MIN_VERSION_base(4,8,0)
-{-# LANGUAGE Safe                  #-}
-#else
-{-# LANGUAGE OverlappingInstances  #-}
-#if __GLASGOW_HASKELL__ >= 704
-{-# LANGUAGE Trustworthy           #-}
-#endif
-#endif
-
-#define HASCBOOL MIN_VERSION_base(4,10,0)
 
 module Test.SmallCheck.Series (
   -- {{{
@@ -184,11 +172,9 @@ module Test.SmallCheck.Series (
   -- * Basic definitions
   Depth, Series, Serial(..), CoSerial(..),
 
-#if __GLASGOW_HASKELL__ >= 702
   -- * Generic implementations
   genericSeries,
   genericCoseries,
-#endif
 
   -- * Convenient wrappers
   Positive(..), NonNegative(..), NonZero(..), NonEmpty(..),
@@ -237,19 +223,8 @@ import Numeric.Natural (Natural)
 import Prelude (Integer, Real, toRational, Enum, toEnum, fromEnum, Num, (+), (*), Integral, quotRem, toInteger, negate, abs, signum, fromInteger, Bounded, minBound, maxBound, Float, Double, (-), odd, encodeFloat, decodeFloat, realToFrac, seq, subtract)
 import Test.SmallCheck.SeriesMonad
 import Text.Show (Show, showsPrec, show)
-
-#if MIN_VERSION_base(4,5,0)
-import Foreign.C.Types (CFloat(CFloat), CDouble(CDouble), CChar(CChar), CSChar(CSChar), CUChar(CUChar), CShort(CShort), CUShort(CUShort), CInt(CInt), CUInt(CUInt), CLong(CLong), CULong(CULong), CPtrdiff(CPtrdiff), CSize(CSize), CWchar(CWchar), CSigAtomic(CSigAtomic), CLLong(CLLong), CULLong(CULLong), CIntPtr(CIntPtr), CUIntPtr(CUIntPtr), CIntMax(CIntMax), CUIntMax(CUIntMax), CClock(CClock), CTime(CTime), CUSeconds(CUSeconds), CSUSeconds(CSUSeconds))
-#endif
-
-#if __GLASGOW_HASKELL__ >= 702
+import Foreign.C.Types (CFloat(CFloat), CDouble(CDouble), CChar(CChar), CSChar(CSChar), CUChar(CUChar), CShort(CShort), CUShort(CUShort), CInt(CInt), CUInt(CUInt), CLong(CLong), CULong(CULong), CPtrdiff(CPtrdiff), CSize(CSize), CWchar(CWchar), CSigAtomic(CSigAtomic), CLLong(CLLong), CULLong(CULLong), CIntPtr(CIntPtr), CUIntPtr(CUIntPtr), CIntMax(CIntMax), CUIntMax(CUIntMax), CClock(CClock), CTime(CTime), CUSeconds(CUSeconds), CSUSeconds(CSUSeconds), CBool(CBool))
 import GHC.Generics (Generic, (:+:)(L1, R1), (:*:)((:*:)), C1, K1(K1), unK1, M1(M1), unM1, U1(U1), V1, Rep, to, from)
-#else
-import Prelude (RealFloat)
-#endif
-#if HASCBOOL
-import Foreign.C.Types (CBool(CBool))
-#endif
 
 ------------------------------
 -- Main types and classes
@@ -260,18 +235,14 @@ import Foreign.C.Types (CBool(CBool))
 class Monad m => Serial m a where
   series   :: Series m a
 
-#if __GLASGOW_HASKELL__ >= 704
   default series :: (Generic a, GSerial m (Rep a)) => Series m a
   series = genericSeries
-#endif
 
-#if __GLASGOW_HASKELL__ >= 702
 -- | @since 1.1.5
 genericSeries
   :: (Monad m, Generic a, GSerial m (Rep a))
   => Series m a
 genericSeries = to <$> gSeries
-#endif
 
 -- | @since 1.0
 class Monad m => CoSerial m a where
@@ -280,18 +251,14 @@ class Monad m => CoSerial m a where
   -- functions non-uniform in their arguments.
   coseries :: Series m b -> Series m (a->b)
 
-#if __GLASGOW_HASKELL__ >= 704
   default coseries :: (Generic a, GCoSerial m (Rep a)) => Series m b -> Series m (a->b)
   coseries = genericCoseries
-#endif
 
-#if __GLASGOW_HASKELL__ >= 702
 -- | @since 1.1.5
 genericCoseries
   :: (Monad m, Generic a, GCoSerial m (Rep a))
   => Series m b -> Series m (a->b)
 genericCoseries rs = (. from) <$> gCoseries rs
-#endif
 
 -- }}}
 
@@ -583,7 +550,6 @@ class GSerial m f where
 class GCoSerial m f where
   gCoseries :: Series m b -> Series m (f a -> b)
 
-#if __GLASGOW_HASKELL__ >= 702
 instance {-# OVERLAPPABLE #-} GSerial m f => GSerial m (M1 i c f) where
   gSeries = M1 <$> gSeries
   {-# INLINE gSeries #-}
@@ -637,7 +603,6 @@ instance (Monad m, GCoSerial m a, GCoSerial m b) => GCoSerial m (a :+: b) where
 instance {-# OVERLAPPING #-} GSerial m f => GSerial m (C1 c f) where
   gSeries = M1 <$> decDepth gSeries
   {-# INLINE gSeries #-}
-#endif
 
 -- }}}
 
@@ -903,22 +868,12 @@ instance CoSerial m a => CoSerial m (NE.NonEmpty a) where
     alts2 rs >>- \f ->
     return $ \(x NE.:| xs') -> f x xs'
 
-#if MIN_VERSION_base(4,4,0)
 -- | @since 1.2.0
 instance Serial m a => Serial m (Complex a) where
-#else
--- | @since 1.2.0
-instance (RealFloat a, Serial m a) => Serial m (Complex a) where
-#endif
   series = cons2 (:+)
 
-#if MIN_VERSION_base(4,4,0)
 -- | @since 1.2.0
 instance CoSerial m a => CoSerial m (Complex a) where
-#else
--- | @since 1.2.0
-instance (RealFloat a, CoSerial m a) => CoSerial m (Complex a) where
-#endif
   coseries rs =
     alts2 rs >>- \f ->
     return $ \(x :+ xs') -> f x xs'
@@ -1133,7 +1088,6 @@ instance Show a => Show (NonEmpty a) where
 ------------------------------
 -- {{{
 
-#if MIN_VERSION_base(4,5,0)
 -- | @since 1.2.0
 instance Monad m => Serial m CFloat where
   series = newtypeCons CFloat
@@ -1148,14 +1102,12 @@ instance Monad m => Serial m CDouble where
 instance Monad m => CoSerial m CDouble where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CDouble x -> f x
 
-#if HASCBOOL
 -- | @since 1.2.0
 instance Monad m => Serial m CBool where
   series = newtypeCons CBool
 -- | @since 1.2.0
 instance Monad m => CoSerial m CBool where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CBool x -> f x
-#endif
 
 -- | @since 1.2.0
 instance Monad m => Serial m CChar where
@@ -1317,6 +1269,5 @@ instance Monad m => Serial m CSUSeconds where
 -- | @since 1.2.0
 instance Monad m => CoSerial m CSUSeconds where
   coseries rs = newtypeAlts rs >>- \f -> return $ \l -> case l of CSUSeconds x -> f x
-#endif
 
 -- }}}
