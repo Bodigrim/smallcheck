@@ -194,7 +194,7 @@ module Test.SmallCheck.Series (
   -- }}}
   ) where
 
-import Control.Applicative (empty, pure, (<$>), (<|>))
+import Control.Applicative (empty, pure, (<$>), (<|>), ZipList(ZipList))
 import Control.Monad (Monad, liftM, guard, mzero, mplus, msum, return, (>>), (>>=))
 import Control.Monad.Identity (Identity(Identity), runIdentity)
 import Control.Monad.Logic (MonadLogic, (>>-), interleave, msplit, observeAllT)
@@ -212,8 +212,10 @@ import Data.Int (Int, Int8, Int16, Int32, Int64)
 import Data.List (intercalate, take, map, length, (++), maximum, sum, unlines, lines, concat)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (Maybe (Just, Nothing), maybe)
-import Data.Ord (Ord, Ordering (LT, EQ, GT), max, (<), (>), (>=), compare, (<=))
+import qualified Data.Monoid as Monoid
+import Data.Ord (Ord, Ordering (LT, EQ, GT), max, (<), (>), (>=), compare, (<=), Down(Down))
 import Data.Ratio (Ratio, numerator, denominator, (%))
+import qualified Data.Semigroup as Semigroup
 import Data.Traversable (Traversable)
 import Data.Tuple (uncurry)
 import Data.Void (Void, absurd)
@@ -224,6 +226,10 @@ import Test.SmallCheck.SeriesMonad
 import Text.Show (Show, showsPrec, show)
 import Foreign.C.Types (CFloat(CFloat), CDouble(CDouble), CChar(CChar), CSChar(CSChar), CUChar(CUChar), CShort(CShort), CUShort(CUShort), CInt(CInt), CUInt(CUInt), CLong(CLong), CULong(CULong), CPtrdiff(CPtrdiff), CSize(CSize), CWchar(CWchar), CSigAtomic(CSigAtomic), CLLong(CLLong), CULLong(CULLong), CIntPtr(CIntPtr), CUIntPtr(CUIntPtr), CIntMax(CIntMax), CUIntMax(CUIntMax), CClock(CClock), CTime(CTime), CUSeconds(CUSeconds), CSUSeconds(CSUSeconds), CBool(CBool))
 import GHC.Generics (Generic, (:+:)(L1, R1), (:*:)((:*:)), C1, K1(K1), unK1, M1(M1), unM1, U1(U1), V1, Rep, to, from)
+
+#if MIN_VERSION_base(4,18,0)
+import Data.Tuple (Solo(MkSolo))
+#endif
 
 ------------------------------
 -- Main types and classes
@@ -1267,5 +1273,126 @@ instance Monad m => Serial m CSUSeconds where
 -- | @since 1.2.0
 instance Monad m => CoSerial m CSUSeconds where
   coseries rs = newtypeAlts rs >>- \f -> return $ \(CSUSeconds x) -> f x
+
+-- }}}
+
+------------------------------
+-- Newtypes from base
+------------------------------
+-- {{{
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Identity a) where
+  series = newtypeCons Identity
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Identity a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Identity x) -> f x
+
+#if MIN_VERSION_base(4,18,0)
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Solo a) where
+  series = newtypeCons MkSolo
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Solo a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(MkSolo x) -> f x
+#endif
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (ZipList a) where
+  series = newtypeCons ZipList
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (ZipList a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(ZipList x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Down a) where
+  series = newtypeCons Down
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Down a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Down x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Monoid.First a) where
+  series = newtypeCons Monoid.First
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Monoid.First a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Monoid.First x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Monoid.Last a) where
+  series = newtypeCons Monoid.Last
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Monoid.Last a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Monoid.Last x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Semigroup.First a) where
+  series = newtypeCons Semigroup.First
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Semigroup.First a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.First x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Semigroup.Last a) where
+  series = newtypeCons Semigroup.Last
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Semigroup.Last a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.Last x) -> f x
+
+-- | @since 1.2.2
+instance Monad m => Serial m Semigroup.All where
+  series = newtypeCons Semigroup.All
+-- | @since 1.2.2
+instance Monad m => CoSerial m Semigroup.All where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.All x) -> f x
+
+-- | @since 1.2.2
+instance Monad m => Serial m Semigroup.Any where
+  series = newtypeCons Semigroup.Any
+-- | @since 1.2.2
+instance Monad m => CoSerial m Semigroup.Any where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.Any x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Semigroup.Max a) where
+  series = newtypeCons Semigroup.Max
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Semigroup.Max a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.Max x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Semigroup.Min a) where
+  series = newtypeCons Semigroup.Min
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Semigroup.Min a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.Min x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Semigroup.Dual a) where
+  series = newtypeCons Semigroup.Dual
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Semigroup.Dual a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.Dual x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Semigroup.Product a) where
+  series = newtypeCons Semigroup.Product
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Semigroup.Product a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.Product x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Semigroup.Sum a) where
+  series = newtypeCons Semigroup.Sum
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Semigroup.Sum a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.Sum x) -> f x
+
+-- | @since 1.2.2
+instance (Monad m, Serial m a) => Serial m (Semigroup.WrappedMonoid a) where
+  series = newtypeCons Semigroup.WrapMonoid
+-- | @since 1.2.2
+instance (Monad m, CoSerial m a) => CoSerial m (Semigroup.WrappedMonoid a) where
+  coseries rs = newtypeAlts rs >>- \f -> return $ \(Semigroup.WrapMonoid x) -> f x
 
 -- }}}
