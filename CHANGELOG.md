@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.2.2
+-------------
+
+* Add `Serial` and `CoSerial` instances for various newtypes from `base`:
+  `Identity`, `Solo`, `ZipList`, `Down`, `First`, `Last`, `All`, `Any`, `Min`, `Max`, `Dual`, `Product`, `Sum`, `WrappedMonoid`.
+
 Version 1.2.1.1
 -------------
 
