@@ -18,7 +18,7 @@ In many ways SmallCheck is very similar to QuickCheck. It uses the idea of type-
 
 The big difference is that instead of using a sample of randomly generated values, SmallCheck tests properties for all the finitely many values up to some depth, progressively increasing the depth used. For data values, depth means depth of construction. For functional values, it is a measure combining the depth to which arguments may be evaluated and the depth of possible results.
 
-The package is based on the [paper](http://www.cs.york.ac.uk/fp/smallcheck/smallcheck.pdf)
+The package is based on the [paper](https://dl.acm.org/doi/epdf/10.1145/1411286.1411292)
 by Colin Runciman, Matthew Naylor and Fredrik Lindblad.
 
 See the [blog post](https://ro-che.info/articles/2018-05-25-quickcheck-vs-smallcheck) by Roman Cheplyaka for the detailed comparison to QuickCheck.
